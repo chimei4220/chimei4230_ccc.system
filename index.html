@@ -177,7 +177,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-tools"></i>設備維修<span class="sb-dev">開發中</span></a>
   <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-box-seam"></i>耗材管理<span class="sb-dev">開發中</span></a>
   <div class="sb-section">行政管理</div>
-  <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-archive"></i>財產總覽<span class="sb-dev">開發中</span></a>
+  <a class="sb-link" onclick="showPanel('assets',this)"><i class="bi bi-archive"></i>財產總覽</a>
   <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-clipboard2-data"></i>耗材清單<span class="sb-dev">開發中</span></a>
   <div class="sb-section">系統設定</div>
   <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-gear"></i>系統設定<span class="sb-dev">開發中</span></a>
@@ -405,6 +405,148 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   </div>
 </div>
 
+<!-- 財產總覽 -->
+<div id="panel-assets" class="panel">
+  <div class="pg-head">
+    <div class="pg-title">
+      <div class="pg-icon"><i class="bi bi-archive"></i></div>
+      <div><h5>財產總覽</h5><div class="pg-sub">臨床技能中心財產清冊管理</div></div>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary btn-sm" onclick="loadAssets()"><i class="bi bi-arrow-clockwise me-1"></i>重新整理</button>
+      <button class="btn btn-primary btn-sm" onclick="openAssetModal()"><i class="bi bi-plus-lg me-1"></i>新增財產</button>
+    </div>
+  </div>
+
+  <!-- 統計卡片 -->
+  <div class="row g-3 mb-3" id="assetStats">
+    <div class="col-6 col-md">
+      <div class="card" style="border-radius:10px;">
+        <div class="card-bd" style="padding:12px 14px">
+          <div style="font-size:.72rem;color:#94a3b8;margin-bottom:4px">列管設備<span style="color:#cbd5e1">（有保管品編號）</span></div>
+          <div style="font-size:1.4rem;font-weight:700;color:#1e293b" id="stat-listed">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="card" style="border-radius:10px;">
+        <div class="card-bd" style="padding:12px 14px">
+          <div style="font-size:.72rem;color:#94a3b8;margin-bottom:4px">無列管設備<span style="color:#cbd5e1">（無保管品編號）</span></div>
+          <div style="font-size:1.4rem;font-weight:700;color:#64748b" id="stat-unlisted">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="card" style="border-radius:10px;">
+        <div class="card-bd" style="padding:12px 14px">
+          <div style="font-size:.72rem;color:#94a3b8;margin-bottom:4px">教具總數<span style="color:#cbd5e1">（有分類／掛網）</span></div>
+          <div style="font-size:1.4rem;font-weight:700;color:#2563eb" id="stat-tools">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="card" style="border-radius:10px;">
+        <div class="card-bd" style="padding:12px 14px">
+          <div style="font-size:.72rem;color:#94a3b8;margin-bottom:4px">教室設備<span style="color:#cbd5e1">（含軟硬體）</span></div>
+          <div style="font-size:1.4rem;font-weight:700;color:#0891b2" id="stat-room">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="card" style="border-radius:10px;">
+        <div class="card-bd" style="padding:12px 14px">
+          <div style="font-size:.72rem;color:#94a3b8;margin-bottom:4px">已報廢（項）</div>
+          <div style="font-size:1.4rem;font-weight:700;color:#dc2626" id="stat-retired">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 搜尋 + 模式切換 -->
+  <div class="card mb-3">
+    <div class="card-bd" style="padding:12px 16px">
+      <div class="d-flex gap-2 flex-wrap align-items-center">
+        <input type="text" class="form-control form-control-sm" id="assetKeyword" placeholder="搜尋教具名稱、保管品號..." style="max-width:260px" oninput="filterAssets()">
+        <select class="form-select form-select-sm" id="assetCatFilter" style="max-width:140px" onchange="filterAssets()">
+          <option value="">全部分類</option>
+        </select>
+        <div class="form-check form-switch mb-0 ms-1 d-flex align-items-center gap-2" style="font-size:.85rem">
+          <input class="form-check-input" type="checkbox" id="showClassroomToggle" checked onchange="filterAssets()" style="width:2.2em;height:1.1em">
+          <label class="form-check-label" for="showClassroomToggle" style="white-space:nowrap">顯示教室設備</label>
+        </div>
+        <div class="ms-auto">
+          <button class="btn btn-sm btn-outline-danger" id="showRetiredBtn" onclick="toggleRetiredView()" style="font-size:.82rem">
+            <i class="bi bi-archive me-1"></i>查看報廢項目
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 報廢清單 -->
+  <div id="retiredView" style="display:none">
+    <div class="card">
+      <div class="card-hd">
+        <span><i class="bi bi-archive me-2" style="color:#dc2626"></i>已報廢清單</span>
+        <span id="retiredCount" style="font-size:.78rem;color:#94a3b8"></span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered" id="retiredTable">
+          <thead>
+            <tr>
+              <th style="width:108px;text-align:center">保管品號</th>
+              <th style="width:220px">掛網/設備名稱</th>
+              <th style="width:100px;text-align:center">分類</th>
+              <th style="width:130px">材料編號</th>
+              <th style="width:44px;text-align:center">單位</th>
+              <th style="width:44px;text-align:center">數量</th>
+              <th style="width:84px;text-align:center">取得日期</th>
+              <th style="width:84px;text-align:center">報廢時間</th>
+              <th style="width:64px;text-align:center">財產標籤</th>
+              <th style="width:70px;text-align:center">註記</th>
+              <th style="width:40px;text-align:center">操作</th>
+            </tr>
+          </thead>
+          <tbody id="retiredBody">
+            <tr><td colspan="10" class="text-center text-muted py-4">載入中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 列表檢視 -->
+  <div id="assetListView">
+    <div class="card">
+      <div class="card-hd">
+        <span><i class="bi bi-table me-2" style="color:var(--ac)"></i>財產清冊列表</span>
+        <span id="assetListCount" style="font-size:.78rem;color:#94a3b8"></span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered">
+          <thead>
+            <tr>
+              <th style="width:108px;text-align:center">保管品號</th>
+              <th style="width:220px">掛網/設備名稱</th>
+              <th style="width:100px;text-align:center">分類</th>
+              <th style="width:130px">材料編號</th>
+              <th style="width:44px;text-align:center">單位</th>
+              <th style="width:44px;text-align:center">數量</th>
+              <th style="width:84px;text-align:center">取得日期</th>
+              <th style="width:64px;text-align:center">財產標籤</th>
+              <th style="width:70px;text-align:center">註記</th>
+              <th style="width:40px;text-align:center">操作</th>
+            </tr>
+          </thead>
+          <tbody id="assetListBody">
+            <tr><td colspan="11" class="text-center text-muted py-5" style="font-size:.85rem">載入中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 開發中 -->
 <div id="panel-dev" class="panel">
   <div class="dev-panel">
@@ -416,6 +558,126 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 
 </div><!-- main -->
 </div><!-- app-body -->
+
+<!-- Asset Modal (新增/編輯財產) -->
+<div class="modal fade" id="assetModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius:14px;border:none;">
+      <div class="modal-header" style="border-bottom:1px solid #f1f5f9;">
+        <h6 class="modal-title fw-bold" id="assetModalTitle"><i class="bi bi-archive me-2" style="color:var(--ac)"></i>新增財產</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="assetRowIndex">
+        <div class="row g-3" style="font-size:.85rem">
+          <!-- 類型選擇 -->
+          <div class="col-12">
+            <label class="form-label fw-semibold">財產類型<span style="color:red">*</span></label>
+            <div class="d-flex gap-3">
+              <div class="form-check"><input class="form-check-input" type="radio" name="amType" id="amTypeMain" value="main" checked onchange="onAssetTypeChange()"><label class="form-check-label" for="amTypeMain">教具主體</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="amType" id="amTypePart" value="part" onchange="onAssetTypeChange()"><label class="form-check-label" for="amTypePart">配件（隸屬某教具）</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="amType" id="amTypeRoom" value="room" onchange="onAssetTypeChange()"><label class="form-check-label" for="amTypeRoom">教室設備</label></div>
+            </div>
+          </div>
+          <!-- 教具主體欄位 -->
+          <div id="amFieldMain">
+            <div class="row g-3">
+              <div class="col-12"><label class="form-label fw-semibold">掛網名稱（教具名稱）<span style="color:red">*</span></label><input type="text" class="form-control form-control-sm" id="am掛網名稱" placeholder="例：簡易型心肺復甦訓練模型(含AED)"></div>
+            </div>
+          </div>
+          <!-- 配件專屬：父項下拉 -->
+          <div id="amFieldPart" style="display:none">
+            <div class="row g-3">
+              <div class="col-12"><label class="form-label fw-semibold">隸屬教具（父項掛網名稱）<span style="color:red">*</span></label>
+                <select class="form-select form-select-sm" id="am父項"><option value="">請選擇教具...</option></select>
+                <div class="form-text">配件的掛網名稱可以留空，會用父項名稱分組顯示</div>
+              </div>
+              <div class="col-12"><label class="form-label fw-semibold">配件掛網名稱（選填）</label><input type="text" class="form-control form-control-sm" id="am掛網名稱2" placeholder="若有獨立掛網名稱才填"></div>
+            </div>
+          </div>
+          <!-- 教室設備：父項固定為教室設備 -->
+          <div id="amFieldRoom" style="display:none">
+            <div class="row g-3">
+              <div class="col-12"><label class="form-label fw-semibold">掛網／設備名稱</label><input type="text" class="form-control form-control-sm" id="am掛網名稱3" placeholder="例：視訊鏡頭、辦公椅..."></div>
+            </div>
+            <div class="alert alert-secondary py-2 mt-2 mb-0" style="font-size:.82rem"><i class="bi bi-info-circle me-1"></i>父項將自動設為「教室設備」，規格欄填寫品名描述</div>
+          </div>
+          <!-- 共用欄位 -->
+          <div class="col-md-3"><label class="form-label fw-semibold">保管品號</label><input type="text" class="form-control form-control-sm" id="am保管品號" placeholder="例：50179"></div>
+          <div class="col-md-3"><label class="form-label fw-semibold">財產標籤</label>
+            <select class="form-select form-select-sm" id="am財產標籤"><option value="">—</option><option value="有">有</option><option value="無">無</option></select></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">材料編號</label><input type="text" class="form-control form-control-sm" id="am材料編號" placeholder="例：A5-116-46627"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">品名</label><input type="text" class="form-control form-control-sm" id="am品名" placeholder="例：人工復甦術訓練用人體模型"></div>
+          <div class="col-md-8"><label class="form-label fw-semibold">規格／品名描述</label><input type="text" class="form-control form-control-sm" id="am規格"></div>
+          <div class="col-md-2"><label class="form-label fw-semibold">單位</label><input type="text" class="form-control form-control-sm" id="am單位" placeholder="EA/ST/PC"></div>
+          <div class="col-md-2"><label class="form-label fw-semibold">數量</label><input type="number" class="form-control form-control-sm" id="am數量" value="1" min="1"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">取得日期</label><input type="text" class="form-control form-control-sm" id="am取得日期" placeholder="例：1130801"></div>
+          <div class="col-md-8"><label class="form-label fw-semibold">廠牌/型號</label><input type="text" class="form-control form-control-sm" id="am廠牌型號"></div>
+          <div class="col-md-5"><label class="form-label fw-semibold">備註</label><input type="text" class="form-control form-control-sm" id="am備註"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">分類</label>
+            <select class="form-select form-select-sm" id="am分類">
+              <option value="">—</option>
+              <option>臨床技術類</option><option>急救訓練類</option><option>氣道處理類</option>
+              <option>牙醫操作類</option><option>外科創傷類</option><option>人體模型類</option>
+              <option>教室設備</option><option>其他</option>
+            </select></div>
+          <div class="col-md-3"><label class="form-label fw-semibold">註記</label><input type="text" class="form-control form-control-sm" id="am註記" placeholder="例：整組、配件1..."></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid #f1f5f9;justify-content:space-between">
+        <div>
+          <button type="button" class="btn btn-danger btn-sm" id="assetRetireBtn" onclick="confirmRetire()" style="display:none"><i class="bi bi-trash me-1"></i>標記報廢</button>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="saveAsset()"><i class="bi bi-save me-1"></i>儲存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Retired Edit Modal -->
+<div class="modal fade" id="retiredModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius:14px;border:none;">
+      <div class="modal-header" style="border-bottom:1px solid #f1f5f9;">
+        <h6 class="modal-title fw-bold"><i class="bi bi-archive me-2" style="color:#dc2626"></i>編輯報廢財產</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="retiredRowIndex">
+        <div class="row g-3" style="font-size:.85rem">
+          <div class="col-md-6"><label class="form-label fw-semibold">掛網/設備名稱</label><input type="text" class="form-control form-control-sm" id="rm掛網名稱"></div>
+          <div class="col-md-3"><label class="form-label fw-semibold">保管品號</label><input type="text" class="form-control form-control-sm" id="rm保管品號"></div>
+          <div class="col-md-3"><label class="form-label fw-semibold">財產標籤</label>
+            <select class="form-select form-select-sm" id="rm財產標籤"><option value="">—</option><option value="有">有</option><option value="無">無</option></select></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">材料編號</label><input type="text" class="form-control form-control-sm" id="rm材料編號"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">品名</label><input type="text" class="form-control form-control-sm" id="rm品名"></div>
+          <div class="col-md-8"><label class="form-label fw-semibold">規格／品名描述</label><input type="text" class="form-control form-control-sm" id="rm規格"></div>
+          <div class="col-md-2"><label class="form-label fw-semibold">單位</label><input type="text" class="form-control form-control-sm" id="rm單位"></div>
+          <div class="col-md-2"><label class="form-label fw-semibold">數量</label><input type="number" class="form-control form-control-sm" id="rm數量" min="1"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">取得日期</label><input type="text" class="form-control form-control-sm" id="rm取得日期"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">廠牌/型號</label><input type="text" class="form-control form-control-sm" id="rm廠牌型號"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">報廢時間</label><input type="text" class="form-control form-control-sm" id="rm報廢時間"></div>
+          <div class="col-md-5"><label class="form-label fw-semibold">備註</label><input type="text" class="form-control form-control-sm" id="rm備註"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">分類</label>
+            <select class="form-select form-select-sm" id="rm分類">
+              <option value="">—</option>
+              <option>臨床技術類</option><option>急救訓練類</option><option>氣道處理類</option>
+              <option>牙醫操作類</option><option>外科創傷類</option><option>人體模型類</option>
+              <option>教室設備</option><option>其他</option>
+            </select></div>
+          <div class="col-md-3"><label class="form-label fw-semibold">註記</label><input type="text" class="form-control form-control-sm" id="rm註記"></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid #f1f5f9;justify-content:flex-end">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="saveRetired()"><i class="bi bi-save me-1"></i>儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Edit Modal -->
 <div class="modal fade" id="editModal" tabindex="-1">
@@ -564,6 +826,7 @@ function showPanel(name,el){
   document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('active'));
   if(el)el.classList.add('active');
   if(name==='query'&&!queryResults.length) queryToday();
+  if(name==='assets'&&!allAssets.length) loadAssets();
 }
 
 // Import tabs
@@ -1216,6 +1479,701 @@ function exportExcel(){
   const today=new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb,`借用紀錄_${today}.xlsx`);
   toast('匯出成功',`已下載借用紀錄_${today}.xlsx`,'success');
+}
+
+// ===== 財產總覽 =====
+let allAssets = [], filteredAssets = [], assetView = 'group', allAssetNames = [];
+
+async function loadAssets() {
+  if (!getToken()) return;
+  showLoad('載入財產清單...');
+  try {
+    const r = await fetch(API + '?action=queryAssets&token=' + encodeURIComponent(getToken()));
+    const data = await r.json();
+    if (!data.success) { toast('載入失敗', data.message, 'danger'); return; }
+    allAssets = data.data || [];
+    allAssetNames = data.allNames || [];
+    buildCategoryFilter(data.allCategories || []);
+    filterAssets();
+    updateAssetStats();
+    document.getElementById('assetListView').style.display = '';
+    // 另外撈已報廢數量
+    fetch(API + '?action=queryRetiredCount&token=' + encodeURIComponent(getToken()))
+      .then(r => r.json())
+      .then(d => { if (d.success) document.getElementById('stat-retired').textContent = d.count; })
+      .catch(() => {});
+  } catch(e) { toast('連線失敗', e.message, 'danger'); }
+  finally { hideLoad(); }
+}
+
+function updateAssetStats() {
+  const sumQty = arr => arr.reduce((s, r) => s + (parseInt(r['數量']) || 1), 0);
+
+  // 列管設備：有保管品編號（筆數）
+  const listed   = allAssets.filter(r => r['保管品號'] && String(r['保管品號']).trim() !== '').length;
+  // 無列管設備：沒有保管品編號（筆數）
+  const unlisted = allAssets.filter(r => !r['保管品號'] || String(r['保管品號']).trim() === '').length;
+  // 教具總數：有分類或掛網名稱（排除教室設備），加總數量
+  const tools    = sumQty(allAssets.filter(r => r['父項'] !== '教室設備' && (r['分類'] || r['掛網名稱'])));
+  // 教室設備（筆數）
+  const room     = allAssets.filter(r => r['父項'] === '教室設備').length;
+
+  document.getElementById('stat-listed').textContent   = listed;
+  document.getElementById('stat-unlisted').textContent = unlisted;
+  document.getElementById('stat-tools').textContent    = tools;
+  document.getElementById('stat-room').textContent     = room;
+  document.getElementById('stat-retired').textContent  = '—';
+}
+
+function buildCategoryFilter(cats) {
+  const sel = document.getElementById('assetCatFilter');
+  if (!sel) return;
+  // 固定顯示所有分類選項，不依資料篩選
+  const order = ['急救訓練類','氣道處理類','臨床技術類','外科創傷類','人體模型類','牙醫操作類','其他','教室設備'];
+  sel.innerHTML = '<option value="">全部分類</option>' +
+    order.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+function filterAssets() {
+  const kw  = (document.getElementById('assetKeyword').value || '').trim().toLowerCase();
+  const cat = (document.getElementById('assetCatFilter')?.value || '').trim();
+  const showClassroom = document.getElementById('showClassroomToggle').checked;
+
+  filteredAssets = allAssets.filter(r => {
+    if (!showClassroom && r['父項'] === '教室設備') return false;
+    // 配件跟隨主體分類，篩選時一併顯示
+    if (cat) {
+      const rCat = String(r['分類']||'').trim();
+      const parentCat = (() => {
+        if (!r['父項'] || r['父項']==='教室設備') return '';
+        const parent = allAssets.find(a => a['掛網名稱'] === r['父項']);
+        return parent ? String(parent['分類']||'').trim() : '';
+      })();
+      if (rCat !== cat && parentCat !== cat) return false;
+    }
+    if (kw) {
+      const hay = [r['掛網名稱'],r['品名'],r['保管品號'],r['材料編號'],r['備註'],r['規格'],r['父項'],r['_displayName'],r['分類']].join('|').toLowerCase();
+      if (!hay.includes(kw)) return false;
+    }
+    return true;
+  });
+  renderListView();
+}
+
+function setAssetView(mode) {
+  assetView = mode;
+  const gBtn = document.getElementById('viewModeGroup');
+  const lBtn = document.getElementById('viewModeList');
+  const on  = 'btn btn-sm';
+  const off = 'btn btn-sm btn-outline-secondary';
+  gBtn.className = mode==='group' ? on : off;
+  lBtn.className = mode==='list'  ? on : off;
+  gBtn.style.cssText = mode==='group' ? 'background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;font-weight:600' : '';
+  lBtn.style.cssText = mode==='list'  ? 'background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;font-weight:600' : '';
+  document.getElementById('assetGroupView').style.display = mode==='group' ? '' : 'none';
+  document.getElementById('assetListView').style.display  = mode==='list'  ? '' : 'none';
+  renderAssets();
+}
+
+function renderAssets() {
+  if (assetView === 'group') renderGroupView();
+  else renderListView();
+}
+
+// 產生標籤 badge
+function noteBadge(v) {
+  if (!v) return '';
+  const map = {
+    '整組':'#dbeafe:#1d4ed8', '主體':'#d1fae5:#065f46',
+    '配件':'#fef9c3:#854d0e', '未拍照':'#fee2e2:#991b1b'
+  };
+  // 配件1~N
+  const isAccessory = /^配件/.test(v);
+  const c = map[v] || (isAccessory ? '#fef9c3:#854d0e' : '#f1f5f9:#64748b');
+  const [bg,col] = c.split(':');
+  return `<span style="background:${bg};color:${col};padding:1px 8px;border-radius:10px;font-size:.68rem;font-weight:600">${v}</span>`;
+}
+
+function renderGroupView() {
+  const container = document.getElementById('assetGroupBody');
+  if (!filteredAssets.length) {
+    container.innerHTML = '<div class="text-center text-muted py-5">查無符合條件的財產</div>';
+    return;
+  }
+
+  const mainGroups = {}, partMap = {}, classroom = [];
+  filteredAssets.forEach(r => {
+    if (r['父項'] === '教室設備') {
+      classroom.push(r);
+    } else if (r['父項'] && !r['掛網名稱']) {
+      if (!partMap[r['父項']]) partMap[r['父項']] = [];
+      partMap[r['父項']].push(r);
+    } else {
+      const key = r['掛網名稱'] || r['品名'] || '(未分類)';
+      if (!mainGroups[key]) mainGroups[key] = [];
+      mainGroups[key].push(r);
+    }
+  });
+
+  // 固定欄寬 colgroup（每張 card 相同，視覺對齊）
+  const colgroup = `<colgroup>
+    <col style="width:108px">
+    <col style="width:128px">
+    <col style="width:260px">
+    <col style="width:46px">
+    <col style="width:82px">
+    <col style="width:64px">
+    <col style="width:160px">
+    <col style="width:72px">
+    <col style="width:40px">
+  </colgroup>`;
+
+  const thead = `<thead>
+    <tr style="font-size:.85rem;color:#64748b;background:#f8fafc">
+      <th style="padding:6px 10px;font-weight:600;white-space:nowrap">保管品號</th>
+      <th style="font-weight:600;white-space:nowrap">材料編號</th>
+      <th style="font-weight:600;white-space:nowrap">規格／型號</th>
+      <th style="font-weight:600;text-align:center;white-space:nowrap">數量</th>
+      <th style="font-weight:600;white-space:nowrap">取得日期</th>
+      <th style="font-weight:600;text-align:center;white-space:nowrap">財產標籤</th>
+      <th style="font-weight:600;white-space:nowrap">備註</th>
+      <th style="font-weight:600;white-space:nowrap">註記</th>
+      <th></th>
+    </tr>
+  </thead>`;
+
+  const tagBadge = v => v === '有'
+    ? '<span style="background:#d1fae5;color:#065f46;padding:1px 7px;border-radius:10px;font-size:.7rem">有</span>'
+    : '<span style="color:#cbd5e1;font-size:.78rem">—</span>';
+
+  const mainRow = r => `<tr>
+    <td style="padding:6px 10px;vertical-align:top"><span style="color:var(--ac);font-weight:600;font-size:.9rem">${r['保管品號']||'—'}</span></td>
+    <td style="font-size:.82rem;color:#64748b;vertical-align:top">${r['材料編號']||'—'}</td>
+    <td style="font-size:.9rem;word-break:break-all;vertical-align:top">${r['規格']||'—'}</td>
+    <td style="text-align:center;font-size:.9rem;vertical-align:top">${r['數量']||1}</td>
+    <td style="font-size:.9rem;vertical-align:top;white-space:nowrap">${r['取得日期']||'—'}</td>
+    <td style="text-align:center;vertical-align:top">${tagBadge(r['財產標籤'])}</td>
+    <td style="font-size:.85rem;color:#475569;word-break:break-all;vertical-align:top">${r['備註']||''}</td>
+    <td style="vertical-align:top">${noteBadge(r['註記'])}</td>
+    <td style="vertical-align:top"><button class="btn btn-xs btn-outline-secondary" style="font-size:.7rem;padding:1px 6px" onclick="openAssetModal(${r._rowIndex})"><i class="bi bi-pencil"></i></button></td>
+  </tr>`;
+
+  const partRow = r => `<tr style="background:#fffdf5">
+    <td style="padding:5px 10px 5px 20px;vertical-align:top">
+      <i class="bi bi-arrow-return-right me-1" style="color:#d97706;font-size:.65rem"></i>
+      <span style="color:#92400e;font-weight:600;font-size:.88rem">${r['保管品號']||'—'}</span>
+    </td>
+    <td style="font-size:.82rem;color:#78716c;vertical-align:top">${r['材料編號']||'—'}</td>
+    <td style="font-size:.88rem;color:#57534e;word-break:break-all;vertical-align:top">${r['規格']||'—'}</td>
+    <td style="text-align:center;font-size:.88rem;vertical-align:top">${r['數量']||1}</td>
+    <td style="font-size:.88rem;vertical-align:top;white-space:nowrap">${r['取得日期']||'—'}</td>
+    <td style="text-align:center;vertical-align:top">${tagBadge(r['財產標籤'])}</td>
+    <td style="font-size:.84rem;color:#78716c;word-break:break-all;vertical-align:top">${r['備註']||''}</td>
+    <td style="vertical-align:top">${noteBadge(r['註記'])}</td>
+    <td style="vertical-align:top"><button class="btn btn-xs btn-outline-secondary" style="font-size:.7rem;padding:1px 6px" onclick="openAssetModal(${r._rowIndex})"><i class="bi bi-pencil"></i></button></td>
+  </tr>`;
+
+  let html = '';
+  const groupNames = Object.keys(mainGroups).sort();
+
+  groupNames.forEach(name => {
+    const items = mainGroups[name];
+    const parts = partMap[name] || [];
+    const gid = 'ag_' + btoa(encodeURIComponent(name)).replace(/[^a-zA-Z0-9]/g,'');
+
+    html += `
+    <div class="card mb-2">
+      <div class="card-hd" style="cursor:pointer;user-select:none" onclick="toggleGroup('${gid}')">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-chevron-right" id="chev_${gid}" style="font-size:.8rem;color:#94a3b8;transition:transform .2s"></i>
+          <span style="font-weight:600;color:#1e293b;font-size:.88rem">${name}</span>
+          <span style="background:#dbeafe;color:#1d4ed8;padding:1px 8px;border-radius:10px;font-size:.7rem;font-weight:600">${items.length} 件</span>
+          ${parts.length ? `<span style="background:#fef9c3;color:#92400e;padding:1px 8px;border-radius:10px;font-size:.7rem;font-weight:600">${parts.length} 配件</span>` : ''}
+        </div>
+        <button class="btn btn-sm btn-outline-primary" style="font-size:.73rem;padding:1px 8px"
+          onclick="event.stopPropagation();openAssetModal(null,'part','${encodeURIComponent(name)}')">
+          <i class="bi bi-plus me-1"></i>新增配件</button>
+      </div>
+      <div id="${gid}" style="display:none" class="table-responsive">
+        <table class="table table-hover mb-0" style="font-size:.82rem;table-layout:fixed;width:100%">
+          ${colgroup}${thead}
+          <tbody>
+            ${items.map(r => mainRow(r)).join('')}
+            ${parts.length ? `<tr style="background:#fffbeb"><td colspan="9" style="padding:3px 10px 3px 20px;font-size:.72rem;color:#92400e;font-weight:600"><i class="bi bi-paperclip me-1"></i>配件 ${parts.length} 件</td></tr>` : ''}
+            ${parts.map(r => partRow(r)).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  });
+
+  // 孤兒配件
+  Object.keys(partMap).filter(p => !mainGroups[p]).sort().forEach(parentName => {
+    const parts = partMap[parentName];
+    const gid = 'ago_' + btoa(encodeURIComponent(parentName)).replace(/[^a-zA-Z0-9]/g,'');
+    html += `
+    <div class="card mb-2">
+      <div class="card-hd" style="cursor:pointer;user-select:none" onclick="toggleGroup('${gid}')">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-chevron-right" id="chev_${gid}" style="font-size:.8rem;color:#94a3b8;transition:transform .2s"></i>
+          <span style="font-weight:600;color:#64748b;font-size:.88rem">${parentName}</span>
+          <span style="background:#fef9c3;color:#92400e;padding:1px 8px;border-radius:10px;font-size:.7rem;font-weight:600">${parts.length} 配件</span>
+        </div>
+      </div>
+      <div id="${gid}" style="display:none" class="table-responsive">
+        <table class="table table-hover mb-0" style="font-size:.82rem;table-layout:fixed;width:100%">
+          ${colgroup}${thead}
+          <tbody>${parts.map(r => partRow(r)).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+  });
+
+  // 教室設備（置底）
+  if (classroom.length) {
+    const gid = 'ag_classroom';
+    html += `
+    <div class="card mb-2" style="border-color:#cbd5e1">
+      <div class="card-hd" style="cursor:pointer;user-select:none;background:#f8fafc" onclick="toggleGroup('${gid}')">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-chevron-right" id="chev_${gid}" style="font-size:.8rem;color:#94a3b8;transition:transform .2s"></i>
+          <i class="bi bi-building" style="color:#64748b;font-size:.85rem"></i>
+          <span style="font-weight:600;color:#475569;font-size:.88rem">教室設備</span>
+          <span style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;padding:1px 8px;border-radius:10px;font-size:.7rem;font-weight:600">${classroom.length} 件</span>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" style="font-size:.73rem;padding:1px 8px"
+          onclick="event.stopPropagation();openAssetModal(null,'room')">
+          <i class="bi bi-plus me-1"></i>新增設備</button>
+      </div>
+      <div id="${gid}" style="display:none" class="table-responsive">
+        <table class="table table-hover mb-0" style="font-size:.82rem;table-layout:fixed;width:100%">
+          <colgroup>
+            <col style="width:108px"><col style="width:130px"><col><col style="width:44px">
+            <col style="width:84px"><col style="width:64px"><col style="width:150px"><col style="width:40px">
+          </colgroup>
+          <thead>
+            <tr style="font-size:.77rem;color:#64748b;background:#f1f5f9">
+              <th style="padding:6px 10px;font-weight:600">保管品號</th>
+              <th style="font-weight:600">材料編號</th>
+              <th style="font-weight:600">品名／規格</th>
+              <th style="font-weight:600;text-align:center">數量</th>
+              <th style="font-weight:600">取得日期</th>
+              <th style="font-weight:600;text-align:center">財產標籤</th>
+              <th style="font-weight:600">備註</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${classroom.map(r => `<tr style="background:#fafafa">
+              <td style="padding:6px 10px;vertical-align:top"><span style="color:#475569;font-weight:600;font-size:.83rem">${r['保管品號']||'—'}</span></td>
+              <td style="font-size:.75rem;color:#64748b;vertical-align:top">${r['材料編號']||'—'}</td>
+              <td style="font-size:.82rem;word-break:break-all;vertical-align:top;font-weight:500">${r['_displayName']||r['規格']||'—'}</td>
+              <td style="text-align:center;font-size:.82rem;vertical-align:top">${r['數量']||1}</td>
+              <td style="font-size:.82rem;vertical-align:top;white-space:nowrap">${r['取得日期']||'—'}</td>
+              <td style="text-align:center;vertical-align:top">${tagBadge(r['財產標籤'])}</td>
+              <td style="font-size:.78rem;color:#475569;word-break:break-all;vertical-align:top">${r['備註']||''}</td>
+              <td style="vertical-align:top"><button class="btn btn-xs btn-outline-secondary" style="font-size:.7rem;padding:1px 6px" onclick="openAssetModal(${r._rowIndex})"><i class="bi bi-pencil"></i></button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function toggleGroup(gid) {
+  const el = document.getElementById(gid);
+  const ch = document.getElementById('chev_' + gid);
+  if (!el) return;
+  const isHidden = el.style.display === 'none';
+  el.style.display = isHidden ? '' : 'none';
+  if (ch) ch.style.transform = isHidden ? 'rotate(90deg)' : '';
+}
+
+// 相容舊函數名稱
+function toggleGroupRows(gid) { toggleGroup(gid); }
+
+// 民國日期格式化（全域）：1061101 → 106/11/01
+function fmtROC(v) {
+  if (!v) return '—';
+  const s = String(v).replace(/\//g,'').trim();
+  if (/^\d{7}$/.test(s)) return s.slice(0,3)+'/'+s.slice(3,5)+'/'+s.slice(5,7);
+  if (/^\d{6}$/.test(s)) return s.slice(0,2)+'/'+s.slice(2,4)+'/'+s.slice(4,6);
+  return String(v);
+}
+
+function renderListView() {
+  const tbody = document.getElementById('assetListBody');
+  document.getElementById('assetListCount').textContent = '共 ' + filteredAssets.length + ' 筆';
+  if (!filteredAssets.length) {
+    tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted py-5">查無資料</td></tr>';
+    return;
+  }
+  // 排序：分類 → 主體掛網名稱 → 配件緊跟主體後面
+  // 每筆取「排序用主體名稱」：主體=自己的掛網名稱；配件=父項名稱；教室設備=zzz_教室設備
+  // 取排序 key：[分類, 群組名稱, 主/配(0=主體,1=配件)]
+  const getKey = r => {
+    const p = String(r['父項']||'').trim();
+    const n = String(r['掛網名稱']||'').trim();
+    if (p === '教室設備') return ['zzz_教室設備', 'zzz_教室設備', 0];
+    if (p) {
+      // 配件（不論掛網名稱有無）：繼承主體分類，group = 父項名稱
+      const parent = allAssets.find(a => String(a['掛網名稱']||'').trim() === p);
+      const pCat = parent ? String(parent['分類']||'').trim() : '';
+      return [pCat || 'zzz', p, 1];
+    }
+    // 主體
+    return [String(r['分類']||'zzz').trim(), n || String(r['品名']||'').trim(), 0];
+  };
+
+  const sorted = [...filteredAssets].sort((a,b) => {
+    const ka = getKey(a), kb = getKey(b);
+    // 1. 分類（自訂順序）
+    const catOrder = ['急救訓練類','氣道處理類','臨床技術類','外科創傷類','人體模型類','牙醫操作類','其他','zzz_教室設備'];
+    const ca = catOrder.indexOf(ka[0]) !== -1 ? catOrder.indexOf(ka[0]) : catOrder.length - 2;
+    const cb = catOrder.indexOf(kb[0]) !== -1 ? catOrder.indexOf(kb[0]) : catOrder.length - 2;
+    if (ca !== cb) return ca - cb;
+    // 2. 群組名稱（主體名稱 或 配件的父項名稱）
+    const grpCmp = ka[1].localeCompare(kb[1], 'zh-TW');
+    if (grpCmp !== 0) return grpCmp;
+    // 3. 主體(0)在前，配件(1)在後
+    return ka[2] - kb[2];
+  });
+
+  const tagBadge2 = v => v==='有'
+    ? '<span style="background:#d1fae5;color:#065f46;padding:1px 7px;border-radius:10px;font-size:.72rem">有</span>'
+    : v==='無'
+    ? '<span style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:10px;font-size:.72rem">無</span>'
+    : '<span style="color:#cbd5e1;font-size:.78rem">—</span>';
+
+  // 分類 badge
+  const catColors = {'臨床技術類':'#dbeafe:#1d4ed8','急救訓練類':'#fee2e2:#991b1b','氣道處理類':'#d1fae5:#065f46','牙醫操作類':'#fef9c3:#854d0e','外科創傷類':'#ede9fe:#5b21b6','其他':'#f1f5f9:#475569','人體模型類':'#fce7f3:#9d174d','教室設備':'#e2e8f0:#334155'};
+  const catBadge = v => {
+    if (!v) return '';
+    const c = catColors[v]||'#f1f5f9:#64748b';
+    const [bg,col]=c.split(':');
+    return `<span style="background:${bg};color:${col};padding:1px 7px;border-radius:10px;font-size:.72rem;font-weight:600;white-space:nowrap">${v}</span>`;
+  };
+
+  tbody.innerHTML = sorted.map(r => {
+    const isRoom = r['父項'] === '教室設備';
+    const _isPart = r['父項'] && r['父項'] !== '教室設備';
+    const rowBg  = _isPart ? 'background:#fffceb' : isRoom ? 'background:#f8fafc' : '';
+    const displayName = _isPart
+      ? `<span style="color:#92400e"><i class="bi bi-arrow-return-right me-1"></i>${r['父項']||''}</span><span style="color:#57534e;margin-left:4px">${r['掛網名稱']||''}</span>`
+      : (r['掛網名稱']||'');
+    return `<tr style="${rowBg}">
+      <td style="white-space:nowrap;text-align:center"><span style="color:var(--ac);font-weight:600">${r['保管品號']||'—'}</span></td>
+      <td>${displayName}</td>
+      <td style="text-align:center">${catBadge(String(r['分類']||'').trim())}</td>
+      <td style="color:#64748b">${r['材料編號']||'—'}</td>
+      <td style="text-align:center">${r['單位']||''}</td>
+      <td style="text-align:center">${r['數量']||1}</td>
+      <td style="white-space:nowrap;text-align:center">${fmtROC(r['取得日期'])}</td>
+      <td style="text-align:center">${tagBadge2(r['財產標籤'])}</td>
+      <td style="text-align:center">${noteBadge(r['註記'])}</td>
+      <td><button class="btn btn-xs btn-outline-secondary" style="padding:1px 6px" onclick="openAssetModal(${r._rowIndex})"><i class="bi bi-pencil"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Modal ──────────────────────────────────────────────────
+function onAssetTypeChange() {
+  const type = document.querySelector('input[name="amType"]:checked').value;
+  document.getElementById('amFieldMain').style.display = type==='main' ? '' : 'none';
+  document.getElementById('amFieldPart').style.display = type==='part' ? '' : 'none';
+  document.getElementById('amFieldRoom').style.display = type==='room' ? '' : 'none';
+}
+
+function openAssetModal(rowIndex, prefillType, prefillParent) {
+  // 填父項下拉
+  const sel = document.getElementById('am父項');
+  sel.innerHTML = '<option value="">請選擇教具...</option>' +
+    allAssetNames.map(n => `<option value="${n}">${n}</option>`).join('');
+
+  // 清空所有欄位
+  ['am掛網名稱','am掛網名稱2','am掛網名稱3','am保管品號','am材料編號','am品名','am規格','am單位','am取得日期','am廠牌型號','am備註','am註記']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('am數量').value = '1';
+  document.getElementById('am父項').value = '';
+  document.getElementById('am財產標籤').value = '';
+  document.getElementById('amTypeMain').checked = true;
+  onAssetTypeChange();
+
+  if (rowIndex) {
+    // 編輯模式
+    const r = allAssets.find(a => a._rowIndex === rowIndex);
+    if (!r) return;
+    document.getElementById('assetRowIndex').value = rowIndex;
+    document.getElementById('assetModalTitle').innerHTML = '<i class="bi bi-pencil-square me-2" style="color:var(--ac)"></i>編輯財產';
+    document.getElementById('assetRetireBtn').style.display = '';
+
+    // 判斷類型
+    if (r['父項'] === '教室設備') {
+      document.getElementById('amTypeRoom').checked = true;
+      document.getElementById('am掛網名稱3').value = r['掛網名稱'] || '';
+    } else if (r['父項'] && !r['掛網名稱']) {
+      document.getElementById('amTypePart').checked = true;
+      document.getElementById('am父項').value = r['父項'] || '';
+    } else {
+      document.getElementById('amTypeMain').checked = true;
+    }
+    onAssetTypeChange();
+
+    document.getElementById('am掛網名稱').value  = r['掛網名稱'] || '';
+    document.getElementById('am掛網名稱2').value = r['掛網名稱'] || '';
+    document.getElementById('am保管品號').value  = r['保管品號'] || '';
+    document.getElementById('am材料編號').value  = r['材料編號'] || '';
+    document.getElementById('am品名').value      = r['品名'] || '';
+    document.getElementById('am規格').value      = r['規格'] || '';
+    document.getElementById('am單位').value      = r['單位'] || '';
+    document.getElementById('am數量').value      = r['數量'] || 1;
+    document.getElementById('am取得日期').value  = r['取得日期'] || '';
+    document.getElementById('am廠牌型號').value  = r['廠牌/型號'] || '';
+    document.getElementById('am備註').value      = r['備註'] || '';
+    document.getElementById('am分類').value      = r['分類'] || '';
+    document.getElementById('am註記').value      = r['註記'] || '';
+    document.getElementById('am財產標籤').value  = r['財產標籤'] || '';
+  } else {
+    // 新增模式
+    document.getElementById('assetRowIndex').value = '';
+    document.getElementById('assetModalTitle').innerHTML = '<i class="bi bi-plus-circle me-2" style="color:var(--ac)"></i>新增財產';
+    document.getElementById('assetRetireBtn').style.display = 'none';
+    if (prefillType) {
+      if (prefillType==='part') { document.getElementById('amTypePart').checked=true; }
+      if (prefillType==='room') { document.getElementById('amTypeRoom').checked=true; }
+      onAssetTypeChange();
+    }
+    if (prefillParent) document.getElementById('am父項').value = decodeURIComponent(prefillParent);
+  }
+  new bootstrap.Modal(document.getElementById('assetModal')).show();
+}
+
+async function saveAsset() {
+  const type = document.querySelector('input[name="amType"]:checked').value;
+  let 掛網名稱, 父項;
+
+  if (type === 'main') {
+    掛網名稱 = document.getElementById('am掛網名稱').value.trim();
+    父項 = '';
+    if (!掛網名稱) { alert('請填寫掛網名稱'); return; }
+  } else if (type === 'part') {
+    父項 = document.getElementById('am父項').value;
+    掛網名稱 = document.getElementById('am掛網名稱2').value.trim();
+    if (!父項) { alert('請選擇隸屬的教具'); return; }
+  } else {
+    掛網名稱 = document.getElementById('am掛網名稱3').value.trim();
+    父項 = '教室設備';
+  }
+
+  const payload = {
+    token: getToken(),
+    data: {
+      '掛網名稱': 掛網名稱,
+      '父項': 父項,
+      '保管品號': document.getElementById('am保管品號').value.trim(),
+      '材料編號': document.getElementById('am材料編號').value.trim(),
+      '品名':     document.getElementById('am品名').value.trim(),
+      '規格':     document.getElementById('am規格').value.trim(),
+      '單位':     document.getElementById('am單位').value.trim(),
+      '數量':     document.getElementById('am數量').value || 1,
+      '取得日期': document.getElementById('am取得日期').value.trim(),
+      '廠牌/型號':document.getElementById('am廠牌型號').value.trim(),
+      '財產標籤': document.getElementById('am財產標籤').value,
+      '備註':     document.getElementById('am備註').value.trim(),
+      '分類':     document.getElementById('am分類').value,
+      '註記':     document.getElementById('am註記').value.trim(),
+    }
+  };
+
+  const rowIndex = document.getElementById('assetRowIndex').value;
+  payload.action = rowIndex ? 'updateAsset' : 'insertAsset';
+  if (rowIndex) payload.rowIndex = parseInt(rowIndex);
+
+  showLoad('儲存中...');
+  bootstrap.Modal.getInstance(document.getElementById('assetModal')).hide();
+  try {
+    const r = await fetch(API, { method:'POST', body: JSON.stringify(payload) });
+    const data = await r.json();
+    if (data.success) { toast('儲存成功', data.message||'財產資料已更新', 'success'); await loadAssets(); }
+    else toast('儲存失敗', data.message, 'danger');
+  } catch(e) { toast('連線失敗', e.message, 'danger'); }
+  finally { hideLoad(); }
+}
+
+async function confirmRetire() {
+  const rowIndex = parseInt(document.getElementById('assetRowIndex').value);
+  const name = document.getElementById('am掛網名稱').value || document.getElementById('am保管品號').value || document.getElementById('am規格').value;
+  if (!confirm(`確定要將「${name}」標記為報廢並移到已報廢清單？
+此動作無法復原。`)) return;
+  bootstrap.Modal.getInstance(document.getElementById('assetModal')).hide();
+  showLoad('處理中...');
+  try {
+    const r = await fetch(API, { method:'POST', body: JSON.stringify({ action:'retireAsset', token:getToken(), rowIndex }) });
+    const data = await r.json();
+    if (data.success) { toast('已報廢', data.message||'已移至已報廢清單', 'success'); await loadAssets(); }
+    else toast('操作失敗', data.message, 'danger');
+  } catch(e) { toast('連線失敗', e.message, 'danger'); }
+  finally { hideLoad(); }
+}
+
+// ── 報廢清單 ──────────────────────────────────────────────
+let retiredLoaded = false, showingRetired = false, retiredItems = [];
+
+function openRetiredModal(rowIndex) {
+  const r = retiredItems.find(a => a._rowIndex === rowIndex);
+  if (!r) return;
+  document.getElementById('retiredRowIndex').value = rowIndex;
+  const fields = {
+    'rm掛網名稱': r['掛網名稱']||'', 'rm保管品號': r['保管品號']||'',
+    'rm材料編號': r['材料編號']||'', 'rm品名': r['品名']||'',
+    'rm規格': r['規格']||'', 'rm單位': r['單位']||'',
+    'rm數量': r['數量']||1, 'rm取得日期': r['取得日期']||'',
+    'rm廠牌型號': r['廠牌/型號']||'', 'rm備註': r['備註']||'',
+    'rm報廢時間': r['報廢時間']||'', 'rm分類': r['分類']||'',
+    'rm財產標籤': r['財產標籤']||'', 'rm註記': r['註記']||''
+  };
+  Object.entries(fields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+  new bootstrap.Modal(document.getElementById('retiredModal')).show();
+}
+
+async function saveRetired() {
+  const rowIndex = parseInt(document.getElementById('retiredRowIndex').value);
+  const payload = {
+    action: 'updateRetired', token: getToken(), rowIndex,
+    data: {
+      '掛網名稱': document.getElementById('rm掛網名稱').value.trim(),
+      '保管品號': document.getElementById('rm保管品號').value.trim(),
+      '材料編號': document.getElementById('rm材料編號').value.trim(),
+      '品名':     document.getElementById('rm品名').value.trim(),
+      '規格':     document.getElementById('rm規格').value.trim(),
+      '單位':     document.getElementById('rm單位').value.trim(),
+      '數量':     document.getElementById('rm數量').value || 1,
+      '取得日期': document.getElementById('rm取得日期').value.trim(),
+      '廠牌/型號':document.getElementById('rm廠牌型號').value.trim(),
+      '備註':     document.getElementById('rm備註').value.trim(),
+      '報廢時間': document.getElementById('rm報廢時間').value.trim(),
+      '分類':     document.getElementById('rm分類').value,
+      '財產標籤': document.getElementById('rm財產標籤').value,
+      '註記':     document.getElementById('rm註記').value.trim(),
+    }
+  };
+  showLoad('儲存中...');
+  bootstrap.Modal.getInstance(document.getElementById('retiredModal')).hide();
+  try {
+    const r = await fetch(API, { method:'POST', body: JSON.stringify(payload) });
+    const data = await r.json();
+    if (data.success) { toast('儲存成功', data.message||'已更新', 'success'); retiredLoaded=false; loadRetired(); }
+    else toast('儲存失敗', data.message, 'danger');
+  } catch(e) { toast('連線失敗', e.message, 'danger'); }
+  finally { hideLoad(); }
+}
+
+
+function toggleRetiredView() {
+  showingRetired = !showingRetired;
+  const rv  = document.getElementById('retiredView');
+  const lv  = document.getElementById('assetListView');
+  const btn = document.getElementById('showRetiredBtn');
+  if (showingRetired) {
+    rv.style.display  = '';
+    lv.style.display  = 'none';
+    btn.className     = 'btn btn-sm btn-danger';
+    btn.innerHTML     = '<i class="bi bi-arrow-left me-1"></i>返回財產清單';
+    if (!retiredLoaded) loadRetired();
+  } else {
+    rv.style.display  = 'none';
+    lv.style.display  = '';
+    btn.className     = 'btn btn-sm btn-outline-danger';
+    btn.innerHTML     = '<i class="bi bi-archive me-1"></i>查看報廢項目';
+  }
+}
+
+async function loadRetired() {
+  if (!getToken()) return;
+  showLoad('載入報廢清單...');
+  try {
+    const r = await fetch(API + '?action=queryRetired&token=' + encodeURIComponent(getToken()));
+    const data = await r.json();
+    if (!data.success) { toast('載入失敗', data.message, 'danger'); return; }
+    retiredLoaded = true;
+    const items = data.data || [];
+    retiredItems = items;
+    document.getElementById('retiredCount').textContent = '共 ' + items.length + ' 筆';
+    // 已報廢統計由 GAS queryRetiredCount 負責，這裡不覆蓋
+
+    const catBadgeR = v => {
+      if (!v) return '';
+      const map = {'臨床技術類':'#dbeafe:#1d4ed8','急救訓練類':'#fee2e2:#991b1b','氣道處理類':'#d1fae5:#065f46','牙醫操作類':'#fef9c3:#854d0e','外科創傷類':'#ede9fe:#5b21b6','其他':'#f1f5f9:#475569','人體模型類':'#fce7f3:#9d174d','教室設備':'#e2e8f0:#334155'};
+      const c = map[v]||'#f1f5f9:#64748b'; const [bg,col]=c.split(':');
+      return `<span style="background:${bg};color:${col};padding:1px 7px;border-radius:10px;font-size:.72rem;font-weight:600">${v}</span>`;
+    };
+    const tagB = v => v==='有'
+      ? '<span style="background:#d1fae5;color:#065f46;padding:1px 7px;border-radius:10px;font-size:.72rem">有</span>'
+      : v==='無' ? '<span style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:10px;font-size:.72rem">無</span>' : '—';
+    const noteB = v => {
+      if (!v) return '';
+      const map = {'整組':'#dbeafe:#1d4ed8','主體':'#d1fae5:#065f46'};
+      const isAcc = /^配件/.test(v);
+      const c = map[v]||(isAcc?'#fef9c3:#854d0e':'#f1f5f9:#64748b');
+      const [bg,col]=c.split(':');
+      return `<span style="background:${bg};color:${col};padding:1px 7px;border-radius:10px;font-size:.7rem;font-weight:600">${v}</span>`;
+    };
+
+    // 排序：同財產清冊（分類→主體群組→主體在前配件在後）
+    const catOrder = ['急救訓練類','氣道處理類','臨床技術類','外科創傷類','人體模型類','牙醫操作類','其他','zzz_教室設備'];
+    const getRKey = r => {
+      const p = String(r['父項']||'').trim();
+      if (p === '教室設備') return ['zzz_教室設備','zzz_教室設備',0];
+      if (p) {
+        const parent = items.find(a => String(a['掛網名稱']||'').trim() === p);
+        const pCat = parent ? String(parent['分類']||'').trim() : '';
+        const ci = catOrder.indexOf(pCat); 
+        return [ci>=0?ci:catOrder.length-2, p, 1];
+      }
+      const n = String(r['掛網名稱']||r['品名']||'').trim();
+      const cat = String(r['分類']||'').trim();
+      const ci = catOrder.indexOf(cat);
+      return [ci>=0?ci:catOrder.length-2, n, 0];
+    };
+    const sortedR = [...items].sort((a,b) => {
+      const ka=getRKey(a), kb=getRKey(b);
+      if (ka[0]!==kb[0]) return ka[0]-kb[0];
+      if (ka[1]!==kb[1]) return ka[1].localeCompare(kb[1],'zh-TW');
+      return ka[2]-kb[2];
+    });
+
+    document.getElementById('retiredBody').innerHTML = sortedR.length
+      ? sortedR.map(r => {
+          const isRm = r['父項']==='教室設備';
+          const isPt = r['父項'] && r['父項']!=='教室設備';
+          const bg   = isPt ? 'background:#fffceb' : isRm ? 'background:#f8fafc' : 'background:#fff8f8';
+          const partSelf = [r['掛網名稱'], r['品名'], r['規格']].map(v=>String(v||'').trim()).find(v=>v) || '';
+          const displayName = isPt
+            ? `<span style="font-size:.78rem;color:#92400e"><i class="bi bi-arrow-return-right me-1"></i>${r['父項']||''}</span>${partSelf ? `<span style="color:#57534e;margin-left:6px">${partSelf}</span>` : ''}`
+            : (r['掛網名稱']||r['規格']||'—');
+          return `<tr style="${bg}">
+            <td style="text-align:center;white-space:nowrap"><span style="color:#dc2626;font-weight:600">${r['保管品號']||'—'}</span></td>
+            <td>${displayName}</td>
+            <td style="text-align:center">${catBadgeR(String(r['分類']||'').trim())}</td>
+            <td style="color:#64748b">${r['材料編號']||'—'}</td>
+            <td style="text-align:center">${r['單位']||''}</td>
+            <td style="text-align:center">${r['數量']||1}</td>
+            <td style="text-align:center;white-space:nowrap">${fmtROC(r['取得日期'])}</td>
+            <td style="text-align:center;white-space:nowrap;color:#dc2626;font-weight:600">${r['報廢時間']||'—'}</td>
+            <td style="text-align:center">${tagB(r['財產標籤'])}</td>
+            <td style="text-align:center">${noteB(r['註記'])}</td>
+            <td style="text-align:center"><button class="btn btn-xs btn-outline-secondary" style="font-size:.7rem;padding:1px 6px" onclick="openRetiredModal(${r._rowIndex})"><i class="bi bi-pencil"></i></button></td>
+          </tr>`;
+        }).join('')
+      : '<tr><td colspan="11" class="text-center text-muted py-4">目前沒有報廢項目</td></tr>';
+  } catch(e) { toast('連線失敗', e.message, 'danger'); }
+  finally { hideLoad(); }
 }
 
 // Init
