@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>臨床技能中心管理系統</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+:root{--ac:#2563eb;--bg:#f4f6fb;--top:#2563eb;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+/* Topbar */
+.topbar{height:54px;background:var(--top);display:flex;align-items:center;padding:0 20px;justify-content:space-between;flex-shrink:0;box-shadow:0 2px 6px rgba(37,99,235,.3);}
+.tb-brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:700;font-size:1rem;}
+.tb-brand .logo{width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.tb-brand .logo i{font-size:1.1rem;color:#fff;}
+.tb-right{display:flex;align-items:center;gap:12px;}
+.tb-time{color:rgba(255,255,255,.75);font-size:0.82rem;}
+.tb-admin{background:rgba(255,255,255,.15);color:#fff;font-size:0.8rem;padding:5px 14px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+/* Layout */
+.app-body{display:flex;flex:1;overflow:hidden;}
+/* Sidebar */
+.sidebar{width:215px;background:#fff;border-right:1px solid #e5e9f2;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;padding:12px 10px 20px;}
+.sb-section{font-size:0.67rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;font-weight:700;padding:14px 10px 5px;}
+.sb-link{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:8px;color:#64748b;font-size:0.85rem;cursor:pointer;margin-bottom:1px;text-decoration:none;transition:all .15s;position:relative;}
+.sb-link:hover{background:#f0f4ff;color:var(--ac);}
+.sb-link.active{background:#eff6ff;color:var(--ac);font-weight:600;}
+.sb-link i{font-size:.95rem;width:16px;text-align:center;flex-shrink:0;}
+.sb-badge{margin-left:auto;font-size:.65rem;background:var(--ac);color:#fff;padding:1px 7px;border-radius:10px;line-height:1.6;}
+.sb-dev{margin-left:auto;font-size:.62rem;background:#f1f5f9;color:#94a3b8;padding:2px 7px;border-radius:10px;}
+/* Main */
+.main{flex:1;overflow-y:auto;padding:22px 26px;}
+.panel{display:none;}.panel.active{display:block;}
+/* Page title */
+.pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.pg-title{display:flex;align-items:center;gap:8px;}
+.pg-title h5{font-size:1.05rem;font-weight:700;margin:0;color:#1e293b;}
+.pg-title .pg-icon{width:34px;height:34px;background:#eff6ff;border-radius:9px;display:flex;align-items:center;justify-content:center;}
+.pg-title .pg-icon i{color:var(--ac);font-size:1rem;}
+.pg-sub{font-size:.78rem;color:#94a3b8;margin-top:1px;}
+/* Card */
+.card{border:none;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);background:#fff;}
+.card-hd{padding:13px 18px;border-bottom:1px solid #f1f5f9;font-weight:600;font-size:.88rem;color:#334155;display:flex;align-items:center;justify-content:space-between;}
+.card-bd{padding:18px;}
+/* Status badges */
+.st{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.73rem;font-weight:600;white-space:nowrap;}
+.st-借用中{background:#dbeafe;color:#1d4ed8;}
+.st-借用教室{background:#fef9c3;color:#854d0e;}
+.st-即將到期{background:#ffedd5;color:#9a3412;}
+.st-今日到期{background:#fee2e2;color:#991b1b;}
+.st-已過期{background:#fce7f3;color:#9d174d;}
+.st-已結案{background:#e5e7eb;color:#4b5563;}
+.st-取消{background:#e5e7eb;color:#4b5563;}
+.st-未借出{background:#ede9fe;color:#5b21b6;}
+/* Status filter tabs - match badge colors */
+.stf-btn{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:20px;padding:4px 14px;font-size:.78rem;color:#94a3b8;cursor:pointer;font-weight:500;transition:all .15s;}
+.stf-btn:hover{border-color:#cbd5e1;color:#475569;}
+.stf-btn .cnt{font-size:.7rem;margin-left:4px;}
+.stf-btn[data-status=""].active,.stf-btn[data-status="all"].active{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+.stf-btn[data-status="借用中"].active{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd;}
+.stf-btn[data-status="借用教室"].active{background:#fef9c3;color:#854d0e;border-color:#fde047;}
+.stf-btn[data-status="今日到期"].active{background:#fee2e2;color:#991b1b;border-color:#fca5a5;}
+.stf-btn[data-status="即將到期"].active{background:#ffedd5;color:#9a3412;border-color:#fdba74;}
+.stf-btn[data-status="已過期"].active{background:#fce7f3;color:#9d174d;border-color:#f9a8d4;}
+.stf-btn[data-status="已結案"].active{background:#e5e7eb;color:#4b5563;border-color:#9ca3af;}
+.stf-btn[data-status="取消"].active{background:#e5e7eb;color:#4b5563;border-color:#9ca3af;}
+.stf-btn[data-status="未借出"].active{background:#ede9fe;color:#5b21b6;border-color:#a78bfa;}
+/* Tab buttons */
+.tab-bar{display:flex;gap:0;border-bottom:1px solid #f1f5f9;padding:0 8px;}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:10px 18px;font-size:.85rem;color:#64748b;cursor:pointer;font-weight:500;transition:all .15s;}
+.tab-btn.active{color:var(--ac);border-bottom-color:var(--ac);}
+/* Table */
+.table{font-size:.81rem;margin:0;}
+.table th{font-size:.8rem;font-weight:600;color:#64748b;background:#f8fafc;white-space:nowrap;border-bottom:1px solid #e2e8f0;padding:9px 12px;}
+.table td{vertical-align:middle;color:#334155;border-bottom:1px solid #f1f5f9;padding:8px 12px;font-size:.85rem;}
+.table tbody tr:hover td{background:#f8faff;}
+.id-pill{color:var(--ac);font-weight:600;font-size:.78rem;cursor:pointer;}
+/* Editable */
+.ec{cursor:pointer;}
+.ec:hover{background:#eff6ff!important;}
+.ec.editing{padding:0!important;}
+.ec input,.ec select{border:none;outline:2px solid var(--ac);width:100%;min-width:60px;font-size:.79rem;padding:5px 7px;background:#eff6ff;border-radius:4px;}
+.ew{background:#fffbeb!important;}
+.em{background:#eff6ff!important;}
+/* Filter card */
+.filter-card{background:#fff;border-radius:12px;padding:14px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:14px;}
+/* Status filter tabs */
+.stf{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+/* 未選中：刷淡背景 + 深灰文字 */
+.stf-btn[data-status=""]{background:#eff6ff;color:#475569;border-color:#bfdbfe;}
+.stf-btn[data-status="借用中"]{background:#eff6ff;color:#475569;border-color:#bfdbfe;}
+.stf-btn[data-status="借用教室"]{background:#fefce8;color:#475569;border-color:#fde68a;}
+.stf-btn[data-status="今日到期"]{background:#fff5f5;color:#475569;border-color:#fecaca;}
+.stf-btn[data-status="即將到期"]{background:#fff7ed;color:#475569;border-color:#fed7aa;}
+.stf-btn[data-status="已過期"]{background:#fdf2f8;color:#475569;border-color:#fbcfe8;}
+.stf-btn[data-status="已結案"]{background:#f9fafb;color:#475569;border-color:#e5e7eb;}
+.stf-btn[data-status="取消"]{background:#f9fafb;color:#475569;border-color:#e5e7eb;}
+.stf-btn[data-status="未借出"]{background:#f5f3ff;color:#475569;border-color:#ddd6fe;}
+/* Dev panel */
+.dev-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:320px;color:#94a3b8;gap:12px;}
+.dev-panel i{font-size:3rem;color:#cbd5e1;}
+.dev-panel h6{color:#64748b;font-weight:600;margin:0;}
+/* Loading */
+#lo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9998;align-items:center;justify-content:center;}
+#lo.show{display:flex;}
+.lo-box{background:#fff;border-radius:14px;padding:28px 36px;text-align:center;}
+.lo-box p{margin:10px 0 0;font-size:.88rem;color:#64748b;}
+.toast-container{z-index:9999;}
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+/* Login */
+#loginPage{position:fixed;inset:0;background:linear-gradient(160deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);display:flex;align-items:center;justify-content:center;z-index:99999;}
+#loginPage.hidden{display:none;}
+.login-box{background:#fff;border-radius:20px;padding:44px 48px;width:400px;box-shadow:0 24px 64px rgba(0,0,0,.35);}
+.login-logo{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:10px;}
+.login-logo .logo{width:52px;height:52px;background:var(--ac);border-radius:14px;display:flex;align-items:center;justify-content:center;}
+.login-logo .logo i{font-size:1.6rem;color:#fff;}
+.login-logo span{font-size:1.35rem;font-weight:700;color:#1e293b;text-align:center;}
+.login-title{font-size:.85rem;color:#94a3b8;text-align:center;margin-bottom:28px;margin-top:4px;}
+.login-divider{height:1px;background:#f1f5f9;margin-bottom:24px;}
+.login-box .form-label{font-size:.82rem;font-weight:600;color:#475569;}
+.login-box .form-control{border-radius:10px;font-size:.88rem;padding:10px 14px;border-color:#e2e8f0;background:#f8fafc;}
+.login-box .form-control:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(37,99,235,.12);background:#fff;}
+.login-btn{width:100%;padding:12px;border-radius:10px;font-size:.92rem;font-weight:600;background:var(--ac);border:none;color:#fff;margin-top:12px;cursor:pointer;transition:all .15s;letter-spacing:.02em;}
+.login-btn:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,.3);}
+.login-btn:disabled{opacity:.7;transform:none;box-shadow:none;}
+.login-error{color:#dc2626;font-size:.8rem;margin-top:10px;text-align:center;min-height:20px;}
+.login-footer{text-align:center;font-size:.75rem;color:#cbd5e1;margin-top:20px;}
+</style>
+</head>
+<body>
+
+<!-- Login Page -->
+<div id="loginPage">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo"><i class="bi bi-hospital-fill"></i></div>
+      <span>臨床技能中心管理系統</span>
+    </div>
+    <div class="login-title">Chi Mei Hospital, Liouying</div>
+    <div class="login-divider"></div>
+    <div class="mb-3">
+      <label class="form-label"><i class="bi bi-person me-1"></i>帳號</label>
+      <input type="text" class="form-control" id="loginUser" placeholder="請輸入帳號" autocomplete="username">
+    </div>
+    <div class="mb-3">
+      <label class="form-label"><i class="bi bi-lock me-1"></i>密碼</label>
+      <input type="password" class="form-control" id="loginPass" placeholder="請輸入密碼" autocomplete="current-password">
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button class="login-btn" id="loginBtn">登　入</button>
+    <div class="login-footer">© 2026 柳營奇美 臨床技能中心　僅限授權人員使用</div>
+  </div>
+</div>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="tb-brand">
+    <div class="logo"><i class="bi bi-hospital-fill"></i></div>
+    <span>臨床技能中心管理系統</span>
+  </div>
+  <div class="tb-right">
+    <span class="tb-time" id="clock"></span>
+    <div class="tb-admin" style="cursor:pointer" onclick="doLogout()" title="點擊登出"><i class="bi bi-person-circle"></i><span id="currentUser">管理員</span><i class="bi bi-box-arrow-right ms-1" style="font-size:.75rem"></i></div>
+  </div>
+</div>
+
+<div class="app-body">
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sb-section">主要功能</div>
+  <a class="sb-link" onclick="showPanel('import',this)"><i class="bi bi-cloud-upload"></i>匯入資料</a>
+  <a class="sb-link active" onclick="showPanel('query',this)"><i class="bi bi-card-list"></i>借用管理<span class="sb-badge" id="sb-count" style="display:none">0</span></a>
+  <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-tools"></i>設備維修<span class="sb-dev">開發中</span></a>
+  <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-box-seam"></i>耗材管理<span class="sb-dev">開發中</span></a>
+  <div class="sb-section">行政管理</div>
+  <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-archive"></i>財產總覽<span class="sb-dev">開發中</span></a>
+  <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-clipboard2-data"></i>耗材清單<span class="sb-dev">開發中</span></a>
+  <div class="sb-section">系統設定</div>
+  <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-gear"></i>系統設定<span class="sb-dev">開發中</span></a>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+<!-- 匯入資料 -->
+<div id="panel-import" class="panel">
+  <div class="pg-head">
+    <div class="pg-title">
+      <div class="pg-icon"><i class="bi bi-cloud-upload"></i></div>
+      <div><h5>匯入資料</h5><div class="pg-sub">從院內系統貼上或上傳 Excel</div></div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-paste" onclick="switchTab('paste')"><i class="bi bi-clipboard me-1"></i>貼上文字</button>
+      <button class="tab-btn" id="tab-excel" onclick="switchTab('excel')"><i class="bi bi-file-earmark-excel me-1"></i>上傳 Excel</button>
+    </div>
+    <div class="card-bd">
+      <div id="import-paste">
+        <label class="form-label" style="font-size:.85rem;font-weight:600;color:#475569">從院內系統複製借用資料後貼到下方</label>
+        <textarea id="pasteInput" class="form-control font-monospace" rows="5" style="font-size:.8rem;resize:vertical" placeholder="借用單位&#9;借用人&#9;場地&#9;借用日&#9;借用時段&#9;..."></textarea>
+        <div class="d-flex gap-2 mt-2 align-items-center">
+          <button class="btn btn-primary btn-sm" onclick="parsePaste()"><i class="bi bi-table me-1"></i>解析資料</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="clearPaste()"><i class="bi bi-x-circle me-1"></i>清除</button>
+          <span style="font-size:.78rem;color:#94a3b8">系統自動拆解欄位並比對重複</span>
+        </div>
+      </div>
+      <div id="import-excel" style="display:none">
+        <label class="form-label" style="font-size:.85rem;font-weight:600;color:#475569">上傳院內系統匯出的 Excel 或 CSV 檔案（可包含多天資料）</label>
+        <input type="file" class="form-control form-control-sm" id="excelFile" accept=".xlsx,.xls,.csv">
+        <div class="mt-2">
+          <button class="btn btn-primary btn-sm" onclick="parseExcel()"><i class="bi bi-file-earmark-arrow-up me-1"></i>解析 Excel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 解析結果 -->
+  <div id="parseResult" style="display:none">
+    <div class="card">
+      <div class="card-hd">
+        <span><i class="bi bi-list-check me-2" style="color:var(--ac)"></i>解析結果預覽</span>
+        <span id="parseCount" style="font-size:.78rem;color:#94a3b8"></span>
+      </div>
+      <div style="padding:10px 18px 6px">
+        <div class="alert alert-info py-2 mb-2" style="font-size:.8rem">
+          <i class="bi bi-info-circle me-1"></i>點擊任何欄位可直接修改。
+          <span class="badge bg-warning text-dark" style="font-size:.72rem">⚠ 職員別</span> 表示系統自動帶入，請確認。
+          相同人事號可批次修改職員別／職類別。
+        </div>
+        <!-- 批次修改 -->
+        <div class="d-flex gap-2 align-items-center mb-2" id="batchBar" style="display:none!important">
+          <span style="font-size:.8rem;color:#64748b">批次修改選取筆數：</span>
+          <span id="batchCount" style="font-size:.8rem;font-weight:600;color:var(--ac)">0</span>
+          <select class="form-select form-select-sm" id="batch職員別" style="width:110px">
+            <option value="">職員別</option>
+            <option>醫師</option><option>醫技</option><option>護理</option><option>行政</option>
+          </select>
+          <select class="form-select form-select-sm" id="batch職類別" style="width:130px">
+            <option value="">職類別</option>
+            <option>西醫師</option><option>牙醫師</option><option>中醫師</option><option>藥師</option>
+            <option>醫事放射師</option><option>醫事檢驗師</option><option>護理師</option>
+            <option>營養師</option><option>呼吸治療師</option><option>物理治療師</option>
+            <option>職能治療師</option><option>臨床心理師</option><option>語言治療師</option>
+            <option>聽力師</option><option>其他</option>
+          </select>
+          <button class="btn btn-warning btn-sm" onclick="applyBatch()"><i class="bi bi-check2-all me-1"></i>套用</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="clearBatch()">取消選取</button>
+        </div>
+      </div>
+      <div class="table-responsive" style="max-height:400px;overflow-y:auto;">
+        <table class="table table-hover table-bordered" id="previewTable">
+          <thead style="position:sticky;top:0;z-index:1">
+            <tr>
+              <th><input type="checkbox" id="chkAll" onclick="toggleAllCheck(this)"></th>
+              <th>比對</th><th>單位</th><th>人事號</th><th>姓名</th><th>場地</th>
+              <th>日期(起)</th><th>時段</th><th>教具名稱</th><th>組數</th>
+              <th>上課對象</th><th>職員別</th><th>職類別</th><th>備註</th>
+            </tr>
+          </thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+      <div style="padding:12px 18px;border-top:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+        <div class="d-flex gap-2">
+          <span class="badge bg-primary" style="font-size:.72rem">新增</span>
+          <span class="badge bg-secondary" style="font-size:.72rem">已存在（略過）</span>
+          <span class="badge bg-light text-secondary border" style="font-size:.72rem">無教具（預設不勾選）</span>
+          <span class="badge bg-warning text-dark" style="font-size:.72rem">⚠ 請確認</span>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-danger btn-sm" onclick="deleteSelectedRows()" title="從預覽清單移除已勾選的列（不會影響已儲存資料）"><i class="bi bi-trash me-1"></i>刪除選取</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="cancelImport()">取消</button>
+          <button class="btn btn-success btn-sm" onclick="confirmImport()"><i class="bi bi-cloud-upload me-1"></i>確認儲存到 Google Sheets</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 借用管理 -->
+<div id="panel-query" class="panel active">
+  <div class="pg-head">
+    <div class="pg-title">
+      <div class="pg-icon"><i class="bi bi-card-list"></i></div>
+      <div><h5>借用管理</h5><div class="pg-sub">查詢、編輯、匯出借用紀錄</div></div>
+    </div>
+    <button class="btn btn-outline-success btn-sm" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i>匯出 Excel</button>
+  </div>
+
+  <!-- 狀態快篩 -->
+  <div class="stf" id="stfBar">
+    <button class="stf-btn active" data-status="" onclick="setStf('',this)">全部<span class="cnt" id="cnt-all">—</span></button>
+    <button class="stf-btn" data-status="借用中" onclick="setStf('借用中',this)">借用中<span class="cnt" id="cnt-借用中">—</span></button>
+    <button class="stf-btn" data-status="借用教室" onclick="setStf('借用教室',this)">借用教室<span class="cnt" id="cnt-借用教室">—</span></button>
+    <button class="stf-btn" data-status="今日到期" onclick="setStf('今日到期',this)">今日到期<span class="cnt" id="cnt-今日到期">—</span></button>
+    <button class="stf-btn" data-status="即將到期" onclick="setStf('即將到期',this)">即將到期<span class="cnt" id="cnt-即將到期">—</span></button>
+    <button class="stf-btn" data-status="已過期" onclick="setStf('已過期',this)">已過期<span class="cnt" id="cnt-已過期">—</span></button>
+    <button class="stf-btn" data-status="已結案" onclick="setStf('已結案',this)">已結案<span class="cnt" id="cnt-已結案">—</span></button>
+    <button class="stf-btn" data-status="取消" onclick="setStf('取消',this)">取消<span class="cnt" id="cnt-取消">—</span></button>
+    <button class="stf-btn" data-status="未借出" onclick="setStf('未借出',this)">未借出<span class="cnt" id="cnt-未借出">—</span></button>
+  </div>
+
+  <!-- 篩選列 -->
+  <div class="filter-card">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-2">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">借用日（起）</label>
+        <input type="date" class="form-control form-control-sm" id="queryStart">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">借用日（迄）</label>
+        <input type="date" class="form-control form-control-sm" id="queryEnd">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">姓名 / 人事號</label>
+        <input type="text" class="form-control form-control-sm" id="queryKeyword" placeholder="輸入關鍵字搜尋">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">課程類別</label>
+        <select class="form-select form-select-sm" id="queryCourse">
+          <option value="">全部</option>
+          <option>臨床技能</option><option>OSCE</option><option>其他</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary btn-sm" onclick="queryRecords()"><i class="bi bi-search me-1"></i>查詢</button>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-secondary btn-sm" onclick="queryToday()"><i class="bi bi-calendar-day me-1"></i>查今天</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 批次操作列 -->
+  <div id="batchQueryBar" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 16px;margin-bottom:12px;">
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+      <span style="font-size:.82rem;color:#1d4ed8;font-weight:600"><i class="bi bi-check2-square me-1"></i>已選取 <span id="bqCount">0</span> 筆</span>
+      <div style="width:1px;height:20px;background:#bfdbfe;margin:0 4px"></div>
+      <span style="font-size:.8rem;color:#475569">批次修改：</span>
+      <select class="form-select form-select-sm" id="bq借出者" style="width:120px">
+        <option value="">借出者...</option>
+        <option>沈俞汎</option><option>王馨珮</option><option>歐馨憶</option><option>楊琇淳</option>
+      </select>
+      <input type="date" class="form-control form-control-sm" id="bq日期起" style="width:150px" title="日期(起)">
+      <span style="font-size:.8rem;color:#64748b">～</span>
+      <input type="date" class="form-control form-control-sm" id="bq日期迄" style="width:150px" title="日期(迄)">
+      <select class="form-select form-select-sm" id="bq點收者" style="width:120px">
+        <option value="">點收者...</option>
+        <option>沈俞汎</option><option>王馨珮</option><option>歐馨憶</option><option>楊琇淳</option>
+      </select>
+      <select class="form-select form-select-sm" id="bq職員別" style="width:110px">
+        <option value="">職員別...</option>
+        <option>醫師</option><option>醫技</option><option>護理</option><option>行政</option>
+      </select>
+      <select class="form-select form-select-sm" id="bq職類別" style="width:130px">
+        <option value="">職類別...</option>
+        <option>西醫師</option><option>牙醫師</option><option>中醫師</option><option>藥師</option>
+        <option>醫事放射師</option><option>醫事檢驗師</option><option>護理師</option>
+        <option>營養師</option><option>呼吸治療師</option><option>物理治療師</option>
+        <option>職能治療師</option><option>臨床心理師</option><option>語言治療師</option>
+        <option>聽力師</option><option>其他</option>
+      </select>
+      <select class="form-select form-select-sm" id="bq完成狀態" style="width:120px">
+        <option value="">完成狀態...</option>
+        <option>已結案</option><option>取消</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="applyBatchQuery()"><i class="bi bi-check2-all me-1"></i>套用</button>
+      <button class="btn btn-outline-secondary btn-sm" onclick="clearBatchQuery()">取消選取</button>
+    </div>
+  </div>
+
+  <!-- 結果表格 -->
+  <div class="card">
+    <div class="card-hd">
+      <span><i class="bi bi-table me-2" style="color:var(--ac)"></i>借用清單</span>
+      <span id="queryCount" style="font-size:.78rem;color:#94a3b8">尚未查詢</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover table-bordered">
+        <thead>
+          <tr>
+            <th style="width:36px"><input type="checkbox" id="bqChkAll" onclick="toggleBqAll(this)"></th>
+            <th>狀態</th><th>單位</th><th>人事號</th><th>姓名</th>
+            <th>教具名稱</th><th>組數</th><th>日期(起)</th><th>日期(迄)</th>
+            <th>時段</th><th>分機</th><th>手機</th><th>課程名稱</th><th>場地</th><th>職員別</th>
+            <th>職類別</th><th>借出者</th><th>備</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="queryBody">
+          <tr><td colspan="17" class="text-center text-muted py-5" style="font-size:.85rem">請設定條件後按查詢，或點「查今天」</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- 分頁 -->
+    <div style="padding:10px 18px;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:.78rem;color:#94a3b8" id="pageInfo"></span>
+      <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
+    </div>
+  </div>
+</div>
+
+<!-- 開發中 -->
+<div id="panel-dev" class="panel">
+  <div class="dev-panel">
+    <i class="bi bi-tools"></i>
+    <h6>此功能開發中</h6>
+    <p style="font-size:.85rem;color:#94a3b8;margin:0">敬請期待，將於後續版本上線</p>
+  </div>
+</div>
+
+</div><!-- main -->
+</div><!-- app-body -->
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius:14px;border:none;">
+      <div class="modal-header" style="border-bottom:1px solid #f1f5f9;">
+        <h6 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2" style="color:var(--ac)"></i>編輯借用紀錄</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editRowIndex">
+        <div class="row g-3" style="font-size:.85rem">
+          <div class="col-md-4"><label class="form-label fw-semibold">借出者</label>
+            <select class="form-select form-select-sm" id="edit借出者"><option value="">請選擇</option><option>沈俞汎</option><option>王馨珮</option><option>歐馨憶</option><option>楊琇淳</option></select></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">單位</label><input type="text" class="form-control form-control-sm" id="edit單位"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">人事號</label><input type="text" class="form-control form-control-sm" id="edit人事號"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">姓名</label><input type="text" class="form-control form-control-sm" id="edit姓名"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">場地</label><input type="text" class="form-control form-control-sm" id="edit場地"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">日期(起)</label><input type="date" class="form-control form-control-sm" id="edit日期起"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">日期(迄)</label><input type="date" class="form-control form-control-sm" id="edit日期迄"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">時段(起)</label><input type="time" class="form-control form-control-sm" id="edit時段起"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">時段(迄)</label><input type="time" class="form-control form-control-sm" id="edit時段迄"></div>
+          <div class="col-md-8"><label class="form-label fw-semibold">會議名稱</label><input type="text" class="form-control form-control-sm" id="edit會議名稱"></div>
+          <div class="col-md-2"><label class="form-label fw-semibold">院內人數</label><input type="number" class="form-control form-control-sm" id="edit院內人數"></div>
+          <div class="col-md-2"><label class="form-label fw-semibold">院外人數</label><input type="number" class="form-control form-control-sm" id="edit院外人數"></div>
+          <div class="col-md-3"><label class="form-label fw-semibold">分機</label><input type="text" class="form-control form-control-sm" id="edit分機"></div>
+          <div class="col-md-3"><label class="form-label fw-semibold">手機</label><input type="text" class="form-control form-control-sm" id="edit手機"></div>
+          <div class="col-md-5"><label class="form-label fw-semibold">教具名稱</label><input type="text" class="form-control form-control-sm" id="edit教具名稱"></div>
+          <div class="col-md-1"><label class="form-label fw-semibold">組數</label><input type="number" class="form-control form-control-sm" id="edit組數"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">課程類別</label><input type="text" class="form-control form-control-sm" id="edit課程類別"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">上課對象</label><input type="text" class="form-control form-control-sm" id="edit上課對象"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">職員別</label>
+            <select class="form-select form-select-sm" id="edit職員別"><option value="">請選擇</option><option>醫師</option><option>醫技</option><option>護理</option><option>行政</option></select></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">職類別</label>
+            <select class="form-select form-select-sm" id="edit職類別"><option value="">請選擇</option><option>西醫師</option><option>牙醫師</option><option>中醫師</option><option>藥師</option><option>醫事放射師</option><option>醫事檢驗師</option><option>護理師</option><option>營養師</option><option>呼吸治療師</option><option>物理治療師</option><option>職能治療師</option><option>臨床心理師</option><option>語言治療師</option><option>聽力師</option><option>其他</option></select></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">完成狀態</label>
+            <select class="form-select form-select-sm" id="edit完成狀態"><option value="">—</option><option>已結案</option><option>取消</option></select></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">點收者</label>
+            <select class="form-select form-select-sm" id="edit點收者"><option value="">請選擇</option><option>沈俞汎</option><option>王馨珮</option><option>歐馨憶</option><option>楊琇淳</option></select></div>
+          <div class="col-12"><label class="form-label fw-semibold">備註</label><textarea class="form-control form-control-sm" id="edit備註" rows="2"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid #f1f5f9;">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="saveEdit()"><i class="bi bi-save me-1"></i>儲存變更</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div id="lo">
+  <div class="lo-box">
+    <div class="spinner-border text-primary"></div>
+    <p id="loText">處理中...</p>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="toast" class="toast"><div class="toast-header" id="toastH"><i class="bi me-2" id="toastIcon"></i><strong class="me-auto" id="toastT"></strong><button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button></div><div class="toast-body" id="toastB"></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const API='https://script.google.com/macros/s/AKfycbwBFElgV_PWDBZRU8jl7ABj7qxPg6R0oW6NCoyp7cf7xTlYfuVo_GZANbd5S39mMEhU/exec';
+let parsedRows=[],queryResults=[],filteredResults=[],currentPage=1,pageSize=20,currentStf='';
+
+// ===== 登入系統 =====
+let _token = '';
+
+function getToken(){ return _token || sessionStorage.getItem('authToken') || ''; }
+
+async function doLogin(){
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  const errEl = document.getElementById('loginError');
+  const btn = document.querySelector('.login-btn');
+  if(!user||!pass){errEl.textContent='請輸入帳號和密碼';return;}
+  errEl.textContent='';
+  btn.textContent='驗證中...';btn.disabled=true;
+  try{
+    const resp = await fetch(API, {method:'POST', body:JSON.stringify({action:'login', username:user, password:pass})});
+    const r = await resp.json();
+    if(r.success){
+      _token = r.token;
+      sessionStorage.setItem('authToken', r.token);
+      sessionStorage.setItem('loginName', r.name);
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('currentUser').textContent = r.name;
+    } else {
+      errEl.textContent = r.message || '帳號或密碼錯誤';
+    }
+  }catch(e){
+    errEl.textContent = '連線失敗，請稍後再試';
+  }
+  btn.innerHTML='<i class="bi bi-box-arrow-in-right me-2"></i>登入';
+  btn.disabled=false;
+}
+
+function doLogout(){
+  if(!confirm('確定要登出嗎？')) return;
+  _token='';
+  sessionStorage.removeItem('authToken');
+  sessionStorage.removeItem('loginName');
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginPage').classList.remove('hidden');
+}
+
+// 按 Enter 登入
+document.addEventListener('keydown', e=>{
+  if(e.key==='Enter' && !document.getElementById('loginPage').classList.contains('hidden')){
+    doLogin();
+  }
+});
+
+// 檢查是否已登入（session 保留）
+window.addEventListener('DOMContentLoaded', ()=>{
+  // 綁定登入按鈕
+  document.getElementById('loginBtn').addEventListener('click', doLogin);
+
+  // 檢查 session
+  const savedToken = sessionStorage.getItem('authToken');
+  const savedName  = sessionStorage.getItem('loginName');
+  if(savedToken && savedName){
+    _token = savedToken;
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('currentUser').textContent = savedName;
+  }
+});
+
+// Clock
+setInterval(()=>{
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'})+' '+
+    n.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+},1000);
+
+// Panel
+function showPanel(name,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('active'));
+  if(el)el.classList.add('active');
+  if(name==='query'&&!queryResults.length) queryToday();
+}
+
+// Import tabs
+function switchTab(t){
+  document.getElementById('import-paste').style.display=t==='paste'?'':'none';
+  document.getElementById('import-excel').style.display=t==='excel'?'':'none';
+  document.getElementById('tab-paste').classList.toggle('active',t==='paste');
+  document.getElementById('tab-excel').classList.toggle('active',t==='excel');
+  document.getElementById('parseResult').style.display='none';
+}
+
+// Loading / Toast
+function showLoad(t){document.getElementById('loText').textContent=t||'處理中...';document.getElementById('lo').classList.add('show');}
+function hideLoad(){document.getElementById('lo').classList.remove('show');}
+function toast(title,msg,type){
+  const map={success:['bg-success','bi-check-circle'],danger:['bg-danger','bi-exclamation-triangle'],info:['bg-primary','bi-info-circle']};
+  const[bg,ic]=map[type]||map.info;
+  document.getElementById('toastH').className='toast-header '+bg+' text-white';
+  document.getElementById('toastIcon').className='bi '+ic+' me-2';
+  document.getElementById('toastT').textContent=title;
+  document.getElementById('toastB').textContent=msg;
+  new bootstrap.Toast(document.getElementById('toast'),{delay:4000}).show();
+}
+
+// Helpers
+function fmtDate(v){
+  if(!v)return'';
+  if(typeof v==='number'){const d=new Date(Math.round((v-25569)*86400*1000));return d.toISOString().split('T')[0];}
+  const s=String(v).trim();
+  const m=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m)return`${m[3]}-${m[1]}-${m[2]}`;
+  const m2=s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);if(m2)return`${m2[1]}-${m2[2].padStart(2,'0')}-${m2[3].padStart(2,'0')}`;
+  return s;
+}
+function fmtTime(v){
+  if(!v)return'';
+  if(typeof v==='number'){const t=Math.round(v*24*60);return`${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;}
+  return String(v).trim();
+}
+function parseBorrower(raw){
+  const s=String(raw||'').trim();if(!s)return{id:'',name:''};
+  if(/^R\d/.test(s)){const p=s.split(/\s+/);return{id:p[0],name:p[1]||p[0]};}
+  const p=s.split(/\s+/);
+  return p.length>=2?{id:p[p.length-1],name:p.slice(0,-1).join('')}:{id:s,name:s};
+}
+function parseTools(raw){
+  if(!raw)return[];
+  const s=String(raw).trim();
+  // CSV格式：教具之間用空白分隔（每個教具結尾是數字括號如(1)(2)）
+  // 判斷是否為 CSV 格式（無逗號但有多個括號數字）
+  if(!s.includes(',') && (s.match(/\(\d+\)/g)||[]).length > 1){
+    // 用 )(  後面接中文或英文字母 來切割
+    const parts = s.split(/(?<=\(\d+\))(?=[^\s(])/);
+    return parts.map(t=>t.trim()).filter(Boolean).map(t=>{
+      const m=t.match(/^(.+?)\((\d+)\)$/);
+      return m?{name:m[1].trim(),qty:parseInt(m[2])}:{name:t,qty:1};
+    });
+  }
+  // 一般逗號分隔格式
+  return s.split(',').map(t=>t.trim()).filter(Boolean).map(t=>{
+    const m=t.match(/^(.+?)\((\d+)\)$/);return m?{name:m[1].trim(),qty:parseInt(m[2])}:{name:t,qty:1};
+  });
+}
+function autoJob(target){
+  if(String(target).includes('護理人員'))return{職類別:'護理師',職員別:'護理'};
+  return{職類別:'',職員別:''};
+}
+function parseRowCols(cols){
+  const b=parseBorrower(cols[1]);
+  const tp=String(cols[4]||'').split('~');
+  const tools=parseTools(cols[11]);
+  const aj=autoJob(cols[15]);
+  const base={
+    單位:cols[0]||'',人事號:b.id,姓名:b.name,場地:cols[2]||'',
+    '日期(起)':fmtDate(cols[3]),'日期(迄)':'',
+    '時段(起)':(tp[0]||'').trim(),'時段(迄)':(tp[1]||'').trim(),
+    會議名稱:cols[5]||'',院內人數:cols[6]||'',院外人數:cols[7]||'',
+    分機:cols[9]||'',手機:cols[10]||'',
+    課程類別:cols[13]||'',上課對象:cols[15]||'',
+    職員別:cols[18]||aj.職員別,職類別:cols[17]||aj.職類別,
+    備註:cols[16]||'',完成狀態:'',借出者:'',點收者:'',
+    _aj:aj,_origJob:cols[18]||'',
+  };
+  if(!tools.length)tools.push({name:'',qty:''});
+  return tools.map(t=>({...base,教具名稱:t.name,組數:t.qty}));
+}
+
+// Parse paste
+// 解析院內系統匯出的 Excel 格式（欄位順序不同）
+function parseExcelRow(cols){
+  // Excel 欄位：[0]借用單位 [1]借用人 [2]場地 [3]借用日 [4]借用開始時間 [5]借用結束時間
+  //             [6]借用時段 [7]會議名稱 [8]院內人數 [9]院外人數 [10]單位借用時數
+  //             [11]分機 [12]手機 [13]借用模具 [14]借用設備 [15]課程類別
+  //             [16]講師 [17]上課對象 [18]備註 [19]職類別 [20]職員別
+  const b = parseBorrower(cols[1]);
+  const timeParts = String(cols[6]||'').split('~');
+  const tools = parseTools(cols[13]);
+  const aj = autoJob(cols[17]);
+  // 清除 &nbsp; 和多餘空白
+  const cleanNote = String(cols[18]||'').replace(/&nbsp;/g,'').trim();
+  const base = {
+    單位: String(cols[0]||'').trim(),
+    人事號: b.id,
+    姓名: b.name,
+    場地: String(cols[2]||'').trim(),
+    '日期(起)': fmtDate(cols[3]),
+    '日期(迄)': '',
+    '時段(起)': (timeParts[0]||'').trim(),
+    '時段(迄)': (timeParts[1]||'').trim(),
+    會議名稱: String(cols[7]||'').trim(),
+    院內人數: cols[8]||'',
+    院外人數: cols[9]||'',
+    分機: String(cols[11]||'').trim(),
+    手機: String(cols[12]||'').trim(),
+    課程類別: String(cols[15]||'').trim(),
+    上課對象: String(cols[17]||'').trim(),
+    職員別: cols[20]||aj.職員別,
+    職類別: cols[19]||aj.職類別,
+    備註: cleanNote,
+    完成狀態:'', 借出者:'', 點收者:'',
+    _aj: aj, _origJob: cols[20]||'',
+  };
+  if(!tools.length) tools.push({name:'',qty:''});
+  return tools.map(t=>({...base, 教具名稱:t.name, 組數:t.qty}));
+}
+
+function mergeRows(rows){
+  // 若同一人事號＋日期＋時段，同時有「教具名稱為空」與「教具名稱不為空」的資料，
+  // 捨棄教具名稱為空的那筆（院內系統有時會多輸出一列空教具）
+  const sigMap={};
+  rows.forEach(r=>{
+    const sig=`${r.人事號}|${r['日期(起)']}|${r['時段(起)']}|${r['時段(迄)']}`;
+    if(!sigMap[sig]) sigMap[sig]=[];
+    sigMap[sig].push(r);
+  });
+  // 若同人事號+日期+時段下，同時有「有教具」和「無教具」的筆，
+  // 將無教具那筆標記 _noTool=true（後續顯示但預設不勾選）
+  rows.forEach(r=>{
+    if(String(r.教具名稱||'').trim()!=='') return;
+    const sig=`${r.人事號}|${r['日期(起)']}|${r['時段(起)']}|${r['時段(迄)']}`;
+    if(sigMap[sig].some(other=>String(other.教具名稱||'').trim()!==''))
+      r._noTool=true;
+  });
+
+  // 依「人事號_教具名稱_時段(起)_時段(迄)」分組
+  const groups={};
+  rows.forEach(row=>{
+    const key=`${row.人事號}|${row.教具名稱}|${row['時段(起)']}|${row['時段(迄)']}`;
+    if(!groups[key]) groups[key]=[];
+    groups[key].push(row);
+  });
+
+  const merged=[];
+  Object.values(groups).forEach(group=>{
+    if(group.length===1){merged.push(group[0]);return;}
+
+    // 依日期排序
+    group.sort((a,b)=>new Date(a['日期(起)'])-new Date(b['日期(起)']));
+
+    // 分段連續合併：遇到不連續就切段，各段各自合併成一筆
+    const segments=[];
+    let seg=[group[0]];
+    for(let i=1;i<group.length;i++){
+      const prev=new Date(group[i-1]['日期(起)']);
+      const curr=new Date(group[i]['日期(起)']);
+      prev.setHours(0,0,0,0);curr.setHours(0,0,0,0);
+      const diff=Math.round((curr-prev)/(1000*60*60*24));
+      if(diff===1){seg.push(group[i]);}
+      else{segments.push(seg);seg=[group[i]];}
+    }
+    segments.push(seg);
+
+    segments.forEach(s=>{
+      if(s.length===1){merged.push(s[0]);return;}
+      const first=s[0];
+      const last=s[s.length-1];
+      const maxInside=Math.max(...s.map(r=>parseInt(r.院內人數)||0));
+      const maxOutside=Math.max(...s.map(r=>parseInt(r.院外人數)||0));
+      merged.push({
+        ...first,
+        '日期(迄)':last['日期(起)'],
+        院內人數:maxInside,
+        院外人數:maxOutside,
+        _merged:s.length,
+      });
+    });
+  });
+  return merged;
+}
+
+async function parsePaste(){
+  try{
+    const text=document.getElementById('pasteInput').value.trim();
+    if(!text){toast('提示','請先貼上資料','info');return;}
+    const lines=text.split('\n').filter(l=>l.trim()&&!l.startsWith('借用單位'));
+    let rawRows=[];
+    lines.forEach(l=>rawRows.push(...parseRowCols(l.split('\t'))));
+    parsedRows=mergeRows(rawRows);
+    showLoad('比對重複資料中...');
+    _dupSet=await checkDuplicates();
+    _compared=true;
+    hideLoad();
+    renderPreview(parsedRows);
+  }catch(err){
+    hideLoad();
+    console.error('parsePaste error:', err);
+    toast('錯誤', '解析失敗：' + err.message, 'danger');
+  }
+}
+function clearPaste(){document.getElementById('pasteInput').value='';document.getElementById('parseResult').style.display='none';parsedRows=[];}
+
+// Parse Excel
+function parseExcel(){
+  const file=document.getElementById('excelFile').files[0];
+  if(!file){toast('提示','請先選擇 Excel 或 CSV 檔案','info');return;}
+  const r=new FileReader();
+  r.onload=async e=>{
+    let sheetData;
+    if(file.name.endsWith('.csv')){
+      // 解析 CSV
+      const text = new TextDecoder('utf-8').decode(e.target.result);
+      const lines = text.split(/\r?\n/).filter(l=>l.trim());
+      sheetData = lines.map(line=>{
+        // 處理 CSV 欄位（含引號包覆的欄位）
+        const result=[];let cur='';let inQuote=false;
+        for(let i=0;i<line.length;i++){
+          if(line[i]==='"'){inQuote=!inQuote;}
+          else if(line[i]===','&&!inQuote){result.push(cur.trim());cur='';}
+          else{cur+=line[i];}
+        }
+        result.push(cur.trim());
+        return result;
+      });
+    } else {
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      sheetData=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    }
+    const hi=sheetData.findIndex(r=>String(r[0]).includes('借用單位')||String(r[1]).includes('借用人'));
+    const headers=hi>=0?sheetData[hi]:sheetData[0];
+    const rows=hi>=0?sheetData.slice(hi+1):sheetData.slice(1);
+    let rawRows=[];
+    // 判斷是院內系統匯出的 Excel（有「借用時段」欄）還是複製貼上格式
+    const isExportFormat = headers && (headers[6]==='借用時段' || headers[4]==='借用開始時間');
+    rows.forEach(cols=>{
+      if(!cols[0]&&!cols[1]) return;
+      if(isExportFormat){
+        rawRows.push(...parseExcelRow(cols));
+      } else {
+        rawRows.push(...parseRowCols(cols));
+      }
+    });
+    parsedRows=mergeRows(rawRows);
+    showLoad('比對重複資料中...');
+    _dupSet=await checkDuplicates();
+    _compared=true;
+    hideLoad();
+    renderPreview(parsedRows);
+  };
+  r.readAsArrayBuffer(file);
+}
+
+// Checkbox batch
+const DD={職員別:['','醫師','醫技','護理','行政'],職類別:['','西醫師','牙醫師','中醫師','藥師','醫事放射師','醫事檢驗師','護理師','營養師','呼吸治療師','物理治療師','職能治療師','臨床心理師','語言治療師','聽力師','其他']};
+function toggleAllCheck(cb){document.querySelectorAll('.row-chk').forEach(c=>{c.checked=cb.checked;});updateBatchBar();}
+function updateBatchBar(){
+  const chk=document.querySelectorAll('.row-chk:checked').length;
+  const bar=document.getElementById('batchBar');
+  bar.style.display=chk>0?'flex':'none';
+  document.getElementById('batchCount').textContent=chk;
+}
+function applyBatch(){
+  const jv=document.getElementById('batch職員別').value;
+  const kv=document.getElementById('batch職類別').value;
+  document.querySelectorAll('.row-chk:checked').forEach(c=>{
+    const ri=parseInt(c.dataset.ri);
+    if(jv){parsedRows[ri].職員別=jv;}
+    if(kv){parsedRows[ri].職類別=kv;}
+  });
+  renderPreview(parsedRows);
+}
+function clearBatch(){document.querySelectorAll('.row-chk').forEach(c=>c.checked=false);updateBatchBar();}
+
+// Editable cell
+const VALID_OPTIONS={
+  '職員別':['醫師','醫技','護理','行政'],
+  '職類別':['西醫師','牙醫師','中醫師','藥師','醫事放射師','醫事檢驗師','護理師','營養師','呼吸治療師','物理治療師','職能治療師','臨床心理師','語言治療師','聽力師','其他']
+};
+
+function makeCell(ri,field,isWarn){
+  const td=document.createElement('td');td.className='ec'+(isWarn?' ew':'');td.title='點擊修改';
+  function render(){
+    td.classList.remove('editing');
+    const v=parsedRows[ri][field]??'';
+    // 檢查值是否在有效選單內
+    const validList=VALID_OPTIONS[field];
+    const isInvalid=validList&&v&&!validList.includes(v);
+    if(isWarn||isInvalid){
+      const label=isInvalid?`⚠ ${v}（不在選單）`:(`⚠ ${v||'—'}`);
+      td.innerHTML=`<span class="badge bg-warning text-dark" style="font-size:.7rem" title="${isInvalid?'此值不在標準選單內，請確認':'系統自動帶入，請確認'}">${label}</span>`;
+    }
+    else td.textContent=v;
+  }
+  td.addEventListener('click',()=>{
+    if(td.classList.contains('editing'))return;
+    td.classList.add('editing');
+    const cur=parsedRows[ri][field]??'';
+    if(DD[field]){
+      const sel=document.createElement('select');
+      DD[field].forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o||'（空白）';if(o===cur)op.selected=true;sel.appendChild(op);});
+      sel.onchange=()=>{parsedRows[ri][field]=sel.value;td.classList.add('em');isWarn=false;render();};
+      sel.onblur=render;td.innerHTML='';td.appendChild(sel);sel.focus();
+    }else{
+      const inp=document.createElement('input');inp.type=field.includes('日期')?'date':'text';inp.value=cur;
+      inp.onblur=()=>{parsedRows[ri][field]=inp.value;if(inp.value!==cur)td.classList.add('em');render();};
+      inp.onkeydown=ev=>{if(ev.key==='Enter')inp.blur();};
+      td.innerHTML='';td.appendChild(inp);inp.focus();
+    }
+  });
+  render();return td;
+}
+
+function renderPreview(rows){
+  const tbody=document.getElementById('previewBody');tbody.innerHTML='';
+  rows.forEach((row,i)=>{
+    const isWarn=row._aj&&row.上課對象.includes('護理人員')&&!row._origJob;
+    const key=`${row.人事號}_${row['日期(起)']}_${row['時段(起)']}_${row.教具名稱}`;
+    const isDup=_dupSet&&_dupSet.has(key);
+    const isMerged=row._merged&&row._merged>1;
+    const isRoomOnly=!String(row.教具名稱||'').trim()&&(String(row['場地']||'').includes('中心')||String(row['場地']||'').includes('教室')||String(row['場地']||'').includes('討論室')||String(row['場地']||'').includes('技能'));
+    const isNoTool=!String(row.教具名稱||'').trim()&&!isRoomOnly;
+    const tr=document.createElement('tr');
+    if(isDup) tr.style.opacity='0.45';
+    if(isNoTool&&!isDup) tr.style.cssText='opacity:0.6;background:#f9fafb';
+    // checkbox：已存在 disabled；無教具名稱預設不勾選
+    const tdC=document.createElement('td');
+    tdC.innerHTML=`<input type="checkbox" class="row-chk" data-ri="${i}" onchange="updateBatchBar()" ${isDup?'disabled':''}>`;
+    tr.appendChild(tdC);
+    // badge
+    const tdB=document.createElement('td');
+    const rowKey=`${row.人事號}_${row['日期(起)']}_${row['時段(起)']}_${row.教具名稱}`;
+    const willUpdate=isDup&&_updateMap&&_updateMap[rowKey];
+    tdB.innerHTML=willUpdate
+      ? `<span class="badge bg-warning text-dark" style="font-size:.7rem" title="更新日期(迄)為 ${_updateMap[rowKey]}">更新日期</span>`
+      : isDup
+        ? '<span class="badge bg-secondary" style="font-size:.7rem">已存在</span>'
+        : isNoTool
+          ? '<span class="badge bg-light text-secondary border" style="font-size:.7rem" title="教具名稱為空，請確認是否需要匯入">無教具</span>'
+          : isMerged
+            ? `<span class="badge bg-success" style="font-size:.7rem" title="已合併 ${row._merged} 天連續借用">新增 (${row._merged}天)</span>`
+            : '<span class="badge bg-primary" style="font-size:.7rem">新增</span>';
+    tr.appendChild(tdB);
+    ['單位','人事號','姓名','場地','日期(起)'].forEach(f=>tr.appendChild(makeCell(i,f,false)));
+    // time
+    const tdT=document.createElement('td');tdT.className='ec';tdT.title='點擊修改時段';tdT.textContent=`${row['時段(起)']}~${row['時段(迄)']}`;
+    tdT.addEventListener('click',()=>{
+      if(tdT.classList.contains('editing'))return;tdT.classList.add('editing');
+      const w=document.createElement('div');w.style.cssText='display:flex;gap:4px';
+      const s=document.createElement('input');s.type='time';s.value=row['時段(起)'];s.style.width='88px';
+      const e2=document.createElement('input');e2.type='time';e2.value=row['時段(迄)'];e2.style.width='88px';
+      const sv=()=>{parsedRows[i]['時段(起)']=s.value;parsedRows[i]['時段(迄)']=e2.value;tdT.classList.remove('editing');tdT.classList.add('em');tdT.textContent=`${s.value}~${e2.value}`;};
+      e2.onblur=sv;e2.onkeydown=ev=>{if(ev.key==='Enter')sv();};
+      w.appendChild(s);w.appendChild(e2);tdT.innerHTML='';tdT.appendChild(w);s.focus();
+    });
+    tr.appendChild(tdT);
+    tr.appendChild(makeCell(i,'教具名稱',false));tr.appendChild(makeCell(i,'組數',false));tr.appendChild(makeCell(i,'上課對象',false));
+    tr.appendChild(makeCell(i,'職員別',isWarn));tr.appendChild(makeCell(i,'職類別',isWarn));
+    const tdN=makeCell(i,'備註',false);tdN.style.maxWidth='120px';tdN.classList.add('text-truncate');tr.appendChild(tdN);
+    tbody.appendChild(tr);
+  });
+  const newCnt=rows.filter((row)=>{const k=`${row.人事號}_${row['日期(起)']}_${row['時段(起)']}_${row.教具名稱}`;return!_dupSet||!_dupSet.has(k);}).length;
+  document.getElementById('parseCount').textContent=`共 ${rows.length} 筆（新增 ${newCnt} 筆，已存在 ${rows.length-newCnt} 筆）`;
+  document.getElementById('parseResult').style.display='';
+  updateBatchBar();
+}
+function cancelImport(){document.getElementById('parseResult').style.display='none';parsedRows=[];_dupSet=new Set();_compared=false;}
+
+function deleteSelectedRows(){
+  const checked=[...document.querySelectorAll('.row-chk:checked')].map(c=>parseInt(c.dataset.ri));
+  if(!checked.length){toast('提示','請先勾選要刪除的列','info');return;}
+  // 由大到小刪，避免 index 跑掉
+  checked.sort((a,b)=>b-a).forEach(i=>parsedRows.splice(i,1));
+  if(!parsedRows.length){
+    document.getElementById('parseResult').style.display='none';
+    toast('提示','預覽清單已清空','info');
+    return;
+  }
+  _dupSet=new Set();_updateMap={};_compared=false;
+  renderPreview(parsedRows);
+  toast('提示',`已移除 ${checked.length} 筆，若需重新比對請按「解析資料」`,'info');
+}
+async function checkDuplicates(){
+  try{
+    // 傳入每筆的 key 和新的日期(迄)，讓後端比對並回傳需要更新的筆數
+    const items=parsedRows.map(r=>({
+      key:`${r.人事號}_${r['日期(起)']}_${r['時段(起)']}_${r.教具名稱}`,
+      // 只有真正合併多天的筆才傳 newEndDate，單筆不傳（避免被後端誤判為連續借用延展）
+      newEndDate:(r._merged&&r._merged>1)?(r['日期(迄)']||r['日期(起)']||''):''
+    }));
+    const resp=await fetch(API,{method:'POST',body:JSON.stringify({action:'checkDuplicate',items,token:getToken()})});
+    const result=await resp.json();
+    if(result.success){
+      _updateMap=result.updateMap||{};
+      return new Set(result.duplicates);
+    }
+  }catch(err){
+    console.error('checkDuplicates error:', err);
+  }
+  _updateMap={};
+  return new Set();
+}
+
+let _dupSet = new Set();
+let _updateMap = {};
+let _compared = false;
+
+async function confirmImport(){
+  if(!parsedRows.length) return;
+  // 取得使用者勾選的 index 集合
+  const checkedSet=new Set([...document.querySelectorAll('.row-chk:checked')].map(c=>parseInt(c.dataset.ri)));
+  // 實際要送出的資料：已勾選 OR（有教具名稱 AND 非重複）
+  const rowsToSend=parsedRows.filter((r,i)=>{
+    const key=`${r.人事號}_${r['日期(起)']}_${r['時段(起)']}_${r.教具名稱}`;
+    const isDup=_dupSet&&_dupSet.has(key);
+    if(isDup) return true; // 重複的讓後端自行處理（跳過或更新日期）
+    const hasName=String(r.教具名稱||'').trim()!=='';
+    const isRoom=String(r['場地']||'').match(/中心|教室|討論室|技能/);
+    return hasName || isRoom || checkedSet.has(i);
+  });
+  const newCount = rowsToSend.filter(r=>{
+    const key=`${r.人事號}_${r['日期(起)']}_${r['時段(起)']}_${r.教具名稱}`;
+    return !(_dupSet&&_dupSet.has(key));
+  }).length;
+  const updateCount = Object.keys(_updateMap).length;
+  if(newCount === 0 && updateCount === 0){
+    toast('提示', '所有資料皆已存在，無需重複匯入', 'info');
+    return;
+  }
+  showLoad(`${newCount>0?'儲存 '+newCount+' 筆新資料':''}${updateCount>0?'、更新 '+updateCount+' 筆日期(迄)':''}中...`);
+  // 確保每筆日期(迄)若為空，填入日期(起)（後端 getStatus 需要迄日才能正確判斷狀態）
+  rowsToSend.forEach(r=>{if(!r['日期(迄)'])r['日期(迄)']=r['日期(起)']||'';});
+  try{
+    const payload = {action:'insert', data:rowsToSend, updateMap:_updateMap, token:getToken()};
+    const resp = await fetch(API, {method:'POST', body:JSON.stringify(payload)});
+    const r = await resp.json();
+    hideLoad();
+    if(r.success){
+      toast('儲存成功', r.message, 'success');
+      document.getElementById('parseResult').style.display = 'none';
+      document.getElementById('pasteInput').value = '';
+      parsedRows = [];
+      _dupSet = new Set();
+      _updateMap = {};
+      _compared = false;
+    } else {
+      toast('錯誤', r.message, 'danger');
+    }
+  } catch(err){
+    hideLoad();
+    toast('錯誤', '無法連線：' + err.message, 'danger');
+  }
+}
+
+// Query
+async function queryRecords(){
+  const params=new URLSearchParams({action:'query',token:getToken(),startDate:document.getElementById('queryStart').value,endDate:document.getElementById('queryEnd').value,keyword:document.getElementById('queryKeyword').value,status:document.getElementById('queryStatus')?document.getElementById('queryStatus').value:'',course:document.getElementById('queryCourse').value});
+  showLoad('查詢中...');
+  try{
+    const resp=await fetch(API+'?'+params);const r=await resp.json();hideLoad();
+    if(r.success){queryResults=r.data;applyStf(currentStf);}
+    else toast('錯誤',r.message,'danger');
+  }catch(err){hideLoad();toast('錯誤','無法連線：'+err.message,'danger');}
+}
+function queryToday(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('queryStart').value=today;
+  document.getElementById('queryEnd').value=today;
+  document.getElementById('queryKeyword').value='';
+  document.getElementById('queryCourse').value='';
+  queryRecords();
+}
+
+// Status filter
+function setStf(v,el){
+  currentStf=v;
+  document.querySelectorAll('.stf-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  applyStf(v);
+}
+function applyStf(v){
+  filteredResults=v?queryResults.filter(r=>r['狀態']===v):queryResults;
+  currentPage=1;
+  updateStfCounts();
+  renderQueryPage();
+}
+function updateStfCounts(){
+  const counts={};
+  queryResults.forEach(r=>{const s=r['狀態']||'';counts[s]=(counts[s]||0)+1;});
+  document.getElementById('cnt-all').textContent=queryResults.length;
+  ['借用中','借用教室','今日到期','即將到期','已過期','已結案','取消','未借出'].forEach(s=>{
+    const el=document.getElementById('cnt-'+s);if(el)el.textContent=counts[s]||0;
+  });
+  const sb=document.getElementById('sb-count');
+  if(sb){sb.style.display=queryResults.length?'':'none';sb.textContent=queryResults.length;}
+}
+
+// Pagination
+function renderQueryPage(){
+  const total=filteredResults.length;
+  const pages=Math.ceil(total/pageSize)||1;
+  const start=(currentPage-1)*pageSize,end=Math.min(start+pageSize,total);
+  const pageRows=filteredResults.slice(start,end);
+  document.getElementById('queryCount').textContent=`共 ${total} 筆`;
+  document.getElementById('pageInfo').textContent=total?`顯示第 ${start+1}－${end} 筆，共 ${total} 筆`:'';
+
+  const tbody=document.getElementById('queryBody');
+  if(!total){tbody.innerHTML='<tr><td colspan="17" class="text-center text-muted py-5" style="font-size:.85rem">查無資料</td></tr>';document.getElementById('pagination').innerHTML='';return;}
+  tbody.innerHTML='';
+  pageRows.forEach(row=>{
+    const st=row['狀態']||'';
+    const hasNote=String(row['備註']||'').trim()!=='';
+    const t1=row['時段(起)']||'';const t2=row['時段(迄)']||'';
+    const timeStr=(t1&&t2)?`${t1}~${t2}`:(t1||t2||'');
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input type="checkbox" class="bq-chk" data-ri="${row._rowIndex}" onchange="updateBqBar()"></td>
+      <td>${st?`<span class="st st-${st}">${st}</span>`:''}</td>
+      <td>${row['單位']||''}</td>
+      <td><span class="id-pill">${row['人事號']||''}</span></td>
+      <td>${row['姓名']||''}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${row['教具名稱']||''}">${row['教具名稱']||''}</td>
+      <td>${row['組數']||''}</td>
+      <td>${(row['日期(起)']||'').includes('1899')?'':(row['日期(起)']||'')}</td>
+      <td>${(row['日期(迄)']||'').includes('1899')?'':(row['日期(迄)']||'')}</td>
+      <td style="white-space:nowrap">${timeStr}</td>
+      <td style="white-space:nowrap">${row['分機']||'<span style="color:#94a3b8">—</span>'}</td>
+      <td style="white-space:nowrap">${row['手機']||'<span style="color:#94a3b8">—</span>'}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${row['會議名稱']||''}">${row['會議名稱']||''}</td>
+      <td>${row['場地']||''}</td>
+      <td>${row['職員別']||''}</td>
+      <td>${row['職類別']||''}</td>
+      <td>${row['借出者']||'<span style="color:#94a3b8">—</span>'}</td>
+      <td style="text-align:center">${hasNote?`<span title="${String(row['備註']||'').replace(/"/g,"'")}" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:#ef4444;color:#fff;border-radius:50%;font-size:.65rem;font-weight:700;cursor:help">備</span>`:''}</td>
+      <td style="text-align:center"><button class="btn btn-sm" style="background:var(--ac);color:#fff;font-size:.75rem;padding:4px 8px;border-radius:6px;line-height:1" onclick="openEdit(${row._rowIndex})" title="編輯詳情"><i class="bi bi-pencil"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Pagination
+  const pag=document.getElementById('pagination');pag.innerHTML='';
+  if(pages<=1)return;
+  const mkLi=(label,page,disabled,active)=>{
+    const li=document.createElement('li');li.className='page-item'+(disabled?' disabled':'')+(active?' active':'');
+    li.innerHTML=`<a class="page-link" style="font-size:.78rem;cursor:pointer">${label}</a>`;
+    if(!disabled&&!active)li.querySelector('a').onclick=()=>{currentPage=page;renderQueryPage();};
+    return li;
+  };
+  pag.appendChild(mkLi('上一頁',currentPage-1,currentPage===1,false));
+  for(let p=Math.max(1,currentPage-2);p<=Math.min(pages,currentPage+2);p++)pag.appendChild(mkLi(p,p,false,p===currentPage));
+  pag.appendChild(mkLi('下一頁',currentPage+1,currentPage===pages,false));
+}
+
+// Edit Modal
+function fmtTimeVal(v){
+  if(!v)return'';
+  const s=String(v).trim();
+  // already HH:MM
+  if(/^\d{2}:\d{2}/.test(s))return s.substring(0,5);
+  // decimal from sheets (e.g. 0.375)
+  if(!isNaN(s)){const t=Math.round(parseFloat(s)*24*60);return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');}
+  return s;
+}
+function openEdit(ri){
+  const row=queryResults.find(r=>r._rowIndex===ri);if(!row)return;
+  document.getElementById('editRowIndex').value=ri;
+  const fields=[['edit借出者','借出者'],['edit單位','單位'],['edit人事號','人事號'],['edit姓名','姓名'],['edit場地','場地'],['edit日期起','日期(起)'],['edit日期迄','日期(迄)'],['edit會議名稱','會議名稱'],['edit院內人數','院內人數'],['edit院外人數','院外人數'],['edit分機','分機'],['edit手機','手機'],['edit教具名稱','教具名稱'],['edit組數','組數'],['edit課程類別','課程類別'],['edit上課對象','上課對象'],['edit職員別','職員別'],['edit職類別','職類別'],['edit完成狀態','完成狀態'],['edit點收者','點收者'],['edit備註','備註']];
+  fields.forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=row[key]||'';});
+  // handle time separately
+  document.getElementById('edit時段起').value=fmtTimeVal(row['時段(起)']);
+  document.getElementById('edit時段迄').value=fmtTimeVal(row['時段(迄)']);
+  new bootstrap.Modal(document.getElementById('editModal')).show();
+}
+async function saveEdit(){
+  const ri=parseInt(document.getElementById('editRowIndex').value);
+  const data={借出者:document.getElementById('edit借出者').value,單位:document.getElementById('edit單位').value,人事號:document.getElementById('edit人事號').value,姓名:document.getElementById('edit姓名').value,場地:document.getElementById('edit場地').value,'日期(起)':document.getElementById('edit日期起').value,'日期(迄)':document.getElementById('edit日期迄').value,'時段(起)':document.getElementById('edit時段起').value,'時段(迄)':document.getElementById('edit時段迄').value,會議名稱:document.getElementById('edit會議名稱').value,院內人數:document.getElementById('edit院內人數').value,院外人數:document.getElementById('edit院外人數').value,分機:document.getElementById('edit分機').value,手機:document.getElementById('edit手機').value,教具名稱:document.getElementById('edit教具名稱').value,組數:document.getElementById('edit組數').value,課程類別:document.getElementById('edit課程類別').value,上課對象:document.getElementById('edit上課對象').value,職員別:document.getElementById('edit職員別').value,職類別:document.getElementById('edit職類別').value,完成狀態:document.getElementById('edit完成狀態').value,點收者:document.getElementById('edit點收者').value,備註:document.getElementById('edit備註').value};
+  bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+  showLoad('儲存中...');
+  try{
+    const resp=await fetch(API,{method:'POST',body:JSON.stringify({action:'update',rowIndex:ri,data,token:getToken()})});
+    const r=await resp.json();hideLoad();
+    if(r.success){toast('儲存成功','資料已更新','success');queryToday();}
+    else toast('錯誤',r.message,'danger');
+  }catch(err){hideLoad();toast('錯誤','無法連線：'+err.message,'danger');}
+}
+
+// Batch query operations
+function toggleBqAll(cb){document.querySelectorAll('.bq-chk').forEach(c=>c.checked=cb.checked);updateBqBar();}
+function updateBqBar(){
+  const cnt=document.querySelectorAll('.bq-chk:checked').length;
+  const bar=document.getElementById('batchQueryBar');
+  bar.style.display=cnt>0?'':'none';
+  document.getElementById('bqCount').textContent=cnt;
+}
+function clearBatchQuery(){
+  document.querySelectorAll('.bq-chk').forEach(c=>c.checked=false);
+  const cb=document.getElementById('bqChkAll');if(cb)cb.checked=false;
+  updateBqBar();
+}
+async function applyBatchQuery(){
+  const rows=[...document.querySelectorAll('.bq-chk:checked')].map(c=>parseInt(c.dataset.ri));
+  if(!rows.length)return;
+  const borrower=document.getElementById('bq借出者').value;
+  const startDate=document.getElementById('bq日期起').value;
+  const endDate=document.getElementById('bq日期迄').value;
+  const receiver=document.getElementById('bq點收者').value;
+  const doneStatus=document.getElementById('bq完成狀態').value;
+  const jobType=document.getElementById('bq職員別').value;
+  const jobClass=document.getElementById('bq職類別').value;
+  if(!borrower&&!startDate&&!endDate&&!receiver&&!doneStatus&&!jobType&&!jobClass){toast('提示','請至少填寫一個要修改的欄位','info');return;}
+  showLoad(`批次更新 ${rows.length} 筆中...`);
+  let success=0,fail=0;
+  for(const ri of rows){
+    const row=queryResults.find(r=>r._rowIndex===ri);if(!row)continue;
+    const data={...row};
+    if(borrower)data['借出者']=borrower;
+    if(startDate)data['日期(起)']=startDate;
+    if(endDate)data['日期(迄)']=endDate;
+    if(receiver)data['點收者']=receiver;
+    if(doneStatus)data['完成狀態']=doneStatus;
+    if(jobType)data['職員別']=jobType;
+    if(jobClass)data['職類別']=jobClass;
+    delete data['狀態'];delete data['借用天數'];delete data['借用時數'];delete data['_rowIndex'];
+    try{
+      const resp=await fetch(API,{method:'POST',body:JSON.stringify({action:'update',rowIndex:ri,data,token:getToken()})});
+      const r=await resp.json();
+      if(r.success)success++;else fail++;
+    }catch{fail++;}
+  }
+  hideLoad();
+  toast(fail===0?'批次更新成功':'部分更新失敗',`成功 ${success} 筆${fail>0?'，失敗 '+fail+' 筆':''}`,fail===0?'success':'danger');
+  clearBatchQuery();
+  queryRecords();
+}
+
+// Export
+function exportExcel(){
+  if(!queryResults.length){toast('提示','請先查詢資料再匯出','info');return;}
+  const fields=['狀態','借出者','單位','人事號','姓名','場地','日期(起)','日期(迄)','時段(起)','時段(迄)','會議名稱','院內人數','院外人數','分機','手機','教具名稱','組數','備註','課程類別','上課對象','職員別','職類別','完成狀態','點收者','借用天數','借用時數'];
+  const ws=XLSX.utils.aoa_to_sheet([fields,...queryResults.map(r=>fields.map(f=>r[f]??''))]);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'借用記錄查詢');
+  const today=new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb,`借用紀錄_${today}.xlsx`);
+  toast('匯出成功',`已下載借用紀錄_${today}.xlsx`,'success');
+}
+
+// Init
+window.onload=()=>{
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('queryStart').value=today;
+  document.getElementById('queryEnd').value=today;
+};
+</script>
+</body>
+</html>
