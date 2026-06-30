@@ -393,7 +393,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
           </tr>
         </thead>
         <tbody id="queryBody">
-          <tr><td colspan="17" class="text-center text-muted py-5" style="font-size:.85rem">請設定條件後按查詢，或點「查今天」</td></tr>
+          <tr><td colspan="19" class="text-center text-muted py-5" style="font-size:.85rem">請設定條件後按查詢，或點「查今天」</td></tr>
         </tbody>
       </table>
     </div>
@@ -720,9 +720,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
           <div class="col-12"><label class="form-label fw-semibold">備註</label><textarea class="form-control form-control-sm" id="edit備註" rows="2"></textarea></div>
         </div>
       </div>
-      <div class="modal-footer" style="border-top:1px solid #f1f5f9;">
-        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="saveEdit()"><i class="bi bi-save me-1"></i>儲存變更</button>
+      <div class="modal-footer" style="border-top:1px solid #f1f5f9;justify-content:space-between;">
+        <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca" onclick="deleteEditingRow()"><i class="bi bi-trash me-1"></i>刪除此筆</button>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="saveEdit()"><i class="bi bi-save me-1"></i>儲存變更</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1342,7 +1345,7 @@ function renderQueryPage(){
   document.getElementById('pageInfo').textContent=total?`顯示第 ${start+1}－${end} 筆，共 ${total} 筆`:'';
 
   const tbody=document.getElementById('queryBody');
-  if(!total){tbody.innerHTML='<tr><td colspan="17" class="text-center text-muted py-5" style="font-size:.85rem">查無資料</td></tr>';document.getElementById('pagination').innerHTML='';return;}
+  if(!total){tbody.innerHTML='<tr><td colspan="19" class="text-center text-muted py-5" style="font-size:.85rem">查無資料</td></tr>';document.getElementById('pagination').innerHTML='';return;}
   tbody.innerHTML='';
   pageRows.forEach(row=>{
     const st=row['狀態']||'';
@@ -1419,6 +1422,23 @@ async function saveEdit(){
     if(r.success){toast('儲存成功','資料已更新','success');queryRecords();}
     else toast('錯誤',r.message,'danger');
   }catch(err){hideLoad();toast('錯誤','無法連線：'+err.message,'danger');}
+}
+
+async function deleteEditingRow() {
+  const ri = parseInt(document.getElementById('editRowIndex').value);
+  if (!ri) return;
+  const name = document.getElementById('edit姓名').value || '';
+  const tool = document.getElementById('edit教具名稱').value || '';
+  if (!confirm(`確定要刪除這筆借用紀錄嗎？\n\n姓名：${name||'—'}\n教具：${tool||'—'}\n\n此操作將直接從 Google Sheets 移除，無法復原。`)) return;
+  bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+  showLoad('刪除中...');
+  try {
+    const resp = await fetch(API, { method:'POST', body: JSON.stringify({ action:'delete', rowIndex: ri, token: getToken() }) });
+    const r = await resp.json();
+    hideLoad();
+    if (r.success) { toast('刪除成功', r.message || '已刪除該筆紀錄', 'success'); queryRecords(); }
+    else toast('刪除失敗', r.message, 'danger');
+  } catch(err) { hideLoad(); toast('錯誤', '無法連線：'+err.message, 'danger'); }
 }
 
 // Batch query operations
