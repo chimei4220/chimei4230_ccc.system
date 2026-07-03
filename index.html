@@ -179,6 +179,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   <div class="sb-section">行政管理</div>
   <a class="sb-link" onclick="showPanel('assets',this)"><i class="bi bi-archive"></i>財產總覽</a>
   <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-clipboard2-data"></i>耗材清單<span class="sb-dev">開發中</span></a>
+  <a class="sb-link" onclick="showPanel('analytics',this)"><i class="bi bi-bar-chart-line"></i>統計分析</a>
   <div class="sb-section">系統設定</div>
   <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-gear"></i>系統設定<span class="sb-dev">開發中</span></a>
 </div>
@@ -547,6 +548,159 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   </div>
 </div>
 
+<!-- 借用分析 -->
+<div id="panel-analytics" class="panel">
+  <div class="pg-head">
+    <div class="pg-title">
+      <div class="pg-icon"><i class="bi bi-bar-chart-line"></i></div>
+      <div><h5>統計分析</h5><div class="pg-sub">依職類別與月份統計借用概況</div></div>
+    </div>
+  </div>
+
+  <div class="filter-card">
+    <div class="d-flex flex-wrap gap-2 align-items-end">
+      <div>
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">借用日（起）</label>
+        <input type="date" class="form-control form-control-sm" id="anaStart" style="width:160px">
+      </div>
+      <div>
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">借用日（迄）</label>
+        <input type="date" class="form-control form-control-sm" id="anaEnd" style="width:160px">
+      </div>
+      <div>
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">職類別</label>
+        <select class="form-select form-select-sm" id="anaRole" style="width:140px" onchange="loadAnalytics()">
+          <option value="">全部</option>
+          <option>西醫師</option><option>牙醫師</option><option>中醫師</option><option>藥師</option>
+          <option>醫事放射師</option><option>醫事檢驗師</option><option>護理師</option>
+          <option>營養師</option><option>呼吸治療師</option><option>物理治療師</option>
+          <option>職能治療師</option><option>臨床心理師</option><option>其他</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">課程類別</label>
+        <select class="form-select form-select-sm" id="anaCourse" style="width:150px" onchange="loadAnalytics()">
+          <option value="">全部</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="loadAnalytics()"><i class="bi bi-search me-1"></i>查詢</button>
+      <button class="btn btn-outline-secondary btn-sm" onclick="anaQuickRange('month')">本月</button>
+      <button class="btn btn-outline-secondary btn-sm" onclick="anaQuickRange('year')">今年</button>
+      <button class="btn btn-outline-secondary btn-sm" onclick="anaQuickRange('all')">全部區間</button>
+    </div>
+  </div>
+
+  <!-- 摘要卡 -->
+  <div class="row g-3 mb-3 align-items-stretch">
+    <div class="col-6 col-md-4 col-lg">
+      <div class="card h-100" style="border-radius:10px;">
+        <div class="card-bd d-flex flex-column justify-content-center text-center" style="padding:14px 16px">
+          <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">總借用次數</div>
+          <div style="font-size:1.55rem;font-weight:700;color:#1e293b" id="anaTotalCount">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+      <div class="card h-100" style="border-radius:10px;">
+        <div class="card-bd d-flex flex-column justify-content-center text-center" style="padding:14px 16px">
+          <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">總借用時數</div>
+          <div style="font-size:1.55rem;font-weight:700;color:#2563eb" id="anaTotalHours">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+      <div class="card h-100" style="border-radius:10px;">
+        <div class="card-bd d-flex flex-column justify-content-center text-center" style="padding:14px 16px">
+          <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">總借用天數</div>
+          <div style="font-size:1.55rem;font-weight:700;color:#0891b2" id="anaTotalDays">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+      <div class="card h-100" style="border-radius:10px;">
+        <div class="card-bd d-flex flex-column justify-content-center text-center" style="padding:14px 16px">
+          <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">總參與人數</div>
+          <div style="font-size:1.55rem;font-weight:700;color:#7c3aed" id="anaTotalPart">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+      <div class="card h-100" style="border-radius:10px;">
+        <div class="card-bd d-flex flex-column justify-content-center text-center" style="padding:14px 16px">
+          <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">醫師借用次數</div>
+          <div style="font-size:1.55rem;font-weight:700;color:#0d9488" id="anaDoctorCount">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+      <div class="card h-100" style="border-radius:10px;">
+        <div class="card-bd d-flex flex-column justify-content-center text-center" style="padding:14px 16px">
+          <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">醫技借用次數</div>
+          <div style="font-size:1.55rem;font-weight:700;color:#c026d3" id="anaTechCount">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+      <div class="card h-100" style="border-radius:10px;">
+        <div class="card-bd d-flex flex-column justify-content-center text-center" style="padding:14px 16px">
+          <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">護理借用次數</div>
+          <div style="font-size:1.55rem;font-weight:700;color:#ea580c" id="anaNurseCount">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+      <div class="card h-100" style="border-radius:10px;">
+        <div class="card-bd d-flex flex-column justify-content-center text-center" style="padding:14px 16px">
+          <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">借用教室次數</div>
+          <div style="font-size:1.55rem;font-weight:700;color:#854d0e" id="anaRoomCount">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-auto">
+      <div class="card h-100" style="border-radius:10px;">
+        <div class="card-bd d-flex flex-column justify-content-center text-center" style="padding:14px 20px">
+          <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px;white-space:nowrap">熱門教具</div>
+          <div style="font-size:1.3rem;font-weight:700;color:#dc2626;white-space:nowrap;margin-top:6px" id="anaTopTool" title="">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-hd"><span><i class="bi bi-graph-up me-2" style="color:var(--ac)"></i>每月借用趨勢圖</span></div>
+        <div class="card-bd" id="anaTrendChart" style="min-height:160px;width:100%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-hd"><span><i class="bi bi-grid-3x3 me-2" style="color:var(--ac)"></i>職類別教具借用 × 月份統計</span></div>
+        <div class="table-responsive" id="anaMatrixWrap">
+          <table class="table table-bordered table-sm" style="font-size:.85rem;margin:0;table-layout:fixed;width:100%" id="anaMatrixTable"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-hd">
+          <span><i class="bi bi-table me-2" style="color:var(--ac)"></i>教具 × 職類別借用次數統計</span>
+          <span id="anaToolMatrixCount" style="font-size:.75rem;color:#94a3b8;font-weight:400"></span>
+        </div>
+        <div class="table-responsive" id="anaToolMatrixWrap" style="max-height:480px;overflow-y:auto">
+          <table class="table table-bordered table-sm" style="font-size:.85rem;margin:0;table-layout:fixed;width:100%;border-collapse:separate;border-spacing:0" id="anaToolMatrixTable"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 開發中 -->
 <div id="panel-dev" class="panel">
   <div class="dev-panel">
@@ -830,6 +984,7 @@ function showPanel(name,el){
   if(el)el.classList.add('active');
   if(name==='query'&&!queryResults.length) queryToday();
   if(name==='assets'&&!allAssets.length) loadAssets();
+  if(name==='analytics') loadAnalytics();
 }
 
 // Import tabs
@@ -1449,9 +1604,15 @@ function updateBqBar(){
   bar.style.display=cnt>0?'':'none';
   document.getElementById('bqCount').textContent=cnt;
 }
+function resetBatchQueryFields(){
+  ['bq借出者','bq日期起','bq日期迄','bq點收者','bq職員別','bq職類別','bq完成狀態'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+}
 function clearBatchQuery(){
   document.querySelectorAll('.bq-chk').forEach(c=>c.checked=false);
   const cb=document.getElementById('bqChkAll');if(cb)cb.checked=false;
+  resetBatchQueryFields();
   updateBqBar();
 }
 async function applyBatchQuery(){
@@ -2194,6 +2355,206 @@ async function loadRetired() {
       : '<tr><td colspan="11" class="text-center text-muted py-4">目前沒有報廢項目</td></tr>';
   } catch(e) { toast('連線失敗', e.message, 'danger'); }
   finally { hideLoad(); }
+}
+
+// 借用分析
+let anaMetaLoaded = false;
+
+function anaQuickRange(type){
+  const today=new Date();
+  let start='',end='';
+  if(type==='month'){
+    start=new Date(today.getFullYear(),today.getMonth(),1).toISOString().split('T')[0];
+    end=today.toISOString().split('T')[0];
+  } else if(type==='year'){
+    start=new Date(today.getFullYear(),0,1).toISOString().split('T')[0];
+    end=today.toISOString().split('T')[0];
+  } else {
+    start=''; end='';
+  }
+  document.getElementById('anaStart').value=start;
+  document.getElementById('anaEnd').value=end;
+  loadAnalytics();
+}
+
+function drawAnaTrendChart(monthly){
+  // monthly: [{month:'01月'或'2026/01', count:N}, ...]
+  const w=1200, h=190, padL=42, padR=24, padT=16, padB=28;
+  const innerW=w-padL-padR, innerH=h-padT-padB;
+  if(!monthly.length) return '<div class="text-center text-muted py-5" style="font-size:.85rem">尚無資料</div>';
+  const max=Math.max(1, ...monthly.map(m=>m.count));
+  const n=monthly.length;
+  const stepX = n>1 ? innerW/(n-1) : 0;
+  const pts = monthly.map((m,i)=>{
+    const x = padL + stepX*i;
+    const y = padT + innerH - (m.count/max)*innerH;
+    return [x,y];
+  });
+
+  // 平滑曲線（Catmull-Rom 轉三次貝茲曲線）
+  const smoothPath = (points) => {
+    if(points.length<2) return '';
+    let d = `M${points[0][0].toFixed(1)},${points[0][1].toFixed(1)}`;
+    for(let i=0;i<points.length-1;i++){
+      const p0 = points[i-1] || points[i];
+      const p1 = points[i];
+      const p2 = points[i+1];
+      const p3 = points[i+2] || p2;
+      const c1x = p1[0] + (p2[0]-p0[0])/6;
+      const c1y = p1[1] + (p2[1]-p0[1])/6;
+      const c2x = p2[0] - (p3[0]-p1[0])/6;
+      const c2y = p2[1] - (p3[1]-p1[1])/6;
+      d += ` C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+    }
+    return d;
+  };
+  const linePath = smoothPath(pts);
+  const areaPath = linePath + ` L${pts[pts.length-1][0].toFixed(1)},${padT+innerH} L${pts[0][0].toFixed(1)},${padT+innerH} Z`;
+
+  const gridLines = [0,0.25,0.5,0.75,1].map(f=>{
+    const y = padT + innerH*(1-f);
+    const val = Math.round(max*f);
+    return `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="#eef1f6" stroke-width="1"/>
+      <text x="${padL-10}" y="${y+4}" font-size="10" fill="#94a3b8" text-anchor="end">${val}</text>`;
+  }).join('');
+  const xLabels = monthly.map((m,i)=>`<text x="${pts[i][0].toFixed(1)}" y="${h-12}" font-size="10" fill="#94a3b8" text-anchor="middle">${m.month}</text>`).join('');
+  const dots = pts.map((p,i)=>`
+    <circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="7" fill="#2563eb" fill-opacity=".12"/>
+    <circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="#2563eb" stroke="#fff" stroke-width="1.5"><title>${monthly[i].month}：${monthly[i].count}</title></circle>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block">
+    <defs>
+      <linearGradient id="anaTrendFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2563eb" stop-opacity=".28"/>
+        <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${gridLines}
+    <line x1="${padL}" y1="${padT+innerH}" x2="${w-padR}" y2="${padT+innerH}" stroke="#dbe1ea" stroke-width="1"/>
+    <path d="${areaPath}" fill="url(#anaTrendFill)" stroke="none"/>
+    <path d="${linePath}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}
+    ${xLabels}
+  </svg>`;
+}
+
+function renderAnaMatrix(matrix, roleOrder, monthList){
+  const table=document.getElementById('anaMatrixTable');
+  if(!monthList || !monthList.length){
+    table.innerHTML='<tbody><tr><td class="text-center text-muted py-4">尚無資料</td></tr></tbody>';
+    return;
+  }
+  let thead = '<thead><tr><th style="background:#f8fafc;white-space:nowrap;font-size:.85rem">職類別</th>';
+  monthList.forEach(m=>thead+=`<th style="background:#f8fafc;text-align:center;white-space:nowrap;font-size:.85rem">${m.label}</th>`);
+  thead += '<th style="background:#fef9c3;text-align:center;font-size:.85rem">總計</th></tr></thead>';
+
+  let tbody='<tbody>';
+  // 列出全部職類別，即使該類別沒有任何借用紀錄也顯示為 0
+  roleOrder.forEach(role=>{
+    const rec = matrix[role] || { byMonth:{}, total:0 };
+    tbody += `<tr><td style="font-weight:600;white-space:nowrap">${role}</td>`;
+    monthList.forEach(m=>{
+      const v = rec.byMonth[m.key] || 0;
+      tbody += `<td style="text-align:center;color:${v?'#334155':'#cbd5e1'}">${v||0}</td>`;
+    });
+    tbody += `<td style="text-align:center;font-weight:700;background:#fefce8">${rec.total||0}</td></tr>`;
+  });
+  // 總計列
+  const colTotals = monthList.map(m => roleOrder.reduce((s,role)=>s+((matrix[role]&&matrix[role].byMonth[m.key])||0),0));
+  const grandTotal = roleOrder.reduce((s,role)=>s+((matrix[role]&&matrix[role].total)||0),0);
+  tbody += '<tr style="background:#fefce8;font-weight:700"><td>總計</td>';
+  colTotals.forEach(v=>tbody+=`<td style="text-align:center">${v||0}</td>`);
+  tbody += `<td style="text-align:center">${grandTotal}</td></tr>`;
+  tbody += '</tbody>';
+  table.innerHTML = thead + tbody;
+}
+
+function renderToolRoleMatrix(toolRoleMatrix, toolList, roleOrder){
+  const table=document.getElementById('anaToolMatrixTable');
+  const countEl=document.getElementById('anaToolMatrixCount');
+  if(!toolList || !toolList.length){
+    table.innerHTML='<tbody><tr><td class="text-center text-muted py-4">尚無資料</td></tr></tbody>';
+    if(countEl) countEl.textContent='';
+    return;
+  }
+  if(countEl) countEl.textContent='共 '+toolList.length+' 項教具';
+
+  let colgroup = '<colgroup><col style="width:220px">';
+  roleOrder.forEach(()=>colgroup+='<col>');
+  colgroup += '<col style="width:70px"></colgroup>';
+
+  let thead = '<thead><tr><th style="background:#f8fafc;white-space:nowrap;position:sticky;left:0;top:0;z-index:3;font-size:.85rem;box-shadow:0 1px 0 #e2e8f0,1px 0 0 #e2e8f0">教具名稱</th>';
+  roleOrder.forEach(r=>thead+=`<th style="background:#f8fafc;text-align:center;white-space:nowrap;position:sticky;top:0;z-index:2;font-size:.85rem;box-shadow:0 1px 0 #e2e8f0">${r}</th>`);
+  thead += '<th style="background:#fef9c3;text-align:center;white-space:nowrap;position:sticky;top:0;z-index:2;font-size:.85rem;box-shadow:0 1px 0 #e2e8f0">總計</th></tr></thead>';
+
+  let tbody='<tbody>';
+  toolList.forEach(tool=>{
+    const rec = toolRoleMatrix[tool] || { byRole:{}, total:0 };
+    tbody += `<tr><td style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;background:#fff;position:sticky;left:0;z-index:1;box-shadow:1px 0 0 #f1f5f9" title="${tool}">${tool}</td>`;
+    roleOrder.forEach(role=>{
+      const v = rec.byRole[role] || 0;
+      tbody += `<td style="text-align:center;color:${v?'#334155':'#cbd5e1'}">${v||0}</td>`;
+    });
+    tbody += `<td style="text-align:center;font-weight:700;background:#fefce8">${rec.total||0}</td></tr>`;
+  });
+  // 總計列
+  const colTotals = roleOrder.map(role => toolList.reduce((s,tool)=>s+((toolRoleMatrix[tool]&&toolRoleMatrix[tool].byRole[role])||0),0));
+  const grandTotal = toolList.reduce((s,tool)=>s+((toolRoleMatrix[tool]&&toolRoleMatrix[tool].total)||0),0);
+  tbody += '<tr style="background:#fefce8;font-weight:700"><td style="position:sticky;left:0;background:#fefce8">總計</td>';
+  colTotals.forEach(v=>tbody+=`<td style="text-align:center">${v||0}</td>`);
+  tbody += `<td style="text-align:center">${grandTotal}</td></tr>`;
+  tbody += '</tbody>';
+  table.innerHTML = colgroup + thead + tbody;
+}
+
+async function loadAnalytics(){
+  if(!getToken())return;
+  const startDate=document.getElementById('anaStart').value;
+  const endDate  =document.getElementById('anaEnd').value;
+  const role     =document.getElementById('anaRole').value;
+  const course   =document.getElementById('anaCourse').value;
+  showLoad('統計分析中...');
+  try{
+    const qs=new URLSearchParams({action:'analytics',token:getToken(),startDate,endDate,roleType:role,courseType:course}).toString();
+    const r=await fetch(API+'?'+qs);
+    const data=await r.json();
+    hideLoad();
+    if(!data.success){toast('載入失敗',data.message,'danger');return;}
+
+    // 課程類別下拉 + 預設日期區間（僅第一次載入時套用）
+    if(!anaMetaLoaded){
+      const courseSel=document.getElementById('anaCourse');
+      const courses=data.courseTypes||[];
+      courseSel.innerHTML='<option value="">全部</option>'+courses.map(c=>`<option value="${c}">${c}</option>`).join('');
+      anaMetaLoaded=true;
+      if(!startDate && !endDate && data.defaultRange){
+        document.getElementById('anaStart').value = data.defaultRange.start || '';
+        document.getElementById('anaEnd').value   = data.defaultRange.end || '';
+        loadAnalytics();
+        return;
+      }
+    }
+
+    document.getElementById('anaTotalCount').textContent = (data.summary.totalCount||0).toLocaleString();
+    document.getElementById('anaTotalHours').textContent = (data.summary.totalHours||0).toLocaleString();
+    document.getElementById('anaTotalDays').textContent  = (data.summary.totalDays||0).toLocaleString();
+    document.getElementById('anaTotalPart').textContent  = (data.summary.totalParticipants||0).toLocaleString();
+    const topToolEl = document.getElementById('anaTopTool');
+    topToolEl.textContent = data.summary.topTool || '—';
+    topToolEl.title = data.summary.topTool || '';
+
+    const jtc = data.summary.jobTypeCounts || {};
+    document.getElementById('anaDoctorCount').textContent = (jtc['醫師']||0).toLocaleString();
+    document.getElementById('anaTechCount').textContent   = (jtc['醫技']||0).toLocaleString();
+    document.getElementById('anaNurseCount').textContent  = (jtc['護理']||0).toLocaleString();
+    document.getElementById('anaRoomCount').textContent   = (data.summary.roomBorrowCount||0).toLocaleString();
+
+    document.getElementById('anaTrendChart').innerHTML = drawAnaTrendChart(data.monthlyTrend||[]);
+
+    const roleOrder=['西醫師','牙醫師','中醫師','藥師','醫事放射師','醫事檢驗師','護理師','營養師','呼吸治療師','物理治療師','職能治療師','臨床心理師','其他'];
+    renderAnaMatrix(data.matrix||{}, roleOrder, data.monthList||[]);
+    renderToolRoleMatrix(data.toolRoleMatrix||{}, data.toolList||[], roleOrder);
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
 }
 
 // Init
