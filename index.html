@@ -699,6 +699,24 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
       </div>
     </div>
   </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-md-6">
+      <div class="card" id="anaTopToolsCard">
+        <div class="card-hd"><span><i class="bi bi-trophy me-2" style="color:var(--ac)"></i>借用次數最多的教具 Top 10</span></div>
+        <div class="card-bd" style="padding:0" id="anaTopToolsList"></div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card" id="anaZeroCard">
+        <div class="card-hd" id="anaZeroHead">
+          <span><i class="bi bi-exclamation-circle me-2" style="color:var(--ac)"></i>借用 0 次清單</span>
+          <span id="anaZeroCount" style="font-size:.75rem;color:#94a3b8;font-weight:400"></span>
+        </div>
+        <div class="card-bd" style="padding:0;overflow-y:auto" id="anaZeroList"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- 開發中 -->
@@ -2506,6 +2524,65 @@ function renderToolRoleMatrix(toolRoleMatrix, toolList, roleOrder){
   table.innerHTML = colgroup + thead + tbody;
 }
 
+function syncZeroListHeight(){
+  const leftCard = document.getElementById('anaTopToolsCard');
+  const zeroCard = document.getElementById('anaZeroCard');
+  const zeroHead = document.getElementById('anaZeroHead');
+  const zeroList = document.getElementById('anaZeroList');
+  if(!leftCard || !zeroCard || !zeroList) return;
+  zeroCard.style.height = '';
+  zeroList.style.maxHeight = '';
+  const targetH = leftCard.offsetHeight;
+  if(!targetH) return;
+  zeroCard.style.height = targetH + 'px';
+  const headH = zeroHead ? zeroHead.offsetHeight : 0;
+  zeroList.style.maxHeight = (targetH - headH) + 'px';
+}
+
+function renderTopTools(topTools){
+  const wrap=document.getElementById('anaTopToolsList');
+  if(!topTools || !topTools.length){
+    wrap.innerHTML='<div class="text-center text-muted py-4" style="font-size:.85rem">尚無資料</div>';
+    return;
+  }
+  const maxCount = topTools[0].count || 1;
+  const medalColors=['#eab308','#94a3b8','#b45309'];
+  wrap.innerHTML = topTools.map((t,i)=>{
+    const pct = Math.max(4, Math.round((t.count/maxCount)*100));
+    const rankColor = i<3 ? medalColors[i] : '#94a3b8';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid #f1f5f9">
+      <div style="width:22px;text-align:center;font-weight:700;color:${rankColor};font-size:.9rem">${i+1}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.85rem;color:#334155;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${t.name}">${t.name}</div>
+        <div style="background:#f1f5f9;border-radius:4px;height:6px;margin-top:5px;overflow:hidden">
+          <div style="background:#2563eb;height:100%;width:${pct}%;border-radius:4px"></div>
+        </div>
+      </div>
+      <div style="font-size:.95rem;font-weight:700;color:#2563eb;min-width:36px;text-align:right">${t.count}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderZeroBorrowList(zeroList){
+  const wrap=document.getElementById('anaZeroList');
+  const countEl=document.getElementById('anaZeroCount');
+  if(countEl) countEl.textContent = zeroList.length ? ('共 '+zeroList.length+' 項') : '';
+  if(!zeroList || !zeroList.length){
+    wrap.innerHTML='<div class="text-center text-muted py-4" style="font-size:.85rem">目前沒有借用0次的教具</div>';
+    return;
+  }
+  const rowsPerCol = Math.ceil(zeroList.length/3) || 1;
+  wrap.style.display='grid';
+  wrap.style.gridTemplateColumns='repeat(3,1fr)';
+  wrap.style.gridAutoFlow='column';
+  wrap.style.gridTemplateRows=`repeat(${rowsPerCol},1fr)`;
+  wrap.innerHTML = zeroList.map(name=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:17px 18px;border-bottom:1px solid #f1f5f9;border-right:1px solid #f1f5f9;min-width:0">
+      <i class="bi bi-dash-circle" style="color:#cbd5e1;font-size:.85rem;flex-shrink:0"></i>
+      <div style="font-size:.85rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${name}">${name}</div>
+    </div>`).join('');
+}
+
 async function loadAnalytics(){
   if(!getToken())return;
   const startDate=document.getElementById('anaStart').value;
@@ -2553,11 +2630,15 @@ async function loadAnalytics(){
     const roleOrder=['西醫師','牙醫師','中醫師','藥師','醫事放射師','醫事檢驗師','護理師','營養師','呼吸治療師','物理治療師','職能治療師','臨床心理師','其他'];
     renderAnaMatrix(data.matrix||{}, roleOrder, data.monthList||[]);
     renderToolRoleMatrix(data.toolRoleMatrix||{}, data.toolList||[], roleOrder);
+    renderTopTools(data.topTools||[]);
+    renderZeroBorrowList(data.zeroBorrowList||[]);
+    syncZeroListHeight();
   }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
   finally{hideLoad();}
 }
 
 // Init
+window.addEventListener('resize', ()=>{ if(document.getElementById('anaZeroCard')) syncZeroListHeight(); });
 window.onload=()=>{
   const today=new Date().toISOString().split('T')[0];
   document.getElementById('queryStart').value=today;
