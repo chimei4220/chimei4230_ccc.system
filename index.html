@@ -175,10 +175,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   <a class="sb-link" onclick="showPanel('import',this)"><i class="bi bi-cloud-upload"></i>匯入資料</a>
   <a class="sb-link active" onclick="showPanel('query',this)"><i class="bi bi-card-list"></i>借用管理<span class="sb-badge" id="sb-count" style="display:none">0</span></a>
   <a class="sb-link" onclick="showPanel('maintenance',this)"><i class="bi bi-tools"></i>設備維修</a>
-  <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-box-seam"></i>耗材管理<span class="sb-dev">開發中</span></a>
+  <a class="sb-link" onclick="showPanel('requisition',this)"><i class="bi bi-box-seam"></i>耗材請領</a>
   <div class="sb-section">行政管理</div>
   <a class="sb-link" onclick="showPanel('assets',this)"><i class="bi bi-archive"></i>財產總覽</a>
-  <a class="sb-link" onclick="showPanel('dev',this)"><i class="bi bi-clipboard2-data"></i>耗材清單<span class="sb-dev">開發中</span></a>
+  <a class="sb-link" onclick="showPanel('consumables',this)"><i class="bi bi-clipboard2-data"></i>耗材清單</a>
   <a class="sb-link" onclick="showPanel('analytics',this)"><i class="bi bi-bar-chart-line"></i>統計分析</a>
   <div class="sb-section">系統設定</div>
   <a class="sb-link" onclick="showPanel('changelog',this)"><i class="bi bi-clock-history"></i>更新日誌</a>
@@ -479,7 +479,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
             <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">單號</th>
             <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">完成日期</th>
             <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">備</th>
-            <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">操作</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">操作</th>
           </tr>
         </thead>
         <tbody id="maintBody">
@@ -547,6 +547,120 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
         <div class="d-flex gap-2 ms-auto">
           <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
           <button class="btn btn-primary btn-sm" id="maintSubmitBtn" onclick="saveMaintenance()">新增</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 耗材請領 -->
+<div id="panel-requisition" class="panel">
+  <div class="pg-head">
+    <div class="pg-title">
+      <div class="pg-icon"><i class="bi bi-box-seam"></i></div>
+      <div><h5>耗材請領</h5><div class="pg-sub">耗材請購、補充、領用紀錄管理</div></div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openRequisitionModal()"><i class="bi bi-plus-lg me-1"></i>新增紀錄</button>
+  </div>
+
+  <!-- 狀態快篩 -->
+  <div class="stf" id="reqStfBar">
+    <button class="stf-btn active" data-status="" onclick="setReqStf('',this)">全部<span class="cnt" id="rcnt-all">—</span></button>
+    <button class="stf-btn" data-status="採購中" onclick="setReqStf('採購中',this)">採購中<span class="cnt" id="rcnt-採購中">—</span></button>
+    <button class="stf-btn" data-status="備用" onclick="setReqStf('備用',this)">備用<span class="cnt" id="rcnt-備用">—</span></button>
+    <button class="stf-btn" data-status="已補充" onclick="setReqStf('已補充',this)">已補充<span class="cnt" id="rcnt-已補充">—</span></button>
+    <button class="stf-btn" data-status="已領回" onclick="setReqStf('已領回',this)">已領回<span class="cnt" id="rcnt-已領回">—</span></button>
+  </div>
+
+  <!-- 篩選列 -->
+  <div class="filter-card">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-2">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">採購日期（起）</label>
+        <input type="date" class="form-control form-control-sm" id="reqStart">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">採購日期（迄）</label>
+        <input type="date" class="form-control form-control-sm" id="reqEnd">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">規格 / 系統上品名 / 單號 / 材料編號</label>
+        <input type="text" class="form-control form-control-sm" id="reqKeyword" placeholder="輸入關鍵字搜尋">
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary btn-sm" onclick="loadRequisitions()"><i class="bi bi-search me-1"></i>查詢</button>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-secondary btn-sm" onclick="resetReqFilter()"><i class="bi bi-arrow-counterclockwise me-1"></i>清除篩選</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 結果表格 -->
+  <div class="card">
+    <div class="card-hd">
+      <span><i class="bi bi-table me-2" style="color:var(--ac)"></i>請領紀錄清單</span>
+      <span id="reqCount" style="font-size:.78rem;color:#94a3b8">尚未查詢</span>
+    </div>
+    <div class="table-responsive" style="max-height:560px;overflow-y:auto">
+      <table class="table table-hover table-bordered">
+        <thead>
+          <tr>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">狀態</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">採購日期</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">請購單編號</th>
+            <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">規格</th>
+            <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">系統上品名</th>
+            <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">材料編號</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">數量</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">補充日期</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">備</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">操作</th>
+          </tr>
+        </thead>
+        <tbody id="reqBody">
+          <tr><td colspan="10" class="text-center text-muted py-5" style="font-size:.85rem">請設定條件後按查詢，或直接點「新增紀錄」</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 耗材請領 新增/編輯 Modal -->
+<div class="modal fade" id="requisitionModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius:14px;border:none;">
+      <div class="modal-header" style="border-bottom:1px solid #f1f5f9;">
+        <h6 class="modal-title fw-bold" id="reqModalTitle"><i class="bi bi-box-seam me-2" style="color:var(--ac)"></i>新增請領紀錄</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="reqRowIndex">
+        <div class="row g-3" style="font-size:.85rem">
+          <div class="col-md-6"><label class="form-label fw-semibold">採購日期<span style="color:red">*</span></label><input type="date" class="form-control form-control-sm" id="rq採購日期"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">狀態<span style="color:red">*</span></label>
+            <select class="form-select form-select-sm" id="rq狀態">
+              <option>採購中</option><option>備用</option><option>已補充</option><option>已領回</option>
+            </select>
+          </div>
+          <div class="col-12"><label class="form-label fw-semibold">規格（品項）<span style="color:red">*</span></label>
+            <select class="form-select form-select-sm" id="rq規格" onchange="onReqItemChange()">
+              <option value="">請選擇...</option>
+            </select>
+          </div>
+          <div class="col-md-6"><label class="form-label fw-semibold">系統上品名<span style="font-weight:400;color:#94a3b8">（自動帶出）</span></label><input type="text" class="form-control form-control-sm" id="rq系統上品名" readonly style="background:#f8fafc"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">材料編號<span style="font-weight:400;color:#94a3b8">（自動帶出）</span></label><input type="text" class="form-control form-control-sm" id="rq材料編號" readonly style="background:#f8fafc"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">請購單編號</label><input type="text" class="form-control form-control-sm" id="rq請購單編號" placeholder="例：115200098H1，或請領系統申請/黃單請領等"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">數量</label><input type="number" min="0" class="form-control form-control-sm" id="rq數量" placeholder="例：10"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">補充日期</label><input type="date" class="form-control form-control-sm" id="rq補充日期"></div>
+          <div class="col-12"><label class="form-label fw-semibold">備註</label><textarea class="form-control form-control-sm" id="rq備註1" rows="2" placeholder="補充說明（選填）"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid #f1f5f9;justify-content:space-between">
+        <button class="btn btn-outline-danger btn-sm" id="reqDeleteBtn" style="display:none" onclick="deleteRequisitionRow()"><i class="bi bi-trash me-1"></i>刪除</button>
+        <div class="d-flex gap-2 ms-auto">
+          <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+          <button class="btn btn-primary btn-sm" id="reqSubmitBtn" onclick="saveRequisition()">新增</button>
         </div>
       </div>
     </div>
@@ -690,6 +804,103 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
             <tr><td colspan="11" class="text-center text-muted py-5" style="font-size:.85rem">載入中...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 耗材清單 -->
+<div id="panel-consumables" class="panel">
+  <div class="pg-head">
+    <div class="pg-title">
+      <div class="pg-icon"><i class="bi bi-clipboard2-data"></i></div>
+      <div><h5>耗材清單</h5><div class="pg-sub">臨床技能中心耗材品項總覽</div></div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openConsumableModal()"><i class="bi bi-plus-lg me-1"></i>新增耗材</button>
+  </div>
+
+  <!-- 篩選列 -->
+  <div class="filter-card">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">分類</label>
+        <select class="form-select form-select-sm" id="csCategory" onchange="loadConsumables()">
+          <option value="">全部分類</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">材料編號 / 名稱 / 系統上品名關鍵字</label>
+        <input type="text" class="form-control form-control-sm" id="csKeyword" placeholder="輸入關鍵字搜尋">
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary btn-sm" onclick="loadConsumables()"><i class="bi bi-search me-1"></i>查詢</button>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-secondary btn-sm" onclick="resetConsumableFilter()"><i class="bi bi-arrow-counterclockwise me-1"></i>清除篩選</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 結果表格 -->
+  <div class="card">
+    <div class="card-hd">
+      <span><i class="bi bi-table me-2" style="color:var(--ac)"></i>耗材清單</span>
+      <span id="csCount" style="font-size:.78rem;color:#94a3b8">尚未查詢</span>
+    </div>
+    <div class="table-responsive" style="max-height:640px;overflow-y:auto">
+      <table class="table table-hover table-bordered">
+        <thead>
+          <tr>
+            <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">材料編號</th>
+            <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">系統上品名</th>
+            <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">名稱</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">庫房</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">請領方式</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">分類</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">備</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">操作</th>
+          </tr>
+        </thead>
+        <tbody id="csBody">
+          <tr><td colspan="8" class="text-center text-muted py-5" style="font-size:.85rem">載入中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 耗材清單 新增/編輯 Modal -->
+<div class="modal fade" id="consumableModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius:14px;border:none;">
+      <div class="modal-header" style="border-bottom:1px solid #f1f5f9;">
+        <h6 class="modal-title fw-bold" id="csModalTitle"><i class="bi bi-clipboard2-data me-2" style="color:var(--ac)"></i>新增耗材</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="csRowIndex">
+        <div class="row g-3" style="font-size:.85rem">
+          <div class="col-12"><label class="form-label fw-semibold">分類<span style="color:red">*</span></label>
+            <select class="form-select form-select-sm" id="csCatSel"></select>
+          </div>
+          <div class="col-12"><label class="form-label fw-semibold">名稱<span style="color:red">*</span></label><input type="text" class="form-control form-control-sm" id="cs名稱" placeholder="例：20G留置針"></div>
+          <div class="col-12"><label class="form-label fw-semibold">系統上品名</label><input type="text" class="form-control form-control-sm" id="cs系統上品名" placeholder="例：I.V CATH 20Gx1 1/4 (無閥)"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">材料編號</label><input type="text" class="form-control form-control-sm" id="cs材料編號" placeholder="例：11-025-1252031"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">庫房</label><input type="text" class="form-control form-control-sm" id="cs庫房" placeholder="例：2923 衛材庫" list="csWhList">
+            <datalist id="csWhList"><option value="2923 衛材庫"><option value="2922一般庫房"><option value="藥庫"><option value="線上請購"><option value="資訊室"></datalist>
+          </div>
+          <div class="col-md-6"><label class="form-label fw-semibold">請領方式</label><input type="text" class="form-control form-control-sm" id="cs請領方式" placeholder="例：請領系統" list="csMethodList">
+            <datalist id="csMethodList"><option value="請領系統"><option value="寫黃單到藥庫"><option value="請購單系統"><option value="文具用品請購"><option value="向資訊室請領"></datalist>
+          </div>
+          <div class="col-12"><label class="form-label fw-semibold">備註</label><textarea class="form-control form-control-sm" id="cs備註" rows="2" placeholder="補充說明（選填）"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid #f1f5f9;justify-content:space-between">
+        <button class="btn btn-outline-danger btn-sm" id="csDeleteBtn" style="display:none" onclick="deleteConsumableRow()"><i class="bi bi-trash me-1"></i>刪除</button>
+        <div class="d-flex gap-2 ms-auto">
+          <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+          <button class="btn btn-primary btn-sm" id="csSubmitBtn" onclick="saveConsumable()">新增</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1204,6 +1415,8 @@ function showPanel(name,el){
   if(name==='analytics') loadAnalytics();
   if(name==='changelog') loadChangelog();
   if(name==='maintenance'&&!maintResults.length) loadMaintenance();
+  if(name==='consumables'&&!csResults.length) loadConsumables();
+  if(name==='requisition'&&!reqResults.length) loadRequisitions();
 }
 
 // Import tabs
@@ -1783,7 +1996,7 @@ function openEdit(ri){
   // handle time separately
   document.getElementById('edit時段起').value=fmtTimeVal(row['時段(起)']);
   document.getElementById('edit時段迄').value=fmtTimeVal(row['時段(迄)']);
-  new bootstrap.Modal(document.getElementById('editModal')).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).show();
 }
 async function saveEdit(){
   const ri=parseInt(document.getElementById('editRowIndex').value);
@@ -2348,7 +2561,7 @@ function openAssetModal(rowIndex, prefillType, prefillParent) {
     }
     if (prefillParent) document.getElementById('am父項').value = decodeURIComponent(prefillParent);
   }
-  new bootstrap.Modal(document.getElementById('assetModal')).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('assetModal')).show();
 }
 
 async function saveAsset() {
@@ -2439,7 +2652,7 @@ function openRetiredModal(rowIndex) {
     const el = document.getElementById(id);
     if (el) el.value = val;
   });
-  new bootstrap.Modal(document.getElementById('retiredModal')).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('retiredModal')).show();
 }
 
 async function saveRetired() {
@@ -3016,7 +3229,7 @@ async function openMaintenanceModal(rowIndex){
   ensureOptionValue(custSel, custVal);
   custSel.value = custVal;
 
-  new bootstrap.Modal(document.getElementById('maintenanceModal')).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('maintenanceModal')).show();
 }
 
 async function saveMaintenance(){
@@ -3068,6 +3281,355 @@ async function deleteMaintenanceRow(){
     bootstrap.Modal.getInstance(document.getElementById('maintenanceModal')).hide();
     toast('已刪除','','success');
     loadMaintenance();
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+// 耗材清單
+let csResults = [];
+let csCategoriesLoaded = false;
+
+async function loadConsumables(){
+  if(!getToken())return;
+  const params=new URLSearchParams({
+    action:'queryConsumables', token:getToken(),
+    keyword:document.getElementById('csKeyword').value,
+    category:document.getElementById('csCategory').value
+  });
+  showLoad('查詢中...');
+  try{
+    const r=await fetch(API+'?'+params);
+    const data=await r.json();
+    hideLoad();
+    if(!data.success){toast('查詢失敗',data.message,'danger');return;}
+    csResults = data.data||[];
+    if(!csCategoriesLoaded && data.categories){
+      const catSel=document.getElementById('csCategory');
+      const catSelModal=document.getElementById('csCatSel');
+      const opts = data.categories.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      catSel.innerHTML = '<option value="">全部分類</option>' + opts;
+      catSelModal.innerHTML = opts;
+      csCategoriesLoaded = true;
+    }
+    renderConsumables();
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+function resetConsumableFilter(){
+  document.getElementById('csKeyword').value='';
+  document.getElementById('csCategory').value='';
+  loadConsumables();
+}
+
+const CS_CAT_COLORS = {
+  '注射 / 輸液類': '#dbeafe;color:#1d4ed8',
+  '紗布 / 敷料 / 膠帶': '#fce7f3;color:#9d174d',
+  '石膏 / 繃帶': '#ffedd5;color:#9a3412',
+  '縫合相關': '#ede9fe;color:#5b21b6',
+  '導尿 / 引流 / 管路': '#cffafe;color:#155e75',
+  '手套': '#ccfbf1;color:#0f766e',
+  '消毒 / 清潔用品': '#dcfce7;color:#166534',
+  '呼吸道 / 通氣 / 急救': '#fee2e2;color:#991b1b',
+  '電池': '#fef9c3;color:#854d0e',
+  '教學模型耗材 / 零件': '#e0e7ff;color:#3730a3',
+  '辦公文具': '#e5e7eb;color:#4b5563',
+  '收納整理箱': '#fef3c7;color:#92400e',
+  '3C / 資訊設備': '#e0f2fe;color:#075985',
+  '其他': '#f1f5f9;color:#64748b'
+};
+
+function renderConsumables(){
+  const tbody=document.getElementById('csBody');
+  document.getElementById('csCount').textContent = `共 ${csResults.length} 筆`;
+  if(!csResults.length){
+    tbody.innerHTML='<tr><td colspan="8" class="text-center text-muted py-5" style="font-size:.85rem">查無資料</td></tr>';
+    return;
+  }
+  let html='';
+  csResults.forEach(row=>{
+    const hasNote = String(row['備註']||'').trim()!=='';
+    const cat = row['分類']||'';
+    const catStyle = CS_CAT_COLORS[cat] || '#f1f5f9;color:#64748b';
+    html += `<tr>
+      <td style="font-size:.85rem;white-space:nowrap">${escapeHtml(row['材料編號']||'')}</td>
+      <td style="font-size:.85rem;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(row['系統上品名']||'')}">${escapeHtml(row['系統上品名']||'')}</td>
+      <td style="font-size:.85rem;white-space:nowrap"><span style="color:var(--ac);font-weight:600">${escapeHtml(row['名稱']||'')}</span></td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center">${escapeHtml(row['庫房']||'')}</td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center">${escapeHtml(row['請領方式']||'')}</td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center"><span class="st" style="background:${catStyle}">${escapeHtml(cat)}</span></td>
+      <td style="text-align:center">${hasNote?`<span title="${escapeHtml(row['備註'])}" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:#ef4444;color:#fff;border-radius:50%;font-size:.65rem;font-weight:700;cursor:help">備</span>`:''}</td>
+      <td style="text-align:center"><button class="btn btn-sm" style="background:var(--ac);color:#fff;font-size:.75rem;padding:4px 8px;border-radius:6px;line-height:1" onclick="openConsumableModal(${row._rowIndex})" title="編輯"><i class="bi bi-pencil"></i></button></td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+async function openConsumableModal(rowIndex){
+  await loadConsumableCategoriesIfNeeded();
+  const row = rowIndex ? csResults.find(r=>r._rowIndex===rowIndex) : null;
+  document.getElementById('csRowIndex').value = row ? row._rowIndex : '';
+  document.getElementById('csModalTitle').innerHTML = row
+    ? '<i class="bi bi-clipboard2-data me-2" style="color:var(--ac)"></i>編輯耗材'
+    : '<i class="bi bi-clipboard2-data me-2" style="color:var(--ac)"></i>新增耗材';
+  document.getElementById('csSubmitBtn').textContent = row ? '儲存' : '新增';
+  document.getElementById('csDeleteBtn').style.display = row ? '' : 'none';
+
+  document.getElementById('csCatSel').value = row ? (row['分類']||'') : (document.getElementById('csCategory').value||'');
+  document.getElementById('cs名稱').value = row ? (row['名稱']||'') : '';
+  document.getElementById('cs系統上品名').value = row ? (row['系統上品名']||'') : '';
+  document.getElementById('cs材料編號').value = row ? (row['材料編號']||'') : '';
+  document.getElementById('cs庫房').value = row ? (row['庫房']||'') : '';
+  document.getElementById('cs請領方式').value = row ? (row['請領方式']||'') : '';
+  document.getElementById('cs備註').value = row ? (row['備註']||'') : '';
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('consumableModal')).show();
+}
+
+async function loadConsumableCategoriesIfNeeded(){
+  if(csCategoriesLoaded) return;
+  await loadConsumables();
+}
+
+async function saveConsumable(){
+  const rowIndex = document.getElementById('csRowIndex').value;
+  const name = document.getElementById('cs名稱').value.trim();
+  const category = document.getElementById('csCatSel').value;
+  if(!category){toast('請選擇分類','','danger');return;}
+  if(!name){toast('請填寫名稱','','danger');return;}
+  const data = {
+    '分類': category,
+    '名稱': name,
+    '系統上品名': document.getElementById('cs系統上品名').value.trim(),
+    '材料編號': document.getElementById('cs材料編號').value.trim(),
+    '庫房': document.getElementById('cs庫房').value.trim(),
+    '請領方式': document.getElementById('cs請領方式').value.trim(),
+    '備註': document.getElementById('cs備註').value.trim()
+  };
+  const isEdit = !!rowIndex;
+  showLoad(isEdit?'儲存中...':'新增中...');
+  try{
+    const body = isEdit
+      ? {action:'updateConsumable', token:getToken(), rowIndex:parseInt(rowIndex), data}
+      : {action:'insertConsumable', token:getToken(), data};
+    const r=await fetch(API,{method:'POST',body:JSON.stringify(body)});
+    const res=await r.json();
+    hideLoad();
+    if(!res.success){toast(isEdit?'儲存失敗':'新增失敗',res.message,'danger');return;}
+    bootstrap.Modal.getInstance(document.getElementById('consumableModal')).hide();
+    toast(isEdit?'儲存成功':'新增成功','','success');
+    loadConsumables();
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+async function deleteConsumableRow(){
+  const rowIndex = parseInt(document.getElementById('csRowIndex').value);
+  if(!rowIndex)return;
+  if(!confirm('確定要刪除這筆耗材嗎？'))return;
+  showLoad('刪除中...');
+  try{
+    const r=await fetch(API,{method:'POST',body:JSON.stringify({action:'deleteConsumable', token:getToken(), rowIndex})});
+    const data=await r.json();
+    hideLoad();
+    if(!data.success){toast('刪除失敗',data.message,'danger');return;}
+    bootstrap.Modal.getInstance(document.getElementById('consumableModal')).hide();
+    toast('已刪除','','success');
+    loadConsumables();
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+// 耗材請領
+let reqResults = [];
+let filteredReq = [];
+let currentReqStf = '';
+let reqItemOptionsLoaded = false;
+
+async function loadRequisitions(){
+  if(!getToken())return;
+  const params=new URLSearchParams({
+    action:'queryRequisitions', token:getToken(),
+    startDate:document.getElementById('reqStart').value,
+    endDate:document.getElementById('reqEnd').value,
+    keyword:document.getElementById('reqKeyword').value
+  });
+  showLoad('查詢中...');
+  try{
+    const r=await fetch(API+'?'+params);
+    const data=await r.json();
+    hideLoad();
+    if(!data.success){toast('查詢失敗',data.message,'danger');return;}
+    reqResults = data.data||[];
+    applyReqStf(currentReqStf);
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+function resetReqFilter(){
+  document.getElementById('reqStart').value='';
+  document.getElementById('reqEnd').value='';
+  document.getElementById('reqKeyword').value='';
+  loadRequisitions();
+}
+
+function setReqStf(v,el){
+  currentReqStf=v;
+  document.querySelectorAll('#reqStfBar .stf-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  applyReqStf(v);
+}
+function applyReqStf(v){
+  filteredReq = v ? reqResults.filter(r=>r['狀態']===v) : reqResults;
+  updateReqCounts();
+  renderRequisitions();
+}
+function updateReqCounts(){
+  const counts={};
+  reqResults.forEach(r=>{const s=r['狀態']||'';counts[s]=(counts[s]||0)+1;});
+  document.getElementById('rcnt-all').textContent=reqResults.length;
+  ['採購中','備用','已補充','已領回'].forEach(s=>{
+    const el=document.getElementById('rcnt-'+s);if(el)el.textContent=counts[s]||0;
+  });
+}
+
+const REQ_STATUS_COLOR = {
+  '採購中':'#fef3c7;color:#92400e',
+  '備用':'#e0f2fe;color:#075985',
+  '已補充':'#dcfce7;color:#166534',
+  '已領回':'#e5e7eb;color:#4b5563'
+};
+
+function renderRequisitions(){
+  const tbody=document.getElementById('reqBody');
+  document.getElementById('reqCount').textContent = `共 ${filteredReq.length} 筆`;
+  if(!filteredReq.length){
+    tbody.innerHTML='<tr><td colspan="10" class="text-center text-muted py-5" style="font-size:.85rem">查無資料</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filteredReq.map(row=>{
+    const st = row['狀態']||'';
+    const stStyle = REQ_STATUS_COLOR[st] || '#f1f5f9;color:#64748b';
+    const hasNote = String(row['備註1']||'').trim()!=='';
+    return `<tr>
+      <td style="text-align:center"><span class="st" style="background:${stStyle}">${st||'—'}</span></td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center">${row['採購日期']||''}</td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center">${escapeHtml(row['請購單編號']||'')}</td>
+      <td style="font-size:.85rem;font-weight:600;color:var(--ac);white-space:nowrap">${escapeHtml(row['規格']||'')}</td>
+      <td style="font-size:.85rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(row['系統上品名']||'')}">${escapeHtml(row['系統上品名']||'')}</td>
+      <td style="font-size:.85rem;white-space:nowrap">${escapeHtml(row['材料編號']||'')}</td>
+      <td style="font-size:.85rem;text-align:center">${row['數量']||''}</td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center">${row['補充日期']||''}</td>
+      <td style="text-align:center">${hasNote?`<span title="${escapeHtml(row['備註1'])}" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:#ef4444;color:#fff;border-radius:50%;font-size:.65rem;font-weight:700;cursor:help">備</span>`:''}</td>
+      <td style="text-align:center"><button class="btn btn-sm" style="background:var(--ac);color:#fff;font-size:.75rem;padding:4px 8px;border-radius:6px;line-height:1" onclick="openRequisitionModal(${row._rowIndex})" title="編輯"><i class="bi bi-pencil"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+
+let reqConsumableCache = [];
+async function ensureReqItemOptions(){
+  if(reqItemOptionsLoaded) return;
+  try{
+    const r=await fetch(API+'?action=queryConsumables&token='+encodeURIComponent(getToken())+'&keyword=');
+    const data=await r.json();
+    if(data.success){
+      reqConsumableCache = data.data||[];
+      const names=[...new Set(reqConsumableCache.map(c=>c['名稱']).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+      const sel=document.getElementById('rq規格');
+      sel.innerHTML='<option value="">請選擇...</option>'+names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+      reqItemOptionsLoaded=true;
+    }
+  }catch(e){ /* 靜默失敗 */ }
+}
+
+function onReqItemChange(){
+  const name = document.getElementById('rq規格').value;
+  const match = reqConsumableCache.find(c=>c['名稱']===name);
+  document.getElementById('rq系統上品名').value = match ? (match['系統上品名']||'') : '';
+  document.getElementById('rq材料編號').value = match ? (match['材料編號']||'') : '';
+}
+
+async function openRequisitionModal(rowIndex){
+  await ensureReqItemOptions();
+  const row = rowIndex ? reqResults.find(r=>r._rowIndex===rowIndex) : null;
+  document.getElementById('reqRowIndex').value = row ? row._rowIndex : '';
+  document.getElementById('reqModalTitle').innerHTML = row
+    ? '<i class="bi bi-box-seam me-2" style="color:var(--ac)"></i>編輯請領紀錄'
+    : '<i class="bi bi-box-seam me-2" style="color:var(--ac)"></i>新增請領紀錄';
+  document.getElementById('reqSubmitBtn').textContent = row ? '儲存' : '新增';
+  document.getElementById('reqDeleteBtn').style.display = row ? '' : 'none';
+
+  document.getElementById('rq採購日期').value = row ? (row['採購日期']||'') : new Date().toISOString().split('T')[0];
+  document.getElementById('rq狀態').value = row ? (row['狀態']||'採購中') : '採購中';
+  document.getElementById('rq請購單編號').value = row ? (row['請購單編號']||'') : '';
+  document.getElementById('rq數量').value = row ? (row['數量']||'') : '';
+  document.getElementById('rq補充日期').value = row ? (row['補充日期']||'') : '';
+  document.getElementById('rq備註1').value = row ? (row['備註1']||'') : '';
+
+  const nameSel=document.getElementById('rq規格');
+  const nameVal = row ? (row['規格']||'') : '';
+  if(nameVal && !Array.from(nameSel.options).some(o=>o.value===nameVal)){
+    const opt=document.createElement('option'); opt.value=nameVal; opt.textContent=nameVal;
+    nameSel.appendChild(opt);
+  }
+  nameSel.value = nameVal;
+  if(row){
+    document.getElementById('rq系統上品名').value = row['系統上品名']||'';
+    document.getElementById('rq材料編號').value = row['材料編號']||'';
+  } else {
+    onReqItemChange();
+  }
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('requisitionModal')).show();
+}
+
+async function saveRequisition(){
+  const rowIndex = document.getElementById('reqRowIndex').value;
+  const 採購日期 = document.getElementById('rq採購日期').value;
+  const 規格 = document.getElementById('rq規格').value;
+  if(!採購日期){toast('請選擇採購日期','','danger');return;}
+  if(!規格){toast('請選擇規格（品項）','','danger');return;}
+  const data = {
+    '採購日期': 採購日期,
+    '請購單編號': document.getElementById('rq請購單編號').value.trim(),
+    '規格': 規格,
+    '系統上品名': document.getElementById('rq系統上品名').value,
+    '材料編號': document.getElementById('rq材料編號').value,
+    '數量': document.getElementById('rq數量').value,
+    '狀態': document.getElementById('rq狀態').value,
+    '補充日期': document.getElementById('rq補充日期').value,
+    '備註1': document.getElementById('rq備註1').value.trim()
+  };
+  const isEdit = !!rowIndex;
+  showLoad(isEdit?'儲存中...':'新增中...');
+  try{
+    const body = isEdit
+      ? {action:'updateRequisition', token:getToken(), rowIndex:parseInt(rowIndex), data}
+      : {action:'insertRequisition', token:getToken(), data};
+    const r=await fetch(API,{method:'POST',body:JSON.stringify(body)});
+    const res=await r.json();
+    hideLoad();
+    if(!res.success){toast(isEdit?'儲存失敗':'新增失敗',res.message,'danger');return;}
+    bootstrap.Modal.getInstance(document.getElementById('requisitionModal')).hide();
+    toast(isEdit?'儲存成功':'新增成功','','success');
+    loadRequisitions();
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+async function deleteRequisitionRow(){
+  const rowIndex = parseInt(document.getElementById('reqRowIndex').value);
+  if(!rowIndex)return;
+  if(!confirm('確定要刪除這筆請領紀錄嗎？'))return;
+  showLoad('刪除中...');
+  try{
+    const r=await fetch(API,{method:'POST',body:JSON.stringify({action:'deleteRequisition', token:getToken(), rowIndex})});
+    const data=await r.json();
+    hideLoad();
+    if(!data.success){toast('刪除失敗',data.message,'danger');return;}
+    bootstrap.Modal.getInstance(document.getElementById('requisitionModal')).hide();
+    toast('已刪除','','success');
+    loadRequisitions();
   }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
   finally{hideLoad();}
 }
@@ -3177,7 +3739,7 @@ function openChangelogModal(item){
     document.getElementById('clgContent').value='';
     document.getElementById('clgDate').value=new Date().toISOString().split('T')[0];
   }
-  new bootstrap.Modal(document.getElementById('changelogModal')).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('changelogModal')).show();
 }
 
 async function submitChangelog(){
@@ -3217,6 +3779,19 @@ async function deleteChangelogRow(rowIndex){
   }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
   finally{hideLoad();}
 }
+
+// 保險機制：避免 Modal 遮罩層在某些情況下沒有正確移除，導致畫面卡死需要重新整理
+document.addEventListener('hidden.bs.modal', ()=>{
+  setTimeout(()=>{
+    const anyOpen = document.querySelector('.modal.show');
+    if(!anyOpen){
+      document.querySelectorAll('.modal-backdrop').forEach(el=>el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('padding-right');
+    }
+  }, 150);
+});
 
 window.onload=()=>{
   const today=new Date().toISOString().split('T')[0];
