@@ -1327,7 +1327,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
-const API='https://script.google.com/macros/s/AKfycbwBFElgV_PWDBZRU8jl7ABj7qxPg6R0oW6NCoyp7cf7xTlYfuVo_GZANbd5S39mMEhU/exec';
+const API='https://script.google.com/macros/s/AKfycbzunzd5pHXhZ7ayc6YnNMRXbZWddA0aQ_nmqQs1eU09LxUrRKYEnk7850YbZ3o9PGar/exec';
 let parsedRows=[],queryResults=[],filteredResults=[],currentPage=1,pageSize=20,currentStf='';
 
 // ===== 登入系統 =====
@@ -1794,7 +1794,7 @@ function renderPreview(rows){
 }
 function cancelImport(){document.getElementById('parseResult').style.display='none';parsedRows=[];_dupSet=new Set();_compared=false;}
 
-function deleteSelectedRows(){
+async function deleteSelectedRows(){
   const checked=[...document.querySelectorAll('.row-chk:checked')].map(c=>parseInt(c.dataset.ri));
   if(!checked.length){toast('提示','請先勾選要刪除的列','info');return;}
   // 由大到小刪，避免 index 跑掉
@@ -1804,9 +1804,13 @@ function deleteSelectedRows(){
     toast('提示','預覽清單已清空','info');
     return;
   }
-  _dupSet=new Set();_updateMap={};_compared=false;
+  // 重新向後端比對剩餘列的重複狀態，避免其他列被誤判為「新增」
+  showLoad('重新比對中...');
+  _dupSet=await checkDuplicates();
+  _compared=true;
+  hideLoad();
   renderPreview(parsedRows);
-  toast('提示',`已移除 ${checked.length} 筆，若需重新比對請按「解析資料」`,'info');
+  toast('提示',`已移除 ${checked.length} 筆`,'success');
 }
 async function checkDuplicates(){
   try{
