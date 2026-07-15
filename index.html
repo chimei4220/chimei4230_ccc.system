@@ -1071,7 +1071,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
           <span><i class="bi bi-exclamation-circle me-2" style="color:var(--ac)"></i>借用 0 次清單</span>
           <span id="anaZeroCount" style="font-size:.75rem;color:#94a3b8;font-weight:400"></span>
         </div>
-        <div class="card-bd" style="padding:0;overflow-y:auto" id="anaZeroList"></div>
+        <div class="card-bd" style="padding:0" id="anaZeroList"></div>
       </div>
     </div>
   </div>
@@ -2943,18 +2943,13 @@ function renderToolRoleMatrix(toolRoleMatrix, toolList, roleOrder){
 }
 
 function syncZeroListHeight(){
-  const leftCard = document.getElementById('anaTopToolsCard');
+  // 不再強制與左側 Top10 卡片等高，改為讓「借用0次清單」依內容自然撐開，
+  // 避免項目較多時被壓縮成需要捲動才看得到全部（截圖/列印時尤其重要）
   const zeroCard = document.getElementById('anaZeroCard');
-  const zeroHead = document.getElementById('anaZeroHead');
   const zeroList = document.getElementById('anaZeroList');
-  if(!leftCard || !zeroCard || !zeroList) return;
+  if(!zeroCard || !zeroList) return;
   zeroCard.style.height = '';
   zeroList.style.maxHeight = '';
-  const targetH = leftCard.offsetHeight;
-  if(!targetH) return;
-  zeroCard.style.height = targetH + 'px';
-  const headH = zeroHead ? zeroHead.offsetHeight : 0;
-  zeroList.style.maxHeight = (targetH - headH) + 'px';
 }
 
 function renderTopTools(topTools){
