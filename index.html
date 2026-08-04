@@ -1580,12 +1580,15 @@ function mergeRows(rows){
     const segments=[];
     let seg=[group[0]];
     for(let i=1;i<group.length;i++){
-      const prev=new Date(group[i-1]['日期(起)']);
-      const curr=new Date(group[i]['日期(起)']);
+      const prevRow=group[i-1], currRow=group[i];
+      const prevIsRoom=String(prevRow['場地']||'').trim()==='臨床技能中心';
+      const currIsRoom=String(currRow['場地']||'').trim()==='臨床技能中心';
+      const prev=new Date(prevRow['日期(起)']);
+      const curr=new Date(currRow['日期(起)']);
       prev.setHours(0,0,0,0);curr.setHours(0,0,0,0);
       const diff=Math.round((curr-prev)/(1000*60*60*24));
-      if(diff===1){seg.push(group[i]);}
-      else{segments.push(seg);seg=[group[i]];}
+      if(diff===1 && !prevIsRoom && !currIsRoom){seg.push(currRow);}
+      else{segments.push(seg);seg=[currRow];}
     }
     segments.push(seg);
 
@@ -1817,6 +1820,7 @@ async function checkDuplicates(){
     // 傳入每筆的 key 和新的日期(迄)，讓後端比對並回傳需要更新的筆數
     const items=parsedRows.map(r=>({
       key:`${r.人事號}_${r['日期(起)']}_${r['時段(起)']}_${r.教具名稱}_${r.組數}`,
+      venue: r['場地']||'',
       newEndDate:(r._merged&&r._merged>1)?(r['日期(迄)']||r['日期(起)']||''):''
     }));
     const resp=await fetch(API,{method:'POST',body:JSON.stringify({action:'checkDuplicate',items,token:getToken()})});
