@@ -643,10 +643,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
               <option>採購中</option><option>備用</option><option>已補充</option><option>已領回</option>
             </select>
           </div>
-          <div class="col-12"><label class="form-label fw-semibold">規格（品項）<span style="color:red">*</span></label>
-            <select class="form-select form-select-sm" id="rq規格" onchange="onReqItemChange()">
-              <option value="">請選擇...</option>
-            </select>
+          <div class="col-12" style="position:relative">
+            <label class="form-label fw-semibold">規格（品項）<span style="color:red">*</span><span style="font-weight:400;color:#94a3b8;font-size:.75rem">（可輸入名稱關鍵字或材料編號搜尋）</span></label>
+            <input type="text" class="form-control form-control-sm" id="rq規格輸入" autocomplete="off"
+              placeholder="輸入品名關鍵字或材料編號搜尋..."
+              oninput="onReqSearchInput()" onfocus="onReqSearchInput()" onkeydown="onReqSearchKeydown(event)">
+            <input type="hidden" id="rq規格">
+            <div id="rq規格Dropdown" style="display:none;position:absolute;z-index:1060;top:100%;left:0;right:0;max-height:240px;overflow-y:auto;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.12);margin-top:2px;"></div>
           </div>
           <div class="col-md-6"><label class="form-label fw-semibold">系統上品名<span style="font-weight:400;color:#94a3b8">（自動帶出）</span></label><input type="text" class="form-control form-control-sm" id="rq系統上品名" readonly style="background:#f8fafc"></div>
           <div class="col-md-6"><label class="form-label fw-semibold">材料編號<span style="font-weight:400;color:#94a3b8">（自動帶出）</span></label><input type="text" class="form-control form-control-sm" id="rq材料編號" readonly style="background:#f8fafc"></div>
@@ -3536,21 +3539,96 @@ async function ensureReqItemOptions(){
     const r=await fetch(API+'?action=queryConsumables&token='+encodeURIComponent(getToken())+'&keyword=');
     const data=await r.json();
     if(data.success){
-      reqConsumableCache = data.data||[];
-      const names=[...new Set(reqConsumableCache.map(c=>c['名稱']).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
-      const sel=document.getElementById('rq規格');
-      sel.innerHTML='<option value="">請選擇...</option>'+names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+      reqConsumableCache = (data.data||[]).slice().sort((a,b)=>String(a['名稱']||'').localeCompare(String(b['名稱']||''),'zh-Hant'));
       reqItemOptionsLoaded=true;
     }
   }catch(e){ /* 靜默失敗 */ }
 }
 
-function onReqItemChange(){
-  const name = document.getElementById('rq規格').value;
-  const match = reqConsumableCache.find(c=>c['名稱']===name);
-  document.getElementById('rq系統上品名').value = match ? (match['系統上品名']||'') : '';
-  document.getElementById('rq材料編號').value = match ? (match['材料編號']||'') : '';
+let reqComboFiltered = [];
+let reqComboActiveIndex = -1;
+
+function onReqSearchInput(){
+  const input = document.getElementById('rq規格輸入');
+  const kw = input.value.trim();
+  // 允許直接輸入清單中沒有的品項；若剛好完全符合既有品名，自動帶出系統上品名/材料編號
+  document.getElementById('rq規格').value = kw;
+  const exact = reqConsumableCache.find(c=>c['名稱']===kw);
+  document.getElementById('rq系統上品名').value = exact ? (exact['系統上品名']||'') : '';
+  document.getElementById('rq材料編號').value = exact ? (exact['材料編號']||'') : '';
+
+  const kwLower = kw.toLowerCase();
+  reqComboFiltered = !kwLower ? reqConsumableCache.slice(0,200) : reqConsumableCache.filter(c=>{
+    const hay = ((c['名稱']||'')+'|'+(c['材料編號']||'')+'|'+(c['系統上品名']||'')).toLowerCase();
+    return hay.includes(kwLower);
+  });
+  renderReqComboDropdown();
 }
+
+function renderReqComboDropdown(){
+  const dd = document.getElementById('rq規格Dropdown');
+  reqComboActiveIndex = -1;
+  if(!reqComboFiltered.length){
+    dd.innerHTML = '<div style="padding:10px 12px;font-size:.8rem;color:#94a3b8">查無符合項目，將直接使用您輸入的文字</div>';
+    dd.style.display='block';
+    return;
+  }
+  dd.innerHTML = reqComboFiltered.map((c,i)=>`
+    <div class="req-combo-item" data-idx="${i}" onmousedown="selectReqItem(${i})"
+      style="padding:7px 12px;cursor:pointer;font-size:.83rem;border-bottom:1px solid #f1f5f9">
+      <div style="font-weight:600;color:#1e293b">${escapeHtml(c['名稱']||'')}</div>
+      <div style="font-size:.72rem;color:#94a3b8">${escapeHtml(c['材料編號']||'—')}${c['系統上品名']?' ・ '+escapeHtml(c['系統上品名']):''}</div>
+    </div>`).join('');
+  dd.style.display='block';
+}
+
+function selectReqItem(i){
+  const c = reqComboFiltered[i];
+  if(!c) return;
+  document.getElementById('rq規格').value = c['名稱']||'';
+  document.getElementById('rq規格輸入').value = c['名稱']||'';
+  document.getElementById('rq系統上品名').value = c['系統上品名']||'';
+  document.getElementById('rq材料編號').value = c['材料編號']||'';
+  closeReqDropdown();
+}
+
+function closeReqDropdown(){
+  const dd = document.getElementById('rq規格Dropdown');
+  if(dd) dd.style.display='none';
+  reqComboActiveIndex=-1;
+}
+
+function onReqSearchKeydown(e){
+  const dd = document.getElementById('rq規格Dropdown');
+  if(!dd || dd.style.display==='none') return;
+  const items = dd.querySelectorAll('.req-combo-item');
+  if(e.key==='ArrowDown'){
+    e.preventDefault();
+    if(!items.length) return;
+    reqComboActiveIndex = Math.min(reqComboActiveIndex+1, items.length-1);
+    highlightReqComboItem(items);
+  } else if(e.key==='ArrowUp'){
+    e.preventDefault();
+    if(!items.length) return;
+    reqComboActiveIndex = Math.max(reqComboActiveIndex-1, 0);
+    highlightReqComboItem(items);
+  } else if(e.key==='Enter'){
+    e.preventDefault();
+    if(reqComboActiveIndex>=0) selectReqItem(reqComboActiveIndex);
+    else closeReqDropdown();
+  } else if(e.key==='Escape'){
+    closeReqDropdown();
+  }
+}
+function highlightReqComboItem(items){
+  items.forEach((el,i)=>{ el.style.background = i===reqComboActiveIndex ? '#eff6ff' : '#fff'; });
+  if(reqComboActiveIndex>=0) items[reqComboActiveIndex].scrollIntoView({block:'nearest'});
+}
+document.addEventListener('click', function(e){
+  const input = document.getElementById('rq規格輸入');
+  const dd = document.getElementById('rq規格Dropdown');
+  if(input && dd && e.target!==input && !dd.contains(e.target)) dd.style.display='none';
+});
 
 async function openRequisitionModal(rowIndex){
   await ensureReqItemOptions();
@@ -3569,18 +3647,16 @@ async function openRequisitionModal(rowIndex){
   document.getElementById('rq補充日期').value = row ? (row['補充日期']||'') : '';
   document.getElementById('rq備註1').value = row ? (row['備註1']||'') : '';
 
-  const nameSel=document.getElementById('rq規格');
   const nameVal = row ? (row['規格']||'') : '';
-  if(nameVal && !Array.from(nameSel.options).some(o=>o.value===nameVal)){
-    const opt=document.createElement('option'); opt.value=nameVal; opt.textContent=nameVal;
-    nameSel.appendChild(opt);
-  }
-  nameSel.value = nameVal;
+  document.getElementById('rq規格').value = nameVal;
+  document.getElementById('rq規格輸入').value = nameVal;
+  closeReqDropdown();
   if(row){
     document.getElementById('rq系統上品名').value = row['系統上品名']||'';
     document.getElementById('rq材料編號').value = row['材料編號']||'';
   } else {
-    onReqItemChange();
+    document.getElementById('rq系統上品名').value = '';
+    document.getElementById('rq材料編號').value = '';
   }
 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('requisitionModal')).show();
