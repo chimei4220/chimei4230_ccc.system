@@ -42,6 +42,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 /* Card */
 .card{border:none;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);background:#fff;}
 .card-hd{padding:13px 18px;border-bottom:1px solid #f1f5f9;font-weight:600;font-size:.88rem;color:#334155;display:flex;align-items:center;justify-content:space-between;}
+.tbl-center th,.tbl-center td{text-align:center;vertical-align:middle;}
 .card-bd{padding:18px;}
 /* Status badges */
 .st{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.73rem;font-weight:600;white-space:nowrap;}
@@ -179,7 +180,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   <div class="sb-section">行政管理</div>
   <a class="sb-link" onclick="showPanel('assets',this)"><i class="bi bi-archive"></i>財產總覽</a>
   <a class="sb-link" onclick="showPanel('consumables',this)"><i class="bi bi-clipboard2-data"></i>耗材清單</a>
-  <a class="sb-link" onclick="showPanel('analytics',this)"><i class="bi bi-bar-chart-line"></i>統計分析</a>
+  <div class="sb-section">統計分析</div>
+  <a class="sb-link" onclick="showPanel('analytics',this)"><i class="bi bi-bar-chart-line"></i>中心統計</a>
+  <a class="sb-link" onclick="showPanel('rolestat',this)"><i class="bi bi-grid-3x3-gap"></i>職類統計</a>
+  <a class="sb-link" onclick="showPanel('cases',this)"><i class="bi bi-journal-richtext"></i>教案總覽</a>
+  <a class="sb-link" onclick="showPanel('jobreport',this)"><i class="bi bi-pencil-square"></i>職類填報</a>
   <div class="sb-section">系統設定</div>
   <a class="sb-link" onclick="showPanel('changelog',this)"><i class="bi bi-clock-history"></i>更新日誌</a>
   <div id="sidebarVersion" style="margin-top:auto;padding:14px 12px 4px;border-top:1px solid #f1f5f9;font-size:.75rem;color:#94a3b8;text-align:center">版本 v—</div>
@@ -914,7 +919,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   <div class="pg-head">
     <div class="pg-title">
       <div class="pg-icon"><i class="bi bi-bar-chart-line"></i></div>
-      <div><h5>統計分析</h5><div class="pg-sub">依職類別與月份統計借用概況</div></div>
+      <div><h5>中心統計</h5><div class="pg-sub">依職類別與月份統計「中心系統」登記的借用概況</div></div>
     </div>
   </div>
 
@@ -1072,9 +1077,410 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
       <div class="card" id="anaZeroCard">
         <div class="card-hd" id="anaZeroHead">
           <span><i class="bi bi-exclamation-circle me-2" style="color:var(--ac)"></i>借用 0 次清單</span>
-          <span id="anaZeroCount" style="font-size:.75rem;color:#94a3b8;font-weight:400"></span>
+          <span style="display:flex;align-items:center;gap:12px">
+            <button type="button" class="btn btn-sm btn-link p-0" style="font-size:.75rem;color:#64748b;text-decoration:none" data-bs-toggle="modal" data-bs-target="#zeroBorrowNoteModal"><i class="bi bi-info-circle me-1"></i>注意事項</button>
+            <span id="anaZeroCount" style="font-size:.75rem;color:#94a3b8;font-weight:400"></span>
+          </span>
         </div>
         <div class="card-bd" style="padding:0" id="anaZeroList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-12">
+      <div class="card" id="npAnaCard">
+        <div class="card-hd">
+          <span><i class="bi bi-person-badge me-2" style="color:var(--ac)"></i>專科護理師教具借用</span>
+          <span style="font-size:.72rem;color:#94a3b8;font-weight:400">依會議名稱關鍵字（NP／專科護理師／專師）比對，不影響上方護理師大分類的統計</span>
+        </div>
+        <div class="card-bd" id="npAnaBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 借用0次清單 注意事項 Modal -->
+<div class="modal fade" id="zeroBorrowNoteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title"><i class="bi bi-info-circle me-2" style="color:var(--ac)"></i>借用 0 次清單－操作型定義</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="font-size:.88rem;line-height:1.75;color:#334155">
+        <p style="font-weight:600;margin-bottom:6px">本清單顯示條件（需同時符合）：</p>
+        <ol style="padding-left:20px;margin-bottom:16px">
+          <li>資料來源為「財產總覽」中已填寫分類、且父項不是「教室設備」的教具</li>
+          <li>在您選擇的統計區間內，該教具於「借用管理」完全沒有借用紀錄</li>
+        </ol>
+        <p style="margin-bottom:16px">符合以上兩項條件的教具，就會列入本清單，作為提醒「這段期間內完全沒被借用過」的教具。</p>
+        <p style="font-weight:600;margin-bottom:6px">已手動排除的項目（不會出現在此清單）：</p>
+        <ul style="padding-left:20px;margin-bottom:16px">
+          <li style="margin-bottom:8px"><strong>自動電子血壓計</strong>：固定放置於教學門診診間，非透過本系統借用，故不列入提醒</li>
+          <li><strong>簡易型心肺復甦訓練模型</strong>：與借用系統上掛的「簡易型心肺復甦訓練模型(含AED)」其實是同一項教具，只是財產總覽登記的名稱不同（少了「(含AED)」），借用系統上不會出現以「簡易型心肺復甦訓練模型」這個名稱借用的紀錄，故不列入提醒</li>
+        </ul>
+        <p style="color:#94a3b8;font-size:.8rem;margin:0">如後續還有其他教具需要比照排除，請聯繫系統管理員調整清單。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 職類統計 -->
+<div id="panel-rolestat" class="panel">
+  <div class="pg-head">
+    <div class="pg-title">
+      <div class="pg-icon"><i class="bi bi-grid-3x3-gap"></i></div>
+      <div><h5>職類統計</h5><div class="pg-sub">合併「職類填報（單位）」與「中心系統」的教具使用數據</div></div>
+    </div>
+  </div>
+
+  <div class="filter-card">
+    <div class="d-flex flex-wrap gap-2 align-items-end">
+      <div>
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">年度（西元）</label>
+        <input type="number" class="form-control form-control-sm" id="rsYear" style="width:110px">
+      </div>
+      <div>
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">職類別（明細表用）</label>
+        <select class="form-select form-select-sm" id="rsRole" style="width:150px">
+          <option value="">請選擇職類別</option>
+          <option>西醫師</option><option>牙醫師</option><option>中醫師</option><option>藥師</option>
+          <option>醫事放射師</option><option>醫事檢驗師</option><option>護理師</option>
+          <option>營養師</option><option>呼吸治療師</option><option>物理治療師</option>
+          <option>職能治療師</option><option>臨床心理師</option><option>其他</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="loadRoleStat()"><i class="bi bi-search me-1"></i>查詢</button>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-hd">
+          <span><i class="bi bi-grid-3x3 me-2" style="color:var(--ac)"></i>職類別教具借用 × 月份統計（單位＋中心）</span>
+          <span style="font-size:.7rem;color:#94a3b8;font-weight:400">每月分「單位」「中心」兩欄</span>
+        </div>
+        <div style="padding:12px 18px 4px;font-size:.85rem;font-weight:700;color:var(--ac)">上半年（1~6月）</div>
+        <div class="table-responsive" id="rsMatrixWrapH1">
+          <table class="table table-bordered table-sm" style="font-size:.78rem;margin:0;table-layout:fixed;width:100%" id="rsMatrixTableH1"></table>
+        </div>
+        <div style="padding:14px 18px 4px;font-size:.85rem;font-weight:700;color:var(--ac);border-top:1px solid #f1f5f9">下半年（7~12月）</div>
+        <div class="table-responsive" id="rsMatrixWrapH2">
+          <table class="table table-bordered table-sm" style="font-size:.78rem;margin:0;table-layout:fixed;width:100%" id="rsMatrixTableH2"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-hd">
+          <span><i class="bi bi-table me-2" style="color:var(--ac)"></i>使用明細表 <span id="rsDetailRoleLabel" style="color:var(--ac)"></span></span>
+          <span id="rsDetailCount" style="font-size:.75rem;color:#94a3b8;font-weight:400"></span>
+        </div>
+        <div class="table-responsive" id="rsDetailWrap" style="max-height:520px;overflow-y:auto">
+          <table class="table table-bordered table-sm" style="font-size:.78rem;margin:0;table-layout:fixed;width:100%" id="rsDetailTable"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 職類填報 -->
+<div id="panel-jobreport" class="panel">
+  <div class="pg-head">
+    <div class="pg-title">
+      <div class="pg-icon"><i class="bi bi-pencil-square"></i></div>
+      <div><h5>職類填報</h5><div class="pg-sub">各職類單位回報單位內的教具使用次數（通常半年填報一次）</div></div>
+    </div>
+  </div>
+
+  <div class="filter-card">
+    <div class="row g-2 align-items-end">
+      <div class="col-6 col-md-2">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">職類別</label>
+        <select class="form-select form-select-sm" id="jrRole" onchange="jrRoleChanged()">
+          <option value="">請選擇</option>
+          <option>西醫師</option><option>牙醫師</option><option>中醫師</option><option>藥師</option>
+          <option>醫事放射師</option><option>醫事檢驗師</option><option>護理師</option>
+          <option>營養師</option><option>呼吸治療師</option><option>物理治療師</option>
+          <option>職能治療師</option><option>臨床心理師</option><option>其他</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">年度（民國）</label>
+        <input type="number" class="form-control form-control-sm" id="jrYear" placeholder="例如 115">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">回報期間</label>
+        <select class="form-select form-select-sm" id="jrHalf">
+          <option value="1">上半年（1~6月）</option>
+          <option value="2">下半年（7~12月）</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">填報人</label>
+        <input type="text" class="form-control form-control-sm" id="jrReporter" placeholder="請輸入姓名">
+      </div>
+      <div class="col-12 col-md-4">
+        <button class="btn btn-primary btn-sm" onclick="buildJobReportForm()"><i class="bi bi-table me-1"></i>建立／載入 填報表</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3" id="jrFormCard" style="display:none">
+    <div class="card-hd">
+      <span><i class="bi bi-list-check me-2" style="color:var(--ac)"></i>填報表格 <span id="jrFormLabel" style="color:var(--ac)"></span></span>
+      <button class="btn btn-outline-primary btn-sm" onclick="addJobReportRow()"><i class="bi bi-plus-lg me-1"></i>新增教具列</button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-sm" style="font-size:.82rem;margin:0" id="jrFormTable"></table>
+    </div>
+    <div class="card-bd d-flex justify-content-end" style="padding:12px 18px">
+      <button class="btn btn-primary btn-sm" onclick="submitJobReport()"><i class="bi bi-check-lg me-1"></i>送出填報</button>
+    </div>
+  </div>
+
+  <datalist id="jrToolNames"></datalist>
+
+  <div class="card">
+    <div class="card-hd">
+      <span><i class="bi bi-card-list me-2" style="color:var(--ac)"></i>已填報紀錄</span>
+      <span id="jrListCount" style="font-size:.75rem;color:#94a3b8;font-weight:400"></span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle tbl-center" style="font-size:.82rem;margin:0">
+        <thead class="table-light">
+          <tr><th>職類別</th><th>年月</th><th>教具名稱</th><th>使用次數</th><th>填報人</th><th>更新時間</th><th>備註</th><th style="width:80px">操作</th></tr>
+        </thead>
+        <tbody id="jrListBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 職類填報 編輯 Modal -->
+<div class="modal fade" id="jrEditModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title">編輯填報紀錄</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2">
+          <div class="col-6"><label class="form-label" style="font-size:.8rem;font-weight:600">職類別</label>
+            <select class="form-select form-select-sm" id="jrE職類別"><option>西醫師</option><option>牙醫師</option><option>中醫師</option><option>藥師</option><option>醫事放射師</option><option>醫事檢驗師</option><option>護理師</option><option>營養師</option><option>呼吸治療師</option><option>物理治療師</option><option>職能治療師</option><option>臨床心理師</option><option>其他</option></select>
+          </div>
+          <div class="col-4"><label class="form-label" style="font-size:.8rem;font-weight:600">年度（民國）</label>
+            <input type="number" class="form-control form-control-sm" id="jrE年度"></div>
+          <div class="col-2"><label class="form-label" style="font-size:.8rem;font-weight:600">月</label>
+            <select class="form-select form-select-sm" id="jrE月"><option value="01">1</option><option value="02">2</option><option value="03">3</option><option value="04">4</option><option value="05">5</option><option value="06">6</option><option value="07">7</option><option value="08">8</option><option value="09">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div>
+          <div class="col-6"><label class="form-label" style="font-size:.8rem;font-weight:600">教具名稱</label>
+            <input type="text" class="form-control form-control-sm" id="jrE教具名稱"></div>
+          <div class="col-6">
+            <label class="form-label" style="font-size:.8rem;font-weight:600">使用次數</label>
+            <input type="number" class="form-control form-control-sm" id="jrE使用次數" min="0">
+            <div class="form-check mt-1">
+              <input class="form-check-input" type="checkbox" id="jrE已報廢" onchange="document.getElementById('jrE使用次數').disabled=this.checked">
+              <label class="form-check-label" style="font-size:.78rem;color:#64748b" for="jrE已報廢">此教具這個月已報廢</label>
+            </div>
+          </div>
+          <div class="col-6"><label class="form-label" style="font-size:.8rem;font-weight:600">填報人</label>
+            <input type="text" class="form-control form-control-sm" id="jrE填報人"></div>
+          <div class="col-12"><label class="form-label" style="font-size:.8rem;font-weight:600">備註</label>
+            <input type="text" class="form-control form-control-sm" id="jrE備註"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-danger btn-sm me-auto" onclick="deleteJobReportRow_UI()"><i class="bi bi-trash me-1"></i>刪除</button>
+        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+        <button class="btn btn-primary btn-sm" onclick="saveJobReportEdit()">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 教案總覽 -->
+<div id="panel-cases" class="panel">
+  <div class="pg-head">
+    <div class="pg-title">
+      <div class="pg-icon"><i class="bi bi-journal-richtext"></i></div>
+      <div><h5>教案總覽</h5><div class="pg-sub">各職類教案開發清單與統計</div></div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openCaseModal()"><i class="bi bi-plus-lg me-1"></i>新增教案</button>
+  </div>
+
+  <div class="filter-card">
+    <div class="d-flex flex-wrap gap-2 align-items-end">
+      <div>
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">職類別</label>
+        <select class="form-select form-select-sm" id="caseFRole" style="width:140px" onchange="loadCases()">
+          <option value="">全部</option>
+          <option>西醫師</option><option>牙醫師</option><option>中醫師</option><option>藥師</option>
+          <option>醫事放射師</option><option>醫事檢驗師</option><option>護理師</option>
+          <option>營養師</option><option>呼吸治療師</option><option>物理治療師</option>
+          <option>職能治療師</option><option>臨床心理師</option><option>其他</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">年度（民國）</label>
+        <input type="number" class="form-control form-control-sm" id="caseFYear" style="width:110px" onchange="loadCases()">
+      </div>
+      <div>
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">狀態</label>
+        <select class="form-select form-select-sm" id="caseFStatus" style="width:120px" onchange="loadCases()">
+          <option value="">全部</option>
+          <option>使用中</option>
+          <option>已停用</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">關鍵字</label>
+        <input type="text" class="form-control form-control-sm" id="caseFKeyword" style="width:150px" placeholder="教案名稱">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="loadCases()"><i class="bi bi-search me-1"></i>查詢</button>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="card h-100"><div class="card-bd text-center" style="padding:14px 16px">
+        <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">教案總數</div>
+        <div style="font-size:1.55rem;font-weight:700;color:#1e293b" id="caseTotalCount">—</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card h-100"><div class="card-bd text-center" style="padding:14px 16px">
+        <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">使用中</div>
+        <div style="font-size:1.55rem;font-weight:700;color:#16a34a" id="caseActiveCount">—</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card h-100"><div class="card-bd text-center" style="padding:14px 16px">
+        <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">已停用</div>
+        <div style="font-size:1.55rem;font-weight:700;color:#94a3b8" id="caseRetiredCount">—</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card h-100"><div class="card-bd text-center" style="padding:14px 16px">
+        <div style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">教案數最多職類</div>
+        <div style="font-size:1.1rem;font-weight:700;color:#dc2626" id="caseTopRole">—</div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-hd"><span><i class="bi bi-bar-chart me-2" style="color:var(--ac)"></i>各職類教案數</span></div>
+        <div class="card-bd" id="caseRoleChart" style="min-height:160px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-hd"><span><i class="bi bi-list-ul me-2" style="color:var(--ac)"></i>教案清單</span><span id="caseListCount" style="font-size:.75rem;color:#94a3b8;font-weight:400"></span></div>
+        <div class="table-responsive">
+          <table class="table table-hover table-sm align-middle tbl-center" style="font-size:.82rem;margin:0">
+            <thead class="table-light">
+              <tr><th>教案名稱</th><th>職類別</th><th>開發單位</th><th>年度</th><th>狀態</th><th>內容說明</th><th>填報人</th><th style="width:80px">操作</th></tr>
+            </thead>
+            <tbody id="caseListBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 教案 新增/批次 Modal -->
+<div class="modal fade" id="caseModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title" id="caseModalTitle">新增教案</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2 mb-3">
+          <div class="col-6 col-md-3">
+            <label class="form-label" style="font-size:.8rem;font-weight:600">職類別</label>
+            <select class="form-select form-select-sm" id="caseRole" onchange="caseRoleChanged()">
+              <option value="">請選擇</option>
+              <option>西醫師</option><option>牙醫師</option><option>中醫師</option><option>藥師</option>
+              <option>醫事放射師</option><option>醫事檢驗師</option><option>護理師</option>
+              <option>營養師</option><option>呼吸治療師</option><option>物理治療師</option>
+              <option>職能治療師</option><option>臨床心理師</option><option>其他</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label" style="font-size:.8rem;font-weight:600">開發單位</label>
+            <input type="text" class="form-control form-control-sm" id="caseUnit">
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label" style="font-size:.8rem;font-weight:600">年度（民國）</label>
+            <input type="number" class="form-control form-control-sm" id="caseYear">
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label" style="font-size:.8rem;font-weight:600">填報人</label>
+            <input type="text" class="form-control form-control-sm" id="caseReporter">
+          </div>
+        </div>
+        <div id="caseRowsWrap"></div>
+        <button class="btn btn-outline-primary btn-sm mt-2" onclick="addCaseRow()"><i class="bi bi-plus-lg me-1"></i>新增教案列</button>
+        <datalist id="caseNamesList"></datalist>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+        <button class="btn btn-primary btn-sm" id="caseSubmitBtn" onclick="submitCases()">送出</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 教案 編輯 Modal -->
+<div class="modal fade" id="caseEditModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title">編輯教案</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2">
+          <div class="col-12"><label class="form-label" style="font-size:.8rem;font-weight:600">教案名稱</label>
+            <input type="text" class="form-control form-control-sm" id="caseE教案名稱"></div>
+          <div class="col-6"><label class="form-label" style="font-size:.8rem;font-weight:600">職類別</label>
+            <select class="form-select form-select-sm" id="caseE職類別"><option>西醫師</option><option>牙醫師</option><option>中醫師</option><option>藥師</option><option>醫事放射師</option><option>醫事檢驗師</option><option>護理師</option><option>營養師</option><option>呼吸治療師</option><option>物理治療師</option><option>職能治療師</option><option>臨床心理師</option><option>其他</option></select>
+          </div>
+          <div class="col-6"><label class="form-label" style="font-size:.8rem;font-weight:600">開發單位</label>
+            <input type="text" class="form-control form-control-sm" id="caseE開發單位"></div>
+          <div class="col-6"><label class="form-label" style="font-size:.8rem;font-weight:600">年度（民國）</label>
+            <input type="number" class="form-control form-control-sm" id="caseE年度"></div>
+          <div class="col-6"><label class="form-label" style="font-size:.8rem;font-weight:600">狀態</label>
+            <select class="form-select form-select-sm" id="caseE狀態"><option>使用中</option><option>已停用</option></select>
+          </div>
+          <div class="col-12"><label class="form-label" style="font-size:.8rem;font-weight:600">內容說明</label>
+            <textarea class="form-control form-control-sm" id="caseE內容說明" rows="2"></textarea></div>
+          <div class="col-6"><label class="form-label" style="font-size:.8rem;font-weight:600">填報人</label>
+            <input type="text" class="form-control form-control-sm" id="caseE填報人"></div>
+          <div class="col-6"><label class="form-label" style="font-size:.8rem;font-weight:600">備註</label>
+            <input type="text" class="form-control form-control-sm" id="caseE備註"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-danger btn-sm me-auto" onclick="deleteCaseRow_UI()"><i class="bi bi-trash me-1"></i>刪除</button>
+        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+        <button class="btn btn-primary btn-sm" onclick="saveCaseEdit()">儲存</button>
       </div>
     </div>
   </div>
@@ -1331,6 +1737,28 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const API='https://script.google.com/macros/s/AKfycbzunzd5pHXhZ7ayc6YnNMRXbZWddA0aQ_nmqQs1eU09LxUrRKYEnk7850YbZ3o9PGar/exec';
+
+// ══════════════════════════════════════════════
+//  Apps Script Web App 有個已知怪癖：/exec 會先 302 轉址到一個
+//  echo?user_content_key=... 的暫存網址才拿得到真正內容，短時間內
+//  連續打很多請求時，這個暫存網址偶爾會互相撞車變成 404，
+//  但其實 doGet 本身已經正常執行完畢。這種情況通常「重打一次」就會過，
+//  所以所有呼叫後端的地方都改用這個會自動重試的 fetchJson()，
+//  取代原本直接 fetch(...).then(r=>r.json())。
+// ══════════════════════════════════════════════
+async function fetchJson(url, opts, retries){
+  if (retries === undefined) retries = 2;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const r = await fetch(url, opts);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.json();
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise(res => setTimeout(res, 400 + attempt * 400));
+    }
+  }
+}
 let parsedRows=[],queryResults=[],filteredResults=[],currentPage=1,pageSize=20,currentStf='';
 
 // ===== 登入系統 =====
@@ -1420,6 +1848,9 @@ function showPanel(name,el){
   if(name==='maintenance'&&!maintResults.length) loadMaintenance();
   if(name==='consumables'&&!csResults.length) loadConsumables();
   if(name==='requisition'&&!reqResults.length) loadRequisitions();
+  if(name==='rolestat'&&!rsLoaded) loadRoleStat();
+  if(name==='cases'&&!caseLoaded) loadCases();
+  if(name==='jobreport'&&!jrListLoaded) loadJobReportList();
 }
 
 // Import tabs
@@ -1956,7 +2387,7 @@ function renderQueryPage(){
       <td>${st?`<span class="st st-${st}">${st}</span>`:''}</td>
       <td>${row['單位']||''}</td>
       <td><span class="id-pill">${row['人事號']||''}</span></td>
-      <td>${row['姓名']||''}</td>
+      <td>${row['姓名']||''}${row._isNP?' <span class="badge" style="background:#7c3aed;font-size:.65rem;vertical-align:middle" title="專科護理師">專</span>':''}</td>
       <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${row['教具名稱']||''}">${row['教具名稱']||''}</td>
       <td>${row['組數']||''}</td>
       <td>${(row['日期(起)']||'').includes('1899')?'':(row['日期(起)']||'')}</td>
@@ -3053,8 +3484,96 @@ async function loadAnalytics(){
     renderTopTools(data.topTools||[]);
     renderZeroBorrowList(data.zeroBorrowList||[]);
     syncZeroListHeight();
+    loadNPAnalytics();
   }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
   finally{hideLoad();}
+}
+
+// 專科護理師教具借用（獨立卡片，不影響上面的護理師大分類統計，載入失敗就安靜跳過，不擋主頁面）
+async function loadNPAnalytics(){
+  if(!getToken())return;
+  const endDate=document.getElementById('anaEnd').value;
+  const startDate=document.getElementById('anaStart').value;
+  try{
+    let url=API+'?action=npAnalytics&token='+encodeURIComponent(getToken());
+    if(startDate) url+='&startDate='+encodeURIComponent(startDate);
+    if(endDate) url+='&endDate='+encodeURIComponent(endDate);
+    const data=await fetchJson(url);
+    if(!data.success) return;
+    renderNPAnalytics(data);
+  }catch(err){ /* 安靜失敗，不影響主統計頁面 */ }
+}
+
+function renderNPAnalytics(data){
+  const wrap=document.getElementById('npAnaBody');
+  if(!data.total){
+    wrap.innerHTML='<div class="text-center text-muted py-4" style="font-size:.85rem">'+data.year+' 年度沒有會議名稱含「NP／專科護理師／專師」的借用紀錄</div>';
+    return;
+  }
+
+  const statCard=(label,value,color)=>`
+    <div style="flex:1 1 100px;min-width:90px">
+      <div class="card h-100" style="border-radius:10px;">
+        <div class="card-bd d-flex flex-column justify-content-center text-center" style="padding:12px 10px">
+          <div style="font-size:.78rem;color:#64748b;font-weight:600;margin-bottom:4px;white-space:nowrap">${label}</div>
+          <div style="font-size:1.3rem;font-weight:700;color:${color}">${value}</div>
+        </div>
+      </div>
+    </div>`;
+  const topToolCard=(label,value,color)=>`
+    <div style="flex:2.2 1 220px;min-width:200px">
+      <div class="card h-100" style="border-radius:10px;">
+        <div class="card-bd d-flex flex-column justify-content-center text-center" style="padding:12px 16px">
+          <div style="font-size:.8rem;color:#64748b;font-weight:600;margin-bottom:4px">${label}</div>
+          <div style="font-size:1.3rem;font-weight:700;color:${color}">${value}</div>
+        </div>
+      </div>
+    </div>`;
+  const statsHtml = `<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">` +
+    statCard('總借用次數', (data.total||0).toLocaleString(), '#1e293b') +
+    statCard('總借用時數', (data.totalHours||0).toLocaleString(), '#2563eb') +
+    statCard('總借用天數', (data.totalDays||0).toLocaleString(), '#0891b2') +
+    statCard('總參與人數', (data.totalParticipants||0).toLocaleString(), '#7c3aed') +
+    statCard('借用教室次數', (data.roomBorrowCount||0).toLocaleString(), '#854d0e') +
+    topToolCard('熱門教具', data.topTool||'—', '#dc2626') +
+    `</div>`;
+
+  // 教具 × 月份借用次數：借回既有的 buildDetailTableHtml（單一數字版），這裡沒有單位/中心之分，全部塞進 unit 就好
+  const toolList=data.toolList||[], monthList=data.monthList||[], toolMapRaw=data.toolMap||{};
+  const wrappedToolMap={};
+  toolList.forEach(tool=>{
+    wrappedToolMap[tool]={byMonth:{}};
+    monthList.forEach(m=>{
+      wrappedToolMap[tool].byMonth[m.key]={unit:(toolMapRaw[tool]&&toolMapRaw[tool].byMonth[m.key])||0, center:0};
+    });
+  });
+  const monthTableHtml = buildDetailTableHtml(toolList, monthList, wrappedToolMap, 260);
+
+  wrap.innerHTML = `
+    ${statsHtml}
+    <div>
+      <div style="font-size:.8rem;color:#64748b;font-weight:600;margin-bottom:8px">${data.year} 年度 教具 × 月份借用次數</div>
+      <div class="table-responsive" id="npMonthTableWrap">
+        <table class="table table-bordered table-sm" style="font-size:.78rem;margin:0;table-layout:fixed;width:100%">${monthTableHtml}</table>
+      </div>
+    </div>
+  `;
+  // 用固定像素高度去切剛好會卡在半列中間，改成量測實際列高，精準算出「表頭 + 10 列」的高度再設定，
+  // 這樣不管字型渲染出來的實際列高是多少，都不會卡到一半
+  requestAnimationFrame(()=>{
+    const tableWrap = document.getElementById('npMonthTableWrap');
+    const table = tableWrap && tableWrap.querySelector('table');
+    if(!table) return;
+    const thead = table.querySelector('thead');
+    const rows = table.querySelectorAll('tbody tr');
+    if(thead && rows.length){
+      const headH = thead.getBoundingClientRect().height;
+      const rowH = rows[0].getBoundingClientRect().height;
+      const visibleRows = Math.min(10, rows.length);
+      tableWrap.style.maxHeight = Math.ceil(headH + rowH*visibleRows + 2) + 'px';
+      tableWrap.style.overflowY = 'auto';
+    }
+  });
 }
 
 // Init
@@ -3858,6 +4377,656 @@ async function deleteChangelogRow(rowIndex){
   }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
   finally{hideLoad();}
 }
+
+
+// ══════════════════════════════════════════════
+//  職類統計 / 職類填報 / 教案總覽（新增功能）
+// ══════════════════════════════════════════════
+
+function rocToWestern(r){ r=Number(r); return r?String(r+1911):''; }
+function westernToRoc(w){ w=Number(w); return w?String(w-1911):''; }
+function currentRocYear(){ return new Date().getFullYear()-1911; }
+
+// ---------- 職類統計 ----------
+let rsLoaded = false;
+
+async function loadRoleStat(){
+  if(!getToken())return;
+  if(!document.getElementById('rsYear').value) document.getElementById('rsYear').value = new Date().getFullYear();
+  const year=document.getElementById('rsYear').value;
+  const role=document.getElementById('rsRole').value;
+  showLoad('讀取職類統計...');
+  try{
+    let url=API+'?action=roleStat&token='+encodeURIComponent(getToken())+'&year='+encodeURIComponent(year);
+    if(role) url+='&role='+encodeURIComponent(role);
+    const data=await fetchJson(url);
+    hideLoad();
+    if(!data.success){toast('載入失敗',data.message,'danger');return;}
+    rsLoaded=true;
+    rsMatrixData=data;
+    renderRoleMatrix(data);
+    if(role && data.toolList){
+      rsDetailData=data;
+      renderRoleToolDetail(data);
+    } else {
+      rsDetailClear();
+    }
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+function rsDetailClear(){
+  document.getElementById('rsDetailTable').innerHTML='';
+  document.getElementById('rsDetailRoleLabel').textContent='';
+  document.getElementById('rsDetailCount').textContent='';
+}
+
+// 共用：組出「單一半年（6個月）」的矩陣表格 HTML
+// rowKeys：要列出的列（職類別清單 或 教具名稱清單）
+// monthsHalf：該半年的 6 個月 [{key,label}]
+// getCell(rowKey, monthKey) => {unit, center}
+function buildHalfMatrixHtml(rowHeader, rowKeys, monthsHalf, getCell, firstColWidth){
+  const totalCols = 1 + monthsHalf.length*2 + 2;
+  if(!rowKeys.length){
+    return `<tbody><tr><td colspan="${totalCols}" class="text-center text-muted py-4" style="font-size:.9rem">尚無資料</td></tr></tbody>`;
+  }
+  const numOrZero = v => (typeof v === 'number') ? v : 0; // "報廢" 這種文字狀態在加總時當 0 處理，避免字串相加出錯
+  const unitCellHtml = v => v==='報廢' ? '<span class="text-muted" style="font-size:.78rem">報廢</span>' : (v||0);
+  const widthStyle = firstColWidth ? `width:${firstColWidth}px;min-width:${firstColWidth}px;` : '';
+  const maxW = firstColWidth || 200;
+  let thead='<thead><tr><th rowspan="2" style="background:#f8fafc;vertical-align:middle;white-space:nowrap;font-size:.85rem;text-align:center;'+widthStyle+'">'+rowHeader+'</th>';
+  monthsHalf.forEach(m=>thead+=`<th colspan="2" style="background:#f8fafc;text-align:center;font-size:.85rem;font-weight:700">${m.label}</th>`);
+  thead+='<th colspan="2" style="background:#fef9c3;text-align:center;font-size:.85rem;font-weight:700">小計</th></tr><tr>';
+  monthsHalf.forEach(()=>thead+='<th style="background:#f8fafc;text-align:center;font-weight:600;font-size:.85rem">單位</th><th style="background:#f8fafc;text-align:center;font-weight:600;font-size:.85rem">中心</th>');
+  thead+='<th style="background:#fef9c3;text-align:center;font-weight:600;font-size:.85rem">單位</th><th style="background:#fef9c3;text-align:center;font-weight:600;font-size:.85rem">中心</th></tr></thead>';
+
+  let tbody='<tbody>';
+  rowKeys.forEach(key=>{
+    let rowUnit=0, rowCenter=0;
+    tbody+=`<tr><td style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:${maxW}px" title="${key}">${key}</td>`;
+    monthsHalf.forEach(m=>{
+      const v=getCell(key,m.key)||{unit:0,center:0};
+      rowUnit+=numOrZero(v.unit); rowCenter+=numOrZero(v.center);
+      tbody+=`<td style="text-align:center;font-size:.85rem;color:${v.unit?'#334155':'#cbd5e1'}">${unitCellHtml(v.unit)}</td><td style="text-align:center;font-size:.85rem;color:${v.center?'#334155':'#cbd5e1'}">${v.center||0}</td>`;
+    });
+    tbody+=`<td style="text-align:center;font-weight:700;font-size:.85rem;background:#fefce8">${rowUnit}</td><td style="text-align:center;font-weight:700;font-size:.85rem;background:#fefce8">${rowCenter}</td></tr>`;
+  });
+  const colTotalsUnit=monthsHalf.map(m=>rowKeys.reduce((s,key)=>s+numOrZero(getCell(key,m.key)&&getCell(key,m.key).unit),0));
+  const colTotalsCenter=monthsHalf.map(m=>rowKeys.reduce((s,key)=>s+numOrZero(getCell(key,m.key)&&getCell(key,m.key).center),0));
+  const grandUnit=colTotalsUnit.reduce((a,b)=>a+b,0);
+  const grandCenter=colTotalsCenter.reduce((a,b)=>a+b,0);
+  tbody+='<tr style="background:#fefce8;font-weight:700"><td style="font-size:.85rem">總計</td>';
+  monthsHalf.forEach((m,i)=>tbody+=`<td style="text-align:center;font-size:.85rem">${colTotalsUnit[i]||0}</td><td style="text-align:center;font-size:.85rem">${colTotalsCenter[i]||0}</td>`);
+  tbody+=`<td style="text-align:center;font-size:.85rem">${grandUnit}</td><td style="text-align:center;font-size:.85rem">${grandCenter}</td></tr>`;
+  tbody+='</tbody>';
+  return thead+tbody;
+}
+
+function renderRoleMatrix(data){
+  const roleList=data.roleList, monthList=data.monthList, matrix=data.matrix;
+  const h1=monthList.slice(0,6), h2=monthList.slice(6,12);
+  const getCell=(role,mkey)=> (matrix[role] && matrix[role].byMonth[mkey]) || {unit:0,center:0};
+  document.getElementById('rsMatrixTableH1').innerHTML = buildHalfMatrixHtml('職類別', roleList, h1, getCell);
+  document.getElementById('rsMatrixTableH2').innerHTML = buildHalfMatrixHtml('職類別', roleList, h2, getCell);
+}
+
+function renderRoleToolDetail(data){
+  document.getElementById('rsDetailRoleLabel').textContent='－ '+data.role;
+  const monthList=data.monthList, toolList=data.toolList, toolMap=data.toolMap;
+  document.getElementById('rsDetailCount').textContent = toolList.length ? ('共 '+toolList.length+' 項教具') : '';
+  document.getElementById('rsDetailTable').innerHTML = buildDetailTableHtml(toolList, monthList, toolMap, 340);
+}
+
+// 使用明細表：單一教具在同一個月不會同時有「單位」跟「中心」兩邊數字（一定有一邊是 0），
+// 所以直接合併成一個數字顯示，12個月放同一張表，不用再分單位/中心、也不用再分上下半年
+function buildDetailTableHtml(toolList, monthList, toolMap, firstColWidth){
+  const totalCols = 1 + monthList.length + 1;
+  if(!toolList.length){
+    return `<tbody><tr><td colspan="${totalCols}" class="text-center text-muted py-4" style="font-size:.9rem">尚無資料</td></tr></tbody>`;
+  }
+  const widthStyle = firstColWidth ? `width:${firstColWidth}px;min-width:${firstColWidth}px;` : '';
+  const maxW = firstColWidth || 200;
+  const numOrZero = v => (typeof v === 'number') ? v : 0;
+
+  let thead='<thead><tr><th style="background:#f8fafc;text-align:center;font-size:.85rem;'+widthStyle+'">教具名稱</th>';
+  monthList.forEach(m=>thead+=`<th style="background:#f8fafc;text-align:center;font-size:.85rem;font-weight:700">${m.label}</th>`);
+  thead+='<th style="background:#fef9c3;text-align:center;font-size:.85rem;font-weight:700">合計</th></tr></thead>';
+
+  let tbody='<tbody>';
+  toolList.forEach(tool=>{
+    let rowTotal=0;
+    tbody+=`<tr><td style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:${maxW}px" title="${tool}">${tool}</td>`;
+    monthList.forEach(m=>{
+      const v=(toolMap[tool] && toolMap[tool].byMonth[m.key]) || {unit:0,center:0};
+      const isRetired = v.unit==='報廢';
+      const combined = numOrZero(v.unit) + numOrZero(v.center);
+      rowTotal += combined;
+      const display = isRetired ? '<span class="text-muted" style="font-size:.78rem">報廢</span>' : combined;
+      tbody+=`<td style="text-align:center;font-size:.85rem;color:${combined?'#334155':'#cbd5e1'}">${display}</td>`;
+    });
+    tbody+=`<td style="text-align:center;font-weight:700;font-size:.85rem;background:#fefce8">${rowTotal}</td></tr>`;
+  });
+  const colTotals = monthList.map(m=>toolList.reduce((s,tool)=>{
+    const v=(toolMap[tool] && toolMap[tool].byMonth[m.key]) || {unit:0,center:0};
+    return s + numOrZero(v.unit) + numOrZero(v.center);
+  },0));
+  const grandTotal = colTotals.reduce((a,b)=>a+b,0);
+  tbody+='<tr style="background:#fefce8;font-weight:700"><td style="font-size:.85rem">總計</td>';
+  colTotals.forEach(v=>tbody+=`<td style="text-align:center;font-size:.85rem">${v||0}</td>`);
+  tbody+=`<td style="text-align:center;font-size:.85rem">${grandTotal}</td></tr>`;
+  tbody+='</tbody>';
+  return thead+tbody;
+}
+
+// ---------- 職類填報 ----------
+let jrCurrentMonths = [];
+let jrFormRows = [];
+let jrToolNameOptions = [];
+let jrListData = [];
+let jrListLoaded = false;
+let _jrEditRowIndex = null;
+
+async function jrRoleChanged(){
+  const role=document.getElementById('jrRole').value;
+  if(!role) return;
+  try{
+    const data=await fetchJson(API+'?action=jobReportToolNames&token='+encodeURIComponent(getToken())+'&role='+encodeURIComponent(role));
+    jrToolNameOptions = data.data||[];
+    document.getElementById('jrToolNames').innerHTML = jrToolNameOptions.map(n=>`<option value="${escapeHtml(n)}">`).join('');
+  }catch(err){}
+}
+
+async function buildJobReportForm(){
+  const role=document.getElementById('jrRole').value;
+  const rocYear=document.getElementById('jrYear').value;
+  const half=document.getElementById('jrHalf').value;
+  if(!role){toast('請選擇職類別','','danger');return;}
+  if(!rocYear){toast('請輸入年度','','danger');return;}
+  const startM = half==='1' ? 1 : 7;
+  jrCurrentMonths = [];
+  for(let m=startM;m<startM+6;m++){
+    const mm=String(m).padStart(2,'0');
+    jrCurrentMonths.push({key:rocYear+'/'+mm, label:m+'月'}); // key 直接用民國格式，跟後端存的一致
+  }
+  document.getElementById('jrFormLabel').textContent = `－ ${role}／民國${rocYear}年 ${half==='1'?'上半年':'下半年'}（${jrCurrentMonths[0].label}~${jrCurrentMonths[5].label}）`;
+
+  showLoad('載入既有填報資料...');
+  try{
+    const data=await fetchJson(API+'?action=queryJobReport&token='+encodeURIComponent(getToken())+'&role='+encodeURIComponent(role)+'&year='+encodeURIComponent(rocYear));
+    hideLoad();
+    if(!data.success){toast('載入失敗',data.message,'danger');return;}
+    const existing = data.data||[];
+    const toolMap = {};
+    existing.forEach(rec=>{
+      const ym = String(rec['年月']||'');
+      if(!jrCurrentMonths.find(m=>m.key===ym)) return;
+      const tool = rec['教具名稱']||'';
+      if(!toolMap[tool]) toolMap[tool]={};
+      const raw = rec['使用次數'];
+      const isRetired = String(raw).trim()==='報廢';
+      toolMap[tool][ym] = { count: isRetired ? '報廢' : (Number(raw)||0), remark: rec['備註']||'' };
+    });
+    jrFormRows = Object.keys(toolMap).map(tool=>{
+      const cells = toolMap[tool];
+      // 找出這個半年裡最早出現「報廢」的月份，當作報廢起始月（畫面顯示用）
+      let retireFrom = '';
+      for(const m of jrCurrentMonths){
+        if(cells[m.key] && cells[m.key].count==='報廢'){ retireFrom = m.key; break; }
+      }
+      return {tool, cells, retireFrom};
+    });
+    if(!jrFormRows.length) jrFormRows.push({tool:'', cells:{}, retireFrom:''});
+    renderJobReportForm();
+    document.getElementById('jrFormCard').style.display='';
+    await jrRoleChanged();
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+function addJobReportRow(){
+  jrFormRows.push({tool:'', cells:{}, retireFrom:''});
+  renderJobReportForm();
+}
+function removeJobReportRow(idx){
+  jrFormRows.splice(idx,1);
+  if(!jrFormRows.length) jrFormRows.push({tool:'', cells:{}, retireFrom:''});
+  renderJobReportForm();
+}
+
+function renderJobReportForm(){
+  const table=document.getElementById('jrFormTable');
+  let thead='<thead><tr><th style="background:#f8fafc;min-width:180px">教具名稱</th><th style="background:#f8fafc;min-width:120px">報廢起始月</th>';
+  jrCurrentMonths.forEach(m=>thead+=`<th style="background:#f8fafc;text-align:center;width:70px">${m.label}</th>`);
+  thead+='<th style="background:#f8fafc;width:50px"></th></tr></thead>';
+  let tbody='<tbody>';
+  jrFormRows.forEach((row,ri)=>{
+    tbody+=`<tr><td><input type="text" class="form-control form-control-sm" list="jrToolNames" value="${escapeHtml(row.tool)}" onchange="jrFormRows[${ri}].tool=this.value" placeholder="輸入或選擇教具名稱"></td>`;
+    tbody+=`<td><select class="form-select form-select-sm" onchange="jrSetRetireFrom(${ri},this.value)">`;
+    tbody+=`<option value="">未報廢</option>`;
+    jrCurrentMonths.forEach(m=>tbody+=`<option value="${m.key}" ${row.retireFrom===m.key?'selected':''}>從${m.label}起報廢</option>`);
+    tbody+='</select></td>';
+    const retireIdx = row.retireFrom ? jrCurrentMonths.findIndex(m=>m.key===row.retireFrom) : -1;
+    jrCurrentMonths.forEach((m,mi)=>{
+      if(retireIdx>=0 && mi>=retireIdx){
+        tbody+=`<td class="text-center text-muted" style="background:#f8fafc;font-size:.75rem">報廢</td>`;
+      } else {
+        const cell = row.cells[m.key];
+        const v = cell && cell.count!=='報廢' ? cell.count : '';
+        tbody+=`<td><input type="number" min="0" class="form-control form-control-sm text-center" style="padding:2px" value="${v}" onchange="jrSetCell(${ri},'${m.key}',this.value)"></td>`;
+      }
+    });
+    tbody+=`<td class="text-center"><button class="btn btn-sm btn-outline-danger" style="padding:2px 8px" onclick="removeJobReportRow(${ri})"><i class="bi bi-dash-lg"></i></button></td></tr>`;
+  });
+  tbody+='</tbody>';
+  table.innerHTML = thead+tbody;
+}
+
+function jrSetRetireFrom(ri, monthKey){
+  jrFormRows[ri].retireFrom = monthKey || '';
+  renderJobReportForm();
+}
+
+function jrSetCell(ri, ym, val){
+  const row=jrFormRows[ri];
+  if(!row.cells[ym]) row.cells[ym]={count:0,remark:''};
+  row.cells[ym].count = Number(val)||0;
+}
+
+// 把後端剛寫入/更新的紀錄直接併入畫面上的清單，不用再多打一次 API 重新整份查詢
+function mergeJrRecordsIntoList(records){
+  if(!records || !records.length) return;
+  const roleFilter = document.getElementById('jrRole').value;
+  records.forEach(rec=>{
+    if(roleFilter && rec['職類別']!==roleFilter) return; // 不符合目前清單的職類篩選就不放進畫面
+    const i = jrListData.findIndex(r=>r._rowIndex===rec._rowIndex);
+    if(i>=0) jrListData[i]=rec; else jrListData.push(rec);
+  });
+  jrListData.sort((a,b)=> String(b['年月']||'').localeCompare(String(a['年月']||'')));
+  jrListLoaded=true;
+  renderJobReportList();
+}
+
+async function submitJobReport(){
+  const role=document.getElementById('jrRole').value;
+  const reporter=document.getElementById('jrReporter').value.trim();
+  if(!reporter){toast('請填寫填報人','','danger');return;}
+  const items=[];
+  jrFormRows.forEach(row=>{
+    const tool=(row.tool||'').trim();
+    if(!tool) return;
+    const retireIdx = row.retireFrom ? jrCurrentMonths.findIndex(m=>m.key===row.retireFrom) : -1;
+    jrCurrentMonths.forEach((m,mi)=>{
+      const isRetired = retireIdx>=0 && mi>=retireIdx;
+      const cell=row.cells[m.key];
+      const count = isRetired ? '報廢' : (cell ? cell.count : 0);
+      items.push({'職類別':role,'年月':m.key,'教具名稱':tool,'使用次數':count,'備註':cell?cell.remark:'','填報人':reporter});
+    });
+  });
+  if(!items.length){toast('請至少填寫一項教具','','danger');return;}
+  showLoad('送出填報中...');
+  try{
+    const data=await fetchJson(API,{method:'POST',body:JSON.stringify({action:'insertJobReportBatch',token:getToken(),data:items})});
+    hideLoad();
+    if(!data.success){toast('送出失敗',data.message,'danger');return;}
+    toast('送出成功',data.message,'success');
+    document.getElementById('jrFormCard').style.display='none';
+    mergeJrRecordsIntoList(data.records);
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+async function loadJobReportList(){
+  if(!getToken())return;
+  const role=document.getElementById('jrRole').value;
+  showLoad('讀取已填報紀錄...');
+  try{
+    let url=API+'?action=queryJobReport&token='+encodeURIComponent(getToken());
+    if(role) url+='&role='+encodeURIComponent(role);
+    const data=await fetchJson(url);
+    hideLoad();
+    if(!data.success){toast('載入失敗',data.message,'danger');return;}
+    jrListLoaded=true;
+    jrListData=data.data||[];
+    renderJobReportList();
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+function renderJobReportList(){
+  const body=document.getElementById('jrListBody');
+  document.getElementById('jrListCount').textContent = jrListData.length?('共 '+jrListData.length+' 筆'):'';
+  if(!jrListData.length){
+    body.innerHTML='<tr><td colspan="8" class="text-center text-muted py-4">尚無填報紀錄</td></tr>';
+    return;
+  }
+  body.innerHTML = jrListData.map(rec=>{
+    const ut = rec['更新時間'];
+    let utStr = '';
+    try{ utStr = ut ? new Date(ut).toLocaleString('zh-TW') : ''; }catch(e){ utStr = String(ut||''); }
+    const isRetired = String(rec['使用次數']).trim()==='報廢';
+    const countCell = isRetired
+      ? '<span class="badge bg-secondary">報廢</span>'
+      : (rec['使用次數']||0);
+    return `<tr>
+      <td>${rec['職類別']||''}</td><td>${rec['年月']||''}</td><td>${escapeHtml(rec['教具名稱']||'')}</td>
+      <td>${countCell}</td><td>${escapeHtml(rec['填報人']||'')}</td><td style="font-size:.72rem;color:#94a3b8">${utStr}</td>
+      <td>${escapeHtml(rec['備註']||'')}</td>
+      <td><button class="btn btn-sm" style="padding:2px 8px;color:#94a3b8" onclick='openJrEditModal(${JSON.stringify(rec).replace(/'/g,"&apos;")})'><i class="bi bi-pencil"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+
+function openJrEditModal(rec){
+  _jrEditRowIndex=rec._rowIndex;
+  document.getElementById('jrE職類別').value=rec['職類別']||'';
+  const ym=String(rec['年月']||'').split('/'); // "115/01" -> ["115","01"]
+  document.getElementById('jrE年度').value=ym[0]||'';
+  document.getElementById('jrE月').value=ym[1]||'01';
+  document.getElementById('jrE教具名稱').value=rec['教具名稱']||'';
+  const isRetired = String(rec['使用次數']).trim()==='報廢';
+  document.getElementById('jrE已報廢').checked=isRetired;
+  document.getElementById('jrE使用次數').disabled=isRetired;
+  document.getElementById('jrE使用次數').value=isRetired ? '' : (rec['使用次數']||0);
+  document.getElementById('jrE填報人').value=rec['填報人']||'';
+  document.getElementById('jrE備註').value=rec['備註']||'';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('jrEditModal')).show();
+}
+
+async function saveJobReportEdit(){
+  const rocYear=document.getElementById('jrE年度').value;
+  const month=document.getElementById('jrE月').value;
+  if(!rocYear){toast('請填寫年度','','danger');return;}
+  const isRetired=document.getElementById('jrE已報廢').checked;
+  const data={
+    '職類別':document.getElementById('jrE職類別').value,
+    '年月':rocYear+'/'+month,
+    '教具名稱':document.getElementById('jrE教具名稱').value.trim(),
+    '使用次數':isRetired ? '報廢' : (Number(document.getElementById('jrE使用次數').value)||0),
+    '填報人':document.getElementById('jrE填報人').value.trim(),
+    '備註':document.getElementById('jrE備註').value.trim()
+  };
+  if(!data['教具名稱']){toast('請填寫教具名稱','','danger');return;}
+  showLoad('儲存中...');
+  try{
+    const res=await fetchJson(API,{method:'POST',body:JSON.stringify({action:'updateJobReport',token:getToken(),rowIndex:_jrEditRowIndex,data})});
+    hideLoad();
+    if(!res.success){toast('儲存失敗',res.message,'danger');return;}
+    bootstrap.Modal.getInstance(document.getElementById('jrEditModal')).hide();
+    toast('儲存成功','','success');
+    if(res.record) mergeJrRecordsIntoList([res.record]);
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+async function deleteJobReportRow_UI(){
+  if(!confirm('確定要刪除這筆填報紀錄嗎？'))return;
+  showLoad('刪除中...');
+  try{
+    const data=await fetchJson(API,{method:'POST',body:JSON.stringify({action:'deleteJobReport',token:getToken(),rowIndex:_jrEditRowIndex})});
+    hideLoad();
+    if(!data.success){toast('刪除失敗',data.message,'danger');return;}
+    bootstrap.Modal.getInstance(document.getElementById('jrEditModal')).hide();
+    toast('已刪除','','success');
+    const i=jrListData.findIndex(r=>r._rowIndex===_jrEditRowIndex);
+    if(i>=0){ jrListData.splice(i,1); renderJobReportList(); }
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+// ---------- 教案總覽 ----------
+let caseListData = [];
+let caseFormRows = [];
+let caseNameOptions = [];
+let _caseEditRowIndex = null;
+let caseLoaded = false;
+let caseAnalyticsData = null;
+
+async function loadCases(){
+  if(!getToken())return;
+  const role=document.getElementById('caseFRole').value;
+  const rocYear=document.getElementById('caseFYear').value;
+  const status=document.getElementById('caseFStatus').value;
+  const keyword=document.getElementById('caseFKeyword').value.trim();
+  showLoad('讀取教案清單...');
+  try{
+    let url=API+'?action=caseOverview&token='+encodeURIComponent(getToken());
+    if(role) url+='&role='+encodeURIComponent(role);
+    if(rocYear) url+='&year='+encodeURIComponent(rocYear);
+    if(status) url+='&status='+encodeURIComponent(status);
+    if(keyword) url+='&keyword='+encodeURIComponent(keyword);
+    const data=await fetchJson(url);
+    hideLoad();
+    if(!data.success){toast('載入失敗',data.message,'danger');return;}
+    caseLoaded=true;
+    caseListData=data.data||[];
+    renderCaseList();
+    if(data.analytics){ caseAnalyticsData=data.analytics; renderCaseAnalytics(caseAnalyticsData); }
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+// 教案清單本身有職類/年度/狀態/關鍵字四種篩選，但統計摘要只受「年度」篩選影響（跟後端 getCaseOverview 邏輯一致）
+// 所以新增/編輯/刪除教案時，這兩塊要分開判斷是否要更新畫面
+function caseMatchesListFilter(rec){
+  const role=document.getElementById('caseFRole').value;
+  const year=document.getElementById('caseFYear').value;
+  const status=document.getElementById('caseFStatus').value;
+  const keyword=document.getElementById('caseFKeyword').value.trim();
+  if(role && rec['職類別']!==role) return false;
+  if(year && String(rec['年度'])!==year) return false;
+  if(status && rec['狀態']!==status) return false;
+  if(keyword && !String(rec['教案名稱']||'').includes(keyword)) return false;
+  return true;
+}
+function caseAnalyticsAdjust(role, year, delta){
+  if(!caseAnalyticsData) return;
+  const filterYear=document.getElementById('caseFYear').value;
+  if(filterYear && String(year)!==filterYear) return; // 這筆不在目前分析的年度範圍內，不影響摘要
+  const normRole = (caseAnalyticsData.roleList||[]).includes(role) ? role : '其他';
+  caseAnalyticsData.byRole[normRole] = (caseAnalyticsData.byRole[normRole]||0) + delta;
+  caseAnalyticsData.total = (caseAnalyticsData.total||0) + delta;
+  renderCaseAnalytics(caseAnalyticsData);
+}
+// 把後端剛寫入的教案紀錄直接併入畫面，不用再多打一次 API 重新整份查詢
+function mergeCaseRecordsIntoList(records){
+  if(!records || !records.length) return;
+  records.forEach(rec=>{
+    const i=caseListData.findIndex(r=>r._rowIndex===rec._rowIndex);
+    const pass = caseMatchesListFilter(rec);
+    if(i>=0){
+      if(pass) caseListData[i]=rec; else caseListData.splice(i,1);
+    } else if(pass){
+      caseListData.push(rec);
+    }
+  });
+  caseListData.sort((a,b)=>String(b['年度']||'').localeCompare(String(a['年度']||'')));
+  caseLoaded=true;
+  renderCaseList();
+}
+
+function renderCaseList(){
+  const body=document.getElementById('caseListBody');
+  document.getElementById('caseListCount').textContent = caseListData.length?('共 '+caseListData.length+' 筆'):'';
+  if(!caseListData.length){
+    body.innerHTML='<tr><td colspan="8" class="text-center text-muted py-4">尚無教案紀錄</td></tr>';
+    return;
+  }
+  body.innerHTML = caseListData.map(rec=>{
+    const badge = rec['狀態']==='已停用'
+      ? '<span class="badge bg-secondary">已停用</span>'
+      : '<span class="badge bg-success">使用中</span>';
+    return `<tr>
+      <td style="font-weight:600">${escapeHtml(rec['教案名稱']||'')}</td>
+      <td>${rec['職類別']||''}</td><td>${escapeHtml(rec['開發單位']||'')}</td><td>${rec['年度']||''}</td>
+      <td>${badge}</td>
+      <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(rec['內容說明']||'')}">${escapeHtml(rec['內容說明']||'')}</td>
+      <td>${escapeHtml(rec['填報人']||'')}</td>
+      <td><button class="btn btn-sm" style="padding:2px 8px;color:#94a3b8" onclick='openCaseEditModal(${JSON.stringify(rec).replace(/'/g,"&apos;")})'><i class="bi bi-pencil"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCaseAnalytics(data){
+  document.getElementById('caseTotalCount').textContent = data.total||0;
+  const roleList=data.roleList||[], byRole=data.byRole||{};
+  let active=0, retired=0;
+  caseListData.forEach(r=>{ if(r['狀態']==='已停用') retired++; else active++; });
+  document.getElementById('caseActiveCount').textContent = active;
+  document.getElementById('caseRetiredCount').textContent = retired;
+  let topRole='—', topCount=0;
+  roleList.forEach(role=>{ if((byRole[role]||0)>topCount){topCount=byRole[role];topRole=role;} });
+  document.getElementById('caseTopRole').textContent = topCount ? (topRole+'（'+topCount+'件）') : '—';
+
+  const wrap=document.getElementById('caseRoleChart');
+  const maxCount = Math.max(1, ...roleList.map(r=>byRole[r]||0));
+  wrap.innerHTML = `<div style="display:flex;align-items:flex-end;gap:10px;height:170px;padding:10px 6px 0">` +
+    roleList.map(role=>{
+      const v=byRole[role]||0;
+      const h=Math.round((v/maxCount)*130);
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+        <div style="font-size:.72rem;font-weight:700;color:#334155">${v||''}</div>
+        <div style="width:70%;background:${v?'#2563eb':'#e2e8f0'};border-radius:4px 4px 0 0;height:${Math.max(h,2)}px"></div>
+        <div style="font-size:.66rem;color:#64748b;margin-top:6px;white-space:nowrap;text-align:center">${role}</div>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+function openCaseModal(){
+  document.getElementById('caseModalTitle').textContent='新增教案';
+  document.getElementById('caseRole').value = document.getElementById('caseFRole').value || '';
+  document.getElementById('caseUnit').value='';
+  document.getElementById('caseYear').value = document.getElementById('caseFYear').value || currentRocYear();
+  document.getElementById('caseReporter').value='';
+  caseFormRows=[{name:'',status:'使用中',remark:''}];
+  caseNameOptions=[];
+  document.getElementById('caseNamesList').innerHTML='';
+  renderCaseFormRows();
+  if(document.getElementById('caseRole').value) caseRoleChanged();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('caseModal')).show();
+}
+
+async function caseRoleChanged(){
+  const role=document.getElementById('caseRole').value;
+  if(!role)return;
+  try{
+    const data=await fetchJson(API+'?action=caseNames&token='+encodeURIComponent(getToken())+'&role='+encodeURIComponent(role));
+    caseNameOptions=data.data||[];
+    document.getElementById('caseNamesList').innerHTML = caseNameOptions.map(n=>`<option value="${escapeHtml(n)}">`).join('');
+  }catch(err){}
+}
+
+function addCaseRow(){
+  caseFormRows.push({name:'',status:'使用中',remark:''});
+  renderCaseFormRows();
+}
+function removeCaseRow(idx){
+  caseFormRows.splice(idx,1);
+  if(!caseFormRows.length) caseFormRows.push({name:'',status:'使用中',remark:''});
+  renderCaseFormRows();
+}
+function renderCaseFormRows(){
+  const wrap=document.getElementById('caseRowsWrap');
+  wrap.innerHTML = caseFormRows.map((row,ri)=>`
+    <div class="row g-2 align-items-center mb-2">
+      <div class="col-5"><input type="text" class="form-control form-control-sm" list="caseNamesList" placeholder="教案名稱" value="${escapeHtml(row.name)}" onchange="caseFormRows[${ri}].name=this.value"></div>
+      <div class="col-3">
+        <select class="form-select form-select-sm" onchange="caseFormRows[${ri}].status=this.value">
+          <option ${row.status==='使用中'?'selected':''}>使用中</option>
+          <option ${row.status==='已停用'?'selected':''}>已停用</option>
+        </select>
+      </div>
+      <div class="col-3"><input type="text" class="form-control form-control-sm" placeholder="備註（選填）" value="${escapeHtml(row.remark)}" onchange="caseFormRows[${ri}].remark=this.value"></div>
+      <div class="col-1 text-center"><button class="btn btn-sm btn-outline-danger" style="padding:2px 8px" onclick="removeCaseRow(${ri})"><i class="bi bi-dash-lg"></i></button></div>
+    </div>`).join('');
+}
+
+async function submitCases(){
+  const role=document.getElementById('caseRole').value;
+  const unit=document.getElementById('caseUnit').value.trim();
+  const rocYear=document.getElementById('caseYear').value;
+  const reporter=document.getElementById('caseReporter').value.trim();
+  if(!role){toast('請選擇職類別','','danger');return;}
+  if(!rocYear){toast('請輸入年度','','danger');return;}
+  if(!reporter){toast('請填寫填報人','','danger');return;}
+  const items=[];
+  caseFormRows.forEach(row=>{
+    const name=(row.name||'').trim();
+    if(!name)return;
+    items.push({'教案名稱':name,'職類別':role,'開發單位':unit,'年度':rocYear,'狀態':row.status||'使用中','內容說明':'','備註':row.remark||'','填報人':reporter});
+  });
+  if(!items.length){toast('請至少填寫一筆教案名稱','','danger');return;}
+  showLoad('送出中...');
+  try{
+    const data=await fetchJson(API,{method:'POST',body:JSON.stringify({action:'insertCaseBatch',token:getToken(),data:items})});
+    hideLoad();
+    if(!data.success){toast('送出失敗',data.message,'danger');return;}
+    bootstrap.Modal.getInstance(document.getElementById('caseModal')).hide();
+    toast('新增成功',data.message,'success');
+    mergeCaseRecordsIntoList(data.records);
+    (data.records||[]).forEach(rec=>caseAnalyticsAdjust(rec['職類別'], rec['年度'], 1));
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+let _caseEditBefore = null;
+function openCaseEditModal(rec){
+  _caseEditRowIndex=rec._rowIndex;
+  _caseEditBefore=rec;
+  document.getElementById('caseE教案名稱').value=rec['教案名稱']||'';
+  document.getElementById('caseE職類別').value=rec['職類別']||'';
+  document.getElementById('caseE開發單位').value=rec['開發單位']||'';
+  document.getElementById('caseE年度').value=rec['年度']||'';
+  document.getElementById('caseE狀態').value=rec['狀態']||'使用中';
+  document.getElementById('caseE內容說明').value=rec['內容說明']||'';
+  document.getElementById('caseE填報人').value=rec['填報人']||'';
+  document.getElementById('caseE備註').value=rec['備註']||'';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('caseEditModal')).show();
+}
+
+async function saveCaseEdit(){
+  const data={
+    '教案名稱':document.getElementById('caseE教案名稱').value.trim(),
+    '職類別':document.getElementById('caseE職類別').value,
+    '開發單位':document.getElementById('caseE開發單位').value.trim(),
+    '年度':document.getElementById('caseE年度').value,
+    '狀態':document.getElementById('caseE狀態').value,
+    '內容說明':document.getElementById('caseE內容說明').value.trim(),
+    '填報人':document.getElementById('caseE填報人').value.trim(),
+    '備註':document.getElementById('caseE備註').value.trim()
+  };
+  if(!data['教案名稱']){toast('請填寫教案名稱','','danger');return;}
+  showLoad('儲存中...');
+  try{
+    const res=await fetchJson(API,{method:'POST',body:JSON.stringify({action:'updateCase',token:getToken(),rowIndex:_caseEditRowIndex,data})});
+    hideLoad();
+    if(!res.success){toast('儲存失敗',res.message,'danger');return;}
+    bootstrap.Modal.getInstance(document.getElementById('caseEditModal')).hide();
+    toast('儲存成功','','success');
+    if(_caseEditBefore) caseAnalyticsAdjust(_caseEditBefore['職類別'], _caseEditBefore['年度'], -1);
+    if(res.record){
+      mergeCaseRecordsIntoList([res.record]);
+      caseAnalyticsAdjust(res.record['職類別'], res.record['年度'], 1);
+    }
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+async function deleteCaseRow_UI(){
+  if(!confirm('確定要刪除這筆教案嗎？'))return;
+  showLoad('刪除中...');
+  try{
+    const data=await fetchJson(API,{method:'POST',body:JSON.stringify({action:'deleteCase',token:getToken(),rowIndex:_caseEditRowIndex})});
+    hideLoad();
+    if(!data.success){toast('刪除失敗',data.message,'danger');return;}
+    bootstrap.Modal.getInstance(document.getElementById('caseEditModal')).hide();
+    toast('已刪除','','success');
+    const i=caseListData.findIndex(r=>r._rowIndex===_caseEditRowIndex);
+    if(i>=0){ caseListData.splice(i,1); renderCaseList(); }
+    if(_caseEditBefore) caseAnalyticsAdjust(_caseEditBefore['職類別'], _caseEditBefore['年度'], -1);
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
 
 // 保險機制：避免 Modal 遮罩層在某些情況下沒有正確移除，導致畫面卡死需要重新整理
 document.addEventListener('hidden.bs.modal', ()=>{
