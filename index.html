@@ -180,6 +180,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   <div class="sb-section">行政管理</div>
   <a class="sb-link" onclick="showPanel('assets',this)"><i class="bi bi-archive"></i>財產總覽</a>
   <a class="sb-link" onclick="showPanel('consumables',this)"><i class="bi bi-clipboard2-data"></i>耗材清單</a>
+  <a class="sb-link" onclick="showPanel('access',this)"><i class="bi bi-fingerprint"></i>門禁查詢</a>
   <div class="sb-section">統計分析</div>
   <a class="sb-link" onclick="showPanel('analytics',this)"><i class="bi bi-bar-chart-line"></i>中心統計</a>
   <a class="sb-link" onclick="showPanel('rolestat',this)"><i class="bi bi-grid-3x3-gap"></i>職類統計</a>
@@ -908,6 +909,119 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
         <div class="d-flex gap-2 ms-auto">
           <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
           <button class="btn btn-primary btn-sm" id="csSubmitBtn" onclick="saveConsumable()">新增</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 門禁查詢 -->
+<div id="panel-access" class="panel">
+  <div class="pg-head">
+    <div class="pg-title">
+      <div class="pg-icon"><i class="bi bi-fingerprint"></i></div>
+      <div><h5>門禁查詢</h5><div class="pg-sub">臨床技能中心門禁權限人員清單</div></div>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-success btn-sm" onclick="exportAccessTxt()"><i class="bi bi-download me-1"></i>匯出開通名單</button>
+      <button class="btn btn-primary btn-sm" onclick="openAccessModal()"><i class="bi bi-plus-lg me-1"></i>新增人員</button>
+    </div>
+  </div>
+
+  <!-- 篩選列 -->
+  <div class="filter-card">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">科別代號 / 科別名稱</label>
+        <input type="text" class="form-control form-control-sm" id="accDept" placeholder="輸入科別代號或名稱">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">姓名 / 人事號 / 卡號關鍵字</label>
+        <input type="text" class="form-control form-control-sm" id="accKeyword" placeholder="輸入關鍵字搜尋">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">狀態</label>
+        <select class="form-select form-select-sm" id="accStatus">
+          <option value="">全部</option>
+          <option>已開通</option>
+          <option>申請中</option>
+          <option>已刪除</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary btn-sm" onclick="loadAccess()"><i class="bi bi-search me-1"></i>查詢</button>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-secondary btn-sm" onclick="resetAccessFilter()"><i class="bi bi-arrow-counterclockwise me-1"></i>清除篩選</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 結果表格 -->
+  <div class="card">
+    <div class="card-hd">
+      <span><i class="bi bi-table me-2" style="color:var(--ac)"></i>門禁權限清單</span>
+      <span id="accCount" style="font-size:.78rem;color:#94a3b8">尚未查詢</span>
+    </div>
+    <div class="table-responsive" style="max-height:640px;overflow-y:auto">
+      <table class="table table-hover table-bordered">
+        <thead>
+          <tr>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">科別代號</th>
+            <th style="text-align:center;width:150px;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">科別名稱</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">姓名</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">人事號</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">感應卡卡號</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">權限起始日期</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">狀態</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">核准人</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">備</th>
+            <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">操作</th>
+          </tr>
+        </thead>
+        <tbody id="accBody">
+          <tr><td colspan="10" class="text-center text-muted py-5" style="font-size:.85rem">載入中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 門禁權限 新增/編輯 Modal -->
+<div class="modal fade" id="accessModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius:14px;border:none;">
+      <div class="modal-header" style="border-bottom:1px solid #f1f5f9;">
+        <h6 class="modal-title fw-bold" id="accModalTitle"><i class="bi bi-fingerprint me-2" style="color:var(--ac)"></i>新增人員</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="accRowIndex">
+        <div class="row g-3" style="font-size:.85rem">
+          <div class="col-md-4"><label class="form-label fw-semibold">科別代號<span style="color:red">*</span></label><input type="text" class="form-control form-control-sm" id="acc科別代號" placeholder="例：4220"></div>
+          <div class="col-md-8"><label class="form-label fw-semibold">科別名稱<span style="color:red">*</span></label><input type="text" class="form-control form-control-sm" id="acc科別名稱" placeholder="例：教材組"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">姓名<span style="color:red">*</span></label><input type="text" class="form-control form-control-sm" id="acc姓名" placeholder="例：王小明"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">人事號<span style="color:red">*</span></label><input type="text" class="form-control form-control-sm" id="acc人事號" placeholder="例：930550"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">感應卡卡號<span style="color:red">*</span></label><input type="text" class="form-control form-control-sm" id="acc感應卡卡號" placeholder="例：1350000947"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">權限起始日期</label><input type="date" class="form-control form-control-sm" id="acc權限起始日期"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">狀態</label>
+            <select class="form-select form-select-sm" id="acc狀態">
+              <option>已開通</option>
+              <option>申請中</option>
+              <option>已刪除</option>
+            </select>
+          </div>
+          <div class="col-md-6"><label class="form-label fw-semibold">核准人</label>
+            <select class="form-select form-select-sm" id="acc核准人"><option value="">請選擇</option></select>
+          </div>
+          <div class="col-12"><label class="form-label fw-semibold">備註</label><textarea class="form-control form-control-sm" id="acc備註" rows="2" placeholder="補充說明（選填）"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid #f1f5f9;justify-content:space-between">
+        <button class="btn btn-outline-danger btn-sm" id="accDeleteBtn" style="display:none" onclick="deleteAccessRow()"><i class="bi bi-trash me-1"></i>刪除（標記為已刪除）</button>
+        <div class="d-flex gap-2 ms-auto">
+          <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+          <button class="btn btn-primary btn-sm" id="accSubmitBtn" onclick="saveAccess()">新增</button>
         </div>
       </div>
     </div>
@@ -1848,6 +1962,7 @@ function showPanel(name,el){
   if(name==='maintenance'&&!maintResults.length) loadMaintenance();
   if(name==='consumables'&&!csResults.length) loadConsumables();
   if(name==='requisition'&&!reqResults.length) loadRequisitions();
+  if(name==='access'&&!accResults.length) loadAccess();
   if(name==='rolestat'&&!rsLoaded) loadRoleStat();
   if(name==='cases'&&!caseLoaded) loadCases();
   if(name==='jobreport'&&!jrListLoaded) loadJobReportList();
@@ -3961,6 +4076,196 @@ async function deleteConsumableRow(){
     bootstrap.Modal.getInstance(document.getElementById('consumableModal')).hide();
     toast('已刪除','','success');
     loadConsumables();
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+// ===== 門禁查詢 =====
+let accResults = [];
+let accAdminNamesLoaded = false;
+
+const ACC_STATUS_COLORS = {
+  '已開通': '#dcfce7;color:#166534',
+  '申請中': '#fef9c3;color:#854d0e',
+  '已刪除': '#f1f5f9;color:#64748b'
+};
+
+async function loadAccess(){
+  if(!getToken())return;
+  await loadAdminNamesIfNeeded();
+  const params=new URLSearchParams({
+    action:'queryAccess', token:getToken(),
+    dept:document.getElementById('accDept').value,
+    keyword:document.getElementById('accKeyword').value,
+    status:document.getElementById('accStatus').value
+  });
+  showLoad('查詢中...');
+  try{
+    const r=await fetch(API+'?'+params);
+    const data=await r.json();
+    hideLoad();
+    if(!data.success){toast('查詢失敗',data.message,'danger');return;}
+    accResults = data.data||[];
+    renderAccess();
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+function resetAccessFilter(){
+  document.getElementById('accDept').value='';
+  document.getElementById('accKeyword').value='';
+  document.getElementById('accStatus').value='';
+  loadAccess();
+}
+
+function renderAccess(){
+  const tbody=document.getElementById('accBody');
+  document.getElementById('accCount').textContent = `共 ${accResults.length} 筆`;
+  if(!accResults.length){
+    tbody.innerHTML='<tr><td colspan="10" class="text-center text-muted py-5" style="font-size:.85rem">查無資料</td></tr>';
+    return;
+  }
+  let html='';
+  accResults.forEach(row=>{
+    const hasNote = String(row['備註']||'').trim()!=='';
+    const status = row['狀態']||'';
+    const statusStyle = ACC_STATUS_COLORS[status] || '#f1f5f9;color:#64748b';
+    html += `<tr>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center">${escapeHtml(row['科別代號']||'')}</td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center;max-width:150px;overflow:hidden;text-overflow:ellipsis" title="${escapeHtml(row['科別名稱']||'')}">${escapeHtml(row['科別名稱']||'')}</td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center"><span style="color:var(--ac);font-weight:600">${escapeHtml(row['姓名']||'')}</span></td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center">${escapeHtml(row['人事號']||'')}</td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center">${escapeHtml(row['感應卡卡號']||'')}</td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center">${escapeHtml(row['權限起始日期']||'')}</td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center"><span class="st" style="background:${statusStyle}">${escapeHtml(status)}</span></td>
+      <td style="font-size:.85rem;white-space:nowrap;text-align:center">${escapeHtml(row['核准人']||'')}</td>
+      <td style="text-align:center">${hasNote?`<span title="${escapeHtml(row['備註'])}" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:#ef4444;color:#fff;border-radius:50%;font-size:.65rem;font-weight:700;cursor:help">備</span>`:''}</td>
+      <td style="text-align:center"><button class="btn btn-sm" style="background:var(--ac);color:#fff;font-size:.75rem;padding:4px 8px;border-radius:6px;line-height:1" onclick="openAccessModal(${row._rowIndex})" title="編輯"><i class="bi bi-pencil"></i></button></td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+async function loadAdminNamesIfNeeded(){
+  if(accAdminNamesLoaded)return;
+  try{
+    const r=await fetch(API+'?action=queryAdminNames&token='+encodeURIComponent(getToken()));
+    const data=await r.json();
+    if(data.success){
+      const sel=document.getElementById('acc核准人');
+      const opts = (data.data||[]).map(n=>`<option>${escapeHtml(n)}</option>`).join('');
+      sel.innerHTML = '<option value="">請選擇</option>' + opts;
+      accAdminNamesLoaded = true;
+    }
+  }catch(err){ /* 抓不到管理員清單不影響其他操作，核准人留手動選擇即可 */ }
+}
+
+async function openAccessModal(rowIndex){
+  await loadAdminNamesIfNeeded();
+  const row = rowIndex ? accResults.find(r=>r._rowIndex===rowIndex) : null;
+  document.getElementById('accRowIndex').value = row ? row._rowIndex : '';
+  document.getElementById('accModalTitle').innerHTML = row
+    ? '<i class="bi bi-fingerprint me-2" style="color:var(--ac)"></i>編輯人員'
+    : '<i class="bi bi-fingerprint me-2" style="color:var(--ac)"></i>新增人員';
+  document.getElementById('accSubmitBtn').textContent = row ? '儲存' : '新增';
+  document.getElementById('accDeleteBtn').style.display = row ? '' : 'none';
+
+  document.getElementById('acc科別代號').value = row ? (row['科別代號']||'') : '';
+  document.getElementById('acc科別名稱').value = row ? (row['科別名稱']||'') : '';
+  document.getElementById('acc姓名').value = row ? (row['姓名']||'') : '';
+  document.getElementById('acc人事號').value = row ? (row['人事號']||'') : '';
+  document.getElementById('acc感應卡卡號').value = row ? (row['感應卡卡號']||'') : '';
+  document.getElementById('acc權限起始日期').value = row ? (row['權限起始日期']||'') : new Date().toISOString().split('T')[0];
+  document.getElementById('acc狀態').value = row ? (row['狀態']||'已開通') : '已開通';
+  document.getElementById('acc核准人').value = row ? (row['核准人']||'') : '';
+  document.getElementById('acc備註').value = row ? (row['備註']||'') : '';
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('accessModal')).show();
+}
+
+async function saveAccess(){
+  const rowIndex = document.getElementById('accRowIndex').value;
+  const dept = document.getElementById('acc科別代號').value.trim();
+  const deptName = document.getElementById('acc科別名稱').value.trim();
+  const name = document.getElementById('acc姓名').value.trim();
+  const empId = document.getElementById('acc人事號').value.trim();
+  const cardNo = document.getElementById('acc感應卡卡號').value.trim();
+  if(!dept){toast('請填寫科別代號','','danger');return;}
+  if(!deptName){toast('請填寫科別名稱','','danger');return;}
+  if(!name){toast('請填寫姓名','','danger');return;}
+  if(!empId){toast('請填寫人事號','','danger');return;}
+  if(!cardNo){toast('請填寫感應卡卡號','','danger');return;}
+  const data = {
+    '科別代號': dept,
+    '科別名稱': deptName,
+    '姓名': name,
+    '人事號': empId,
+    '感應卡卡號': cardNo,
+    '權限起始日期': document.getElementById('acc權限起始日期').value,
+    '狀態': document.getElementById('acc狀態').value,
+    '核准人': document.getElementById('acc核准人').value,
+    '備註': document.getElementById('acc備註').value.trim()
+  };
+  const isEdit = !!rowIndex;
+  showLoad(isEdit?'儲存中...':'新增中...');
+  try{
+    const body = isEdit
+      ? {action:'updateAccess', token:getToken(), rowIndex:parseInt(rowIndex), data}
+      : {action:'insertAccess', token:getToken(), data};
+    const r=await fetch(API,{method:'POST',body:JSON.stringify(body)});
+    const res=await r.json();
+    hideLoad();
+    if(!res.success){toast(isEdit?'儲存失敗':'新增失敗',res.message,'danger');return;}
+    bootstrap.Modal.getInstance(document.getElementById('accessModal')).hide();
+    toast(isEdit?'儲存成功':'新增成功','','success');
+    loadAccess();
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+async function deleteAccessRow(){
+  const rowIndex = parseInt(document.getElementById('accRowIndex').value);
+  if(!rowIndex)return;
+  if(!confirm('確定要刪除這筆門禁權限嗎？（資料會保留，狀態會改成「已刪除」）'))return;
+  showLoad('處理中...');
+  try{
+    const r=await fetch(API,{method:'POST',body:JSON.stringify({action:'deleteAccess', token:getToken(), rowIndex})});
+    const data=await r.json();
+    hideLoad();
+    if(!data.success){toast('刪除失敗',data.message,'danger');return;}
+    bootstrap.Modal.getInstance(document.getElementById('accessModal')).hide();
+    toast('已標記為已刪除','','success');
+    loadAccess();
+  }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+// 匯出「已開通」名單：UTF-8、Tab分隔、含表頭，欄位與工務室範本一致（5欄）
+async function exportAccessTxt(){
+  showLoad('匯出中...');
+  try{
+    const params=new URLSearchParams({action:'queryAccess', token:getToken(), status:'已開通'});
+    const r=await fetch(API+'?'+params);
+    const data=await r.json();
+    hideLoad();
+    if(!data.success){toast('匯出失敗',data.message,'danger');return;}
+    const rows = data.data||[];
+    if(!rows.length){toast('提示','目前沒有「已開通」的名單可匯出','info');return;}
+    const fields=['科別代號','科別名稱','姓名','人事號','感應卡卡號'];
+    const lines = [fields.join('\t')];
+    rows.forEach(r=>{ lines.push(fields.map(f=>r[f]??'').join('\t')); });
+    const content = lines.join('\r\n');
+    const blob = new Blob([content], {type:'text/plain;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    a.href = url;
+    a.download = `門禁開通名單_${today}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('匯出成功',`已下載門禁開通名單_${today}.txt（共 ${rows.length} 筆）`,'success');
   }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
   finally{hideLoad();}
 }
