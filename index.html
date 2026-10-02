@@ -178,9 +178,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   <a class="sb-link" onclick="showPanel('maintenance',this)"><i class="bi bi-tools"></i>設備維修</a>
   <a class="sb-link" onclick="showPanel('requisition',this)"><i class="bi bi-box-seam"></i>耗材請領</a>
   <div class="sb-section">行政管理</div>
+  <a class="sb-link" onclick="showPanel('access',this)"><i class="bi bi-credit-card-2-front"></i>門禁管理</a>
   <a class="sb-link" onclick="showPanel('assets',this)"><i class="bi bi-archive"></i>財產總覽</a>
   <a class="sb-link" onclick="showPanel('consumables',this)"><i class="bi bi-clipboard2-data"></i>耗材清單</a>
-  <a class="sb-link" onclick="showPanel('access',this)"><i class="bi bi-fingerprint"></i>門禁查詢</a>
   <div class="sb-section">統計分析</div>
   <a class="sb-link" onclick="showPanel('analytics',this)"><i class="bi bi-bar-chart-line"></i>中心統計</a>
   <a class="sb-link" onclick="showPanel('rolestat',this)"><i class="bi bi-grid-3x3-gap"></i>職類統計</a>
@@ -919,52 +919,105 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 <div id="panel-access" class="panel">
   <div class="pg-head">
     <div class="pg-title">
-      <div class="pg-icon"><i class="bi bi-fingerprint"></i></div>
-      <div><h5>門禁查詢</h5><div class="pg-sub">臨床技能中心門禁權限人員清單</div></div>
-    </div>
-    <div class="d-flex gap-2">
-      <button class="btn btn-outline-success btn-sm" onclick="exportAccessTxt()"><i class="bi bi-download me-1"></i>匯出開通名單</button>
-      <button class="btn btn-primary btn-sm" onclick="openAccessModal()"><i class="bi bi-plus-lg me-1"></i>新增人員</button>
+      <div class="pg-icon"><i class="bi bi-credit-card-2-front"></i></div>
+      <div><h5>門禁管理</h5><div class="pg-sub">臨時門禁卡借用管理 ＆ 門禁權限查詢</div></div>
     </div>
   </div>
 
-  <!-- 篩選列 -->
-  <div class="filter-card">
-    <div class="row g-2 align-items-end">
-      <div class="col-md-3">
-        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">科別代號 / 科別名稱</label>
-        <input type="text" class="form-control form-control-sm" id="accDept" placeholder="輸入科別代號或名稱">
+  <!-- 臨時門禁卡：卡片狀態 -->
+  <div class="row g-3 mb-3" id="tcCardStatus"></div>
+
+  <!-- 臨時門禁卡：借用中 -->
+  <div class="card mb-3">
+    <div class="card-hd">
+      <span><i class="bi bi-person-badge me-2" style="color:var(--ac)"></i>臨時門禁卡借用中</span>
+      <div class="d-flex align-items-center gap-2">
+        <span id="tcActiveCount" style="font-size:.78rem;color:#94a3b8">尚未載入</span>
+        <button class="btn btn-outline-primary btn-sm" onclick="loadTempCards()"><i class="bi bi-arrow-clockwise me-1"></i>重新整理</button>
       </div>
-      <div class="col-md-3">
-        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">姓名 / 人事號 / 卡號關鍵字</label>
-        <input type="text" class="form-control form-control-sm" id="accKeyword" placeholder="輸入關鍵字搜尋">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">狀態</label>
-        <select class="form-select form-select-sm" id="accStatus">
-          <option value="">全部</option>
-          <option>已開通</option>
-          <option>申請中</option>
-          <option>已刪除</option>
-        </select>
-      </div>
-      <div class="col-auto">
-        <button class="btn btn-primary btn-sm" onclick="loadAccess()"><i class="bi bi-search me-1"></i>查詢</button>
-      </div>
-      <div class="col-auto">
-        <button class="btn btn-outline-secondary btn-sm" onclick="resetAccessFilter()"><i class="bi bi-arrow-counterclockwise me-1"></i>清除篩選</button>
-      </div>
+    </div>
+    <div class="table-responsive" style="max-height:480px;overflow-y:auto">
+      <table class="table table-hover table-bordered" style="margin:0">
+        <thead><tr id="tcActiveHead"></tr></thead>
+        <tbody id="tcActiveBody">
+          <tr><td colspan="11" class="text-center text-muted py-5" style="font-size:.85rem">載入中...</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <!-- 結果表格 -->
+  <!-- 臨時門禁卡：已結案（按查詢才呼叫後端） -->
+  <div class="card mb-3">
+    <div class="card-hd">
+      <span><i class="bi bi-archive me-2" style="color:var(--ac)"></i>已結案紀錄</span>
+      <span id="tcClosedCount" style="font-size:.78rem;color:#94a3b8">尚未查詢</span>
+    </div>
+    <div style="padding:12px 18px;border-bottom:1px solid #f1f5f9">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-2">
+          <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">借用日期（起）</label>
+          <input type="date" class="form-control form-control-sm" id="tcFrom">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">借用日期（迄）</label>
+          <input type="date" class="form-control form-control-sm" id="tcTo">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">姓名 / 人事號 / 單位 / 卡別</label>
+          <input type="text" class="form-control form-control-sm" id="tcKeyword" placeholder="輸入關鍵字（選填）">
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-primary btn-sm" onclick="loadTempCardsClosed()"><i class="bi bi-search me-1"></i>查詢已結案</button>
+        </div>
+      </div>
+    </div>
+    <div class="table-responsive" id="tcClosedWrap" style="max-height:420px;overflow-y:auto;display:none">
+      <table class="table table-hover table-bordered" style="margin:0">
+        <thead><tr id="tcClosedHead"></tr></thead>
+        <tbody id="tcClosedBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 門禁權限查詢（按查詢才呼叫後端） -->
   <div class="card">
     <div class="card-hd">
-      <span><i class="bi bi-table me-2" style="color:var(--ac)"></i>門禁權限清單</span>
-      <span id="accCount" style="font-size:.78rem;color:#94a3b8">尚未查詢</span>
+      <span><i class="bi bi-fingerprint me-2" style="color:var(--ac)"></i>門禁權限名單</span>
+      <div class="d-flex align-items-center gap-2">
+        <span id="accCount" style="font-size:.78rem;color:#94a3b8">尚未查詢</span>
+        <button class="btn btn-outline-success btn-sm" onclick="exportAccessTxt()"><i class="bi bi-download me-1"></i>匯出開通名單</button>
+        <button class="btn btn-primary btn-sm" onclick="openAccessModal()"><i class="bi bi-plus-lg me-1"></i>新增人員</button>
+      </div>
     </div>
-    <div class="table-responsive" style="max-height:640px;overflow-y:auto">
-      <table class="table table-hover table-bordered">
+    <div style="padding:12px 18px;border-bottom:1px solid #f1f5f9">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">科別代號 / 科別名稱</label>
+          <input type="text" class="form-control form-control-sm" id="accDept" placeholder="輸入科別代號或名稱">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">姓名 / 人事號 / 卡號關鍵字</label>
+          <input type="text" class="form-control form-control-sm" id="accKeyword" placeholder="輸入關鍵字搜尋">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">狀態</label>
+          <select class="form-select form-select-sm" id="accStatus">
+            <option value="">全部</option>
+            <option>已開通</option>
+            <option>申請中</option>
+            <option>已刪除</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-primary btn-sm" onclick="loadAccess()"><i class="bi bi-search me-1"></i>查詢</button>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-outline-secondary btn-sm" onclick="resetAccessFilter()"><i class="bi bi-arrow-counterclockwise me-1"></i>清除</button>
+        </div>
+      </div>
+    </div>
+    <div class="table-responsive" id="accWrap" style="max-height:400px;overflow-y:auto;display:none">
+      <table class="table table-hover table-bordered" style="margin:0">
         <thead>
           <tr>
             <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">科別代號</th>
@@ -979,10 +1032,43 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
             <th style="text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">操作</th>
           </tr>
         </thead>
-        <tbody id="accBody">
-          <tr><td colspan="10" class="text-center text-muted py-5" style="font-size:.85rem">載入中...</td></tr>
-        </tbody>
+        <tbody id="accBody"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- 臨時門禁卡 管理 Modal -->
+<div class="modal fade" id="tempCardModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius:14px;border:none;">
+      <div class="modal-header" style="border-bottom:1px solid #f1f5f9;">
+        <h6 class="modal-title fw-bold"><i class="bi bi-person-badge me-2" style="color:var(--ac)"></i>臨時門禁卡管理</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="tcKey">
+        <div id="tcInfo" style="background:#f8fafc;border-radius:10px;padding:10px 14px;font-size:.82rem;margin-bottom:14px"></div>
+        <div class="row g-3" style="font-size:.85rem">
+          <div class="col-md-6"><label class="form-label fw-semibold">借出者</label>
+            <select class="form-select form-select-sm" id="tc借出者"><option value="">請選擇</option></select></div>
+          <div class="col-md-6"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">歸還日期</label>
+            <input type="date" class="form-control form-control-sm" id="tc歸還日期"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">點收人</label>
+            <select class="form-select form-select-sm" id="tc點收人"><option value="">請選擇</option></select></div>
+          <div class="col-12"><label class="form-label fw-semibold">備註</label>
+            <textarea class="form-control form-control-sm" id="tc備註" rows="2" placeholder="補充說明（選填）"></textarea></div>
+          <div class="col-12" style="font-size:.75rem;color:#64748b"><i class="bi bi-info-circle me-1"></i>「歸還日期」與「點收人」都填寫後儲存，即視為歸還並結案。</div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid #f1f5f9;justify-content:space-between">
+        <button class="btn btn-outline-success btn-sm" onclick="tcFillReturnToday()"><i class="bi bi-box-arrow-in-down me-1"></i>今日歸還</button>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+          <button class="btn btn-primary btn-sm" onclick="saveTempCard()">儲存</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1259,6 +1345,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
         <input type="number" class="form-control form-control-sm" id="rsYear" style="width:110px">
       </div>
       <div>
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">月份區間</label>
+        <div class="d-flex align-items-center gap-1">
+          <select class="form-select form-select-sm" id="rsMonthFrom" style="width:82px" onchange="rsRangeChanged()"></select>
+          <span style="color:#94a3b8">~</span>
+          <select class="form-select form-select-sm" id="rsMonthTo" style="width:82px" onchange="rsRangeChanged()"></select>
+        </div>
+      </div>
+      <div class="btn-group btn-group-sm" role="group">
+        <button class="btn btn-outline-secondary" onclick="rsSetRange(1,12)">全年</button>
+        <button class="btn btn-outline-secondary" onclick="rsSetRange(1,6)">上半年</button>
+        <button class="btn btn-outline-secondary" onclick="rsSetRange(7,12)">下半年</button>
+      </div>
+      <div>
         <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">職類別（明細表用）</label>
         <select class="form-select form-select-sm" id="rsRole" style="width:150px">
           <option value="">請選擇職類別</option>
@@ -1279,13 +1378,23 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
           <span><i class="bi bi-grid-3x3 me-2" style="color:var(--ac)"></i>職類別教具借用 × 月份統計（單位＋中心）</span>
           <span style="font-size:.7rem;color:#94a3b8;font-weight:400">每月分「單位」「中心」兩欄</span>
         </div>
-        <div style="padding:12px 18px 4px;font-size:.85rem;font-weight:700;color:var(--ac)">上半年（1~6月）</div>
+        <div id="rsRangeTotalSec">
+          <div style="padding:12px 18px 4px;font-size:.85rem;font-weight:700;color:var(--ac)" id="rsRangeTotalLabel">區間合計</div>
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm" style="font-size:.78rem;margin:0;width:100%" id="rsRangeTotalTable"></table>
+          </div>
+        </div>
+        <div id="rsSecH1">
+        <div style="padding:14px 18px 4px;font-size:.85rem;font-weight:700;color:var(--ac);border-top:1px solid #f1f5f9" id="rsLabelH1">上半年（1~6月）</div>
         <div class="table-responsive" id="rsMatrixWrapH1">
           <table class="table table-bordered table-sm" style="font-size:.78rem;margin:0;table-layout:fixed;width:100%" id="rsMatrixTableH1"></table>
         </div>
-        <div style="padding:14px 18px 4px;font-size:.85rem;font-weight:700;color:var(--ac);border-top:1px solid #f1f5f9">下半年（7~12月）</div>
+        </div>
+        <div id="rsSecH2">
+        <div style="padding:14px 18px 4px;font-size:.85rem;font-weight:700;color:var(--ac);border-top:1px solid #f1f5f9" id="rsLabelH2">下半年（7~12月）</div>
         <div class="table-responsive" id="rsMatrixWrapH2">
           <table class="table table-bordered table-sm" style="font-size:.78rem;margin:0;table-layout:fixed;width:100%" id="rsMatrixTableH2"></table>
+        </div>
         </div>
       </div>
     </div>
@@ -1962,7 +2071,7 @@ function showPanel(name,el){
   if(name==='maintenance'&&!maintResults.length) loadMaintenance();
   if(name==='consumables'&&!csResults.length) loadConsumables();
   if(name==='requisition'&&!reqResults.length) loadRequisitions();
-  if(name==='access'&&!accResults.length) loadAccess();
+  if(name==='access'&&!tcLoaded) loadTempCards(); // 門禁權限名單改為按「查詢」才載入
   if(name==='rolestat'&&!rsLoaded) loadRoleStat();
   if(name==='cases'&&!caseLoaded) loadCases();
   if(name==='jobreport'&&!jrListLoaded) loadJobReportList();
@@ -4080,7 +4189,210 @@ async function deleteConsumableRow(){
   finally{hideLoad();}
 }
 
-// ===== 門禁查詢 =====
+// ===== 臨時門禁卡借用（門禁管理） =====
+// 卡別清單：要跟 Google 表單「借用卡別」的選項文字一致，之後加卡在這裡加
+const TC_CARD_LIST = ['A卡','B卡','C卡'];
+let tcLoaded = false;
+let tcActive = [];
+let tcClosed = [];
+let adminNameList = [];
+
+const TC_TH = 'text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0;white-space:nowrap';
+const TC_TD = 'font-size:.85rem;white-space:nowrap;text-align:center';
+
+function tcToday(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// 剩餘天數：<0 逾期、0 今日到期
+function tcDaysLeft(due){
+  if(!due) return null;
+  const a=new Date(due+'T00:00:00'), b=new Date(tcToday()+'T00:00:00');
+  return Math.round((a-b)/86400000);
+}
+
+async function loadTempCards(){
+  if(!getToken())return;
+  showLoad('讀取門禁卡借用...');
+  try{
+    const r=await fetch(API+'?'+new URLSearchParams({action:'queryTempCards', token:getToken(), mode:'active'}));
+    const data=await r.json();
+    if(!data.success){toast('查詢失敗',data.message,'danger');return;}
+    tcActive=data.data||[];
+    tcLoaded=true;
+    renderTempCardStatus();
+    renderTempCardsActive();
+  }catch(err){toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+async function loadTempCardsClosed(){
+  if(!getToken())return;
+  showLoad('查詢已結案...');
+  try{
+    const r=await fetch(API+'?'+new URLSearchParams({
+      action:'queryTempCards', token:getToken(), mode:'closed',
+      from:document.getElementById('tcFrom').value,
+      to:document.getElementById('tcTo').value,
+      keyword:document.getElementById('tcKeyword').value.trim()
+    }));
+    const data=await r.json();
+    if(!data.success){toast('查詢失敗',data.message,'danger');return;}
+    tcClosed=data.data||[];
+    renderTempCardsClosed();
+  }catch(err){toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+function renderTempCardStatus(){
+  const cards=[...TC_CARD_LIST];
+  tcActive.forEach(r=>{ if(r['借用卡別'] && !cards.includes(r['借用卡別'])) cards.push(r['借用卡別']); });
+  document.getElementById('tcCardStatus').innerHTML = cards.map(card=>{
+    const rec=tcActive.filter(r=>r['借用卡別']===card);
+    let bg='#f0fdf4', bd='#bbf7d0', fg='#15803d', st='在庫可借', sub='';
+    if(rec.length){
+      const r=rec[0], left=tcDaysLeft(r['預計歸還日期']);
+      const overdue = left!==null && left<0;
+      bg=overdue?'#fef2f2':'#eff6ff'; bd=overdue?'#fecaca':'#bfdbfe'; fg=overdue?'#b91c1c':'#1d4ed8';
+      st=overdue?'逾期未還':'借用中';
+      sub=`${escapeHtml(r['單位代號']||'')}　${escapeHtml(r['單位名稱']||'')}　${escapeHtml(r['人事號']||'')}　<b>${escapeHtml(r['借用人姓名']||'')}</b>　<span style="color:${fg}">預計歸還 ${escapeHtml(r['預計歸還日期']||'—')}</span>`
+        + (rec.length>1?`<div style="color:#b91c1c;font-size:.85rem;margin-top:4px">※ 另有 ${rec.length-1} 筆未結案登記</div>`:'');
+    }
+    return `<div class="col-12 col-md-4"><div style="background:${bg};border:1px solid ${bd};border-radius:12px;padding:14px 18px;height:100%">
+      <div class="d-flex justify-content-between align-items-center">
+        <span style="font-weight:800;font-size:1.35rem">${escapeHtml(card)}</span>
+        <span style="font-size:.95rem;font-weight:700;color:${fg};background:#fff;border:1px solid ${bd};border-radius:999px;padding:2px 12px">${st}</span>
+      </div>
+      <div style="font-size:1rem;color:#334155;margin-top:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sub||'<span style="color:#94a3b8">—</span>'}</div>
+    </div></div>`;
+  }).join('');
+}
+
+function tcInfoCells(r){
+  return `<td style="${TC_TD}">${escapeHtml(r['借用卡別']||'')}</td>
+    <td style="${TC_TD}"><span style="color:var(--ac);font-weight:600">${escapeHtml(r['借用人姓名']||'')}</span></td>
+    <td style="${TC_TD}">${escapeHtml(r['人事號']||'')}</td>
+    <td style="${TC_TD}">${escapeHtml(r['單位代號']||'')} ${escapeHtml(r['單位名稱']||'')}</td>
+    <td style="${TC_TD}">${escapeHtml(r['聯絡分機or群呼']||'')}</td>
+    <td style="${TC_TD}">${escapeHtml(r['借用日期']||'')}</td>`;
+}
+function tcEditBtn(key){
+  return `<button class="btn btn-sm" style="background:var(--ac);color:#fff;font-size:.75rem;padding:4px 8px;border-radius:6px;line-height:1" onclick="openTempCardModal('${escapeHtml(key)}')" title="管理"><i class="bi bi-pencil"></i></button>`;
+}
+
+function renderTempCardsActive(){
+  document.getElementById('tcActiveHead').innerHTML =
+    ['登記時間','卡別','借用人','人事號','單位','分機/群呼','借用日期','預計歸還','借出者','狀態','操作']
+    .map(h=>`<th style="${TC_TH}">${h}</th>`).join('');
+  document.getElementById('tcActiveCount').textContent = `共 ${tcActive.length} 筆借用中`;
+  const tbody=document.getElementById('tcActiveBody');
+  if(!tcActive.length){
+    tbody.innerHTML='<tr><td colspan="11" class="text-center text-muted py-5" style="font-size:.85rem">目前沒有借用中的門禁卡</td></tr>';
+    return;
+  }
+  tbody.innerHTML = tcActive.map(r=>{
+    const left=tcDaysLeft(r['預計歸還日期']);
+    let badge='<span class="st" style="background:#dbeafe;color:#1d4ed8">借用中</span>';
+    if(left!==null && left<0) badge=`<span class="st" style="background:#fee2e2;color:#b91c1c">逾期 ${-left} 天</span>`;
+    else if(left===0) badge='<span class="st" style="background:#fef9c3;color:#854d0e">今日到期</span>';
+    const lender = r['借出者'] ? escapeHtml(r['借出者']) : '<span style="color:#cbd5e1">未登記</span>';
+    return `<tr>
+      <td style="${TC_TD};color:#64748b">${escapeHtml(r['時間戳記']||'')}</td>
+      ${tcInfoCells(r)}
+      <td style="${TC_TD};${left!==null&&left<0?'color:#b91c1c;font-weight:700':''}">${escapeHtml(r['預計歸還日期']||'')}</td>
+      <td style="${TC_TD}">${lender}</td>
+      <td style="${TC_TD}">${badge}</td>
+      <td style="text-align:center">${tcEditBtn(r.key)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTempCardsClosed(){
+  document.getElementById('tcClosedWrap').style.display='';
+  document.getElementById('tcClosedHead').innerHTML =
+    ['卡別','借用人','人事號','單位','分機/群呼','借用日期','預計歸還','借出者','點收人','歸還日期','操作']
+    .map(h=>`<th style="${TC_TH}">${h}</th>`).join('');
+  document.getElementById('tcClosedCount').textContent = `共 ${tcClosed.length} 筆`;
+  const tbody=document.getElementById('tcClosedBody');
+  if(!tcClosed.length){
+    tbody.innerHTML='<tr><td colspan="11" class="text-center text-muted py-4" style="font-size:.85rem">查無已結案資料</td></tr>';
+    return;
+  }
+  tbody.innerHTML = tcClosed.map(r=>{
+    const late = r['預計歸還日期'] && r['歸還日期'] && r['歸還日期']>r['預計歸還日期'];
+    return `<tr>
+      ${tcInfoCells(r)}
+      <td style="${TC_TD}">${escapeHtml(r['預計歸還日期']||'')}</td>
+      <td style="${TC_TD}">${escapeHtml(r['借出者']||'')}</td>
+      <td style="${TC_TD}">${escapeHtml(r['點收人']||'')}</td>
+      <td style="${TC_TD};${late?'color:#b91c1c;font-weight:700':''}" ${late?'title="晚於預計歸還日期"':''}>${escapeHtml(r['歸還日期']||'')}</td>
+      <td style="text-align:center">${tcEditBtn(r.key)}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function openTempCardModal(key){
+  await loadAdminNamesIfNeeded();
+  const r = tcActive.find(x=>x.key===key) || tcClosed.find(x=>x.key===key);
+  if(!r) return;
+  const opts='<option value="">請選擇</option>'+adminNameList.map(n=>`<option>${escapeHtml(n)}</option>`).join('');
+  ['tc借出者','tc點收人'].forEach(id=>document.getElementById(id).innerHTML=opts);
+  document.getElementById('tcKey').value=key;
+  document.getElementById('tcInfo').innerHTML = `
+    <div><b>${escapeHtml(r['借用卡別']||'')}</b>｜${escapeHtml(r['借用人姓名']||'')}（${escapeHtml(r['人事號']||'')}）</div>
+    <div style="color:#64748b">${escapeHtml(r['單位代號']||'')} ${escapeHtml(r['單位名稱']||'')}｜分機 ${escapeHtml(r['聯絡分機or群呼']||'')}</div>
+    <div style="color:#64748b">借用 ${escapeHtml(r['借用日期']||'')} → 預計歸還 ${escapeHtml(r['預計歸還日期']||'')}</div>`;
+  document.getElementById('tc借出者').value=r['借出者']||'';
+  document.getElementById('tc歸還日期').value=r['歸還日期']||'';
+  document.getElementById('tc點收人').value=r['點收人']||'';
+  document.getElementById('tc備註').value=r['備註']||'';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('tempCardModal')).show();
+}
+
+// 「今日歸還」：帶入今天日期，點收人預設帶目前登入的管理員
+function tcFillReturnToday(){
+  document.getElementById('tc歸還日期').value=tcToday();
+  const me=(document.getElementById('currentUser').textContent||'').trim();
+  const sel=document.getElementById('tc點收人');
+  if(!sel.value && adminNameList.includes(me)) sel.value=me;
+}
+
+async function saveTempCard(){
+  const key=document.getElementById('tcKey').value;
+  const r = tcActive.find(x=>x.key===key) || tcClosed.find(x=>x.key===key) || {};
+  const data={
+    key,
+    '借用卡別':r['借用卡別']||'', '借用人姓名':r['借用人姓名']||'',
+    '借出者':document.getElementById('tc借出者').value,
+    '歸還日期':document.getElementById('tc歸還日期').value,
+    '點收人':document.getElementById('tc點收人').value,
+    '備註':document.getElementById('tc備註').value.trim()
+  };
+  if(!!data['歸還日期'] !== !!data['點收人']){toast('提示','歸還日期與點收人需同時填寫才能結案','info');return;}
+  showLoad('儲存中...');
+  try{
+    const res=await (await fetch(API,{method:'POST',body:JSON.stringify({action:'saveTempCardMgmt', token:getToken(), data})})).json();
+    if(!res.success){toast('儲存失敗',res.message,'danger');return;}
+    bootstrap.Modal.getInstance(document.getElementById('tempCardModal')).hide();
+    toast(res.message||'已儲存','','success');
+    // 前端直接更新，不重新呼叫後端
+    const merged=Object.assign({}, r, data, {'狀態':res.status});
+    tcActive=tcActive.filter(x=>x.key!==key);
+    tcClosed=tcClosed.filter(x=>x.key!==key);
+    if(res.status==='已結案'){
+      if(document.getElementById('tcClosedWrap').style.display!=='none'){ tcClosed.unshift(merged); renderTempCardsClosed(); }
+    }else{
+      tcActive.push(merged);
+      tcActive.sort((a,b)=>String(a['預計歸還日期']).localeCompare(String(b['預計歸還日期'])));
+      if(document.getElementById('tcClosedWrap').style.display!=='none') renderTempCardsClosed();
+    }
+    renderTempCardStatus();
+    renderTempCardsActive();
+  }catch(err){toast('連線失敗',err.message,'danger');}
+  finally{hideLoad();}
+}
+
+// ===== 門禁權限查詢 =====
 let accResults = [];
 let accAdminNamesLoaded = false;
 
@@ -4115,11 +4427,14 @@ function resetAccessFilter(){
   document.getElementById('accDept').value='';
   document.getElementById('accKeyword').value='';
   document.getElementById('accStatus').value='';
-  loadAccess();
+  accResults=[];
+  document.getElementById('accWrap').style.display='none';
+  document.getElementById('accCount').textContent='尚未查詢';
 }
 
 function renderAccess(){
   const tbody=document.getElementById('accBody');
+  document.getElementById('accWrap').style.display='';
   document.getElementById('accCount').textContent = `共 ${accResults.length} 筆`;
   if(!accResults.length){
     tbody.innerHTML='<tr><td colspan="10" class="text-center text-muted py-5" style="font-size:.85rem">查無資料</td></tr>';
@@ -4152,6 +4467,7 @@ async function loadAdminNamesIfNeeded(){
     const r=await fetch(API+'?action=queryAdminNames&token='+encodeURIComponent(getToken()));
     const data=await r.json();
     if(data.success){
+      adminNameList = data.data||[];
       const sel=document.getElementById('acc核准人');
       const opts = (data.data||[]).map(n=>`<option>${escapeHtml(n)}</option>`).join('');
       sel.innerHTML = '<option value="">請選擇</option>' + opts;
@@ -4694,10 +5010,48 @@ function currentRocYear(){ return new Date().getFullYear()-1911; }
 
 // ---------- 職類統計 ----------
 let rsLoaded = false;
+let rsMatrixData = null;
+let rsDetailData = null;
+
+// 月份區間：預設全年；切換月份只重新畫表，不重新向後端撈資料
+function rsInitMonthSelects(){
+  const f=document.getElementById('rsMonthFrom'), t=document.getElementById('rsMonthTo');
+  if(f.options.length) return;
+  let opts='';
+  for(let m=1;m<=12;m++) opts+=`<option value="${m}">${m}月</option>`;
+  f.innerHTML=opts; t.innerHTML=opts;
+  f.value='1'; t.value='12';
+}
+function rsGetRange(){
+  rsInitMonthSelects();
+  let from=Number(document.getElementById('rsMonthFrom').value)||1;
+  let to=Number(document.getElementById('rsMonthTo').value)||12;
+  if(from>to){ const x=from; from=to; to=x; }
+  return {from,to};
+}
+// 依月份序號（1~12）篩選 monthList，key 格式為 YYYY-MM
+function rsFilterMonths(monthList){
+  const {from,to}=rsGetRange();
+  return monthList.filter(m=>{
+    const mm=Number(String(m.key).split('-').pop());
+    return mm>=from && mm<=to;
+  });
+}
+function rsSetRange(from,to){
+  rsInitMonthSelects();
+  document.getElementById('rsMonthFrom').value=String(from);
+  document.getElementById('rsMonthTo').value=String(to);
+  rsRangeChanged();
+}
+function rsRangeChanged(){
+  if(rsMatrixData) renderRoleMatrix(rsMatrixData);
+  if(rsDetailData && document.getElementById('rsDetailRoleLabel').textContent) renderRoleToolDetail(rsDetailData);
+}
 
 async function loadRoleStat(){
   if(!getToken())return;
   if(!document.getElementById('rsYear').value) document.getElementById('rsYear').value = new Date().getFullYear();
+  rsInitMonthSelects();
   const year=document.getElementById('rsYear').value;
   const role=document.getElementById('rsRole').value;
   showLoad('讀取職類統計...');
@@ -4768,23 +5122,95 @@ function buildHalfMatrixHtml(rowHeader, rowKeys, monthsHalf, getCell, firstColWi
 }
 
 function renderRoleMatrix(data){
-  const roleList=data.roleList, monthList=data.monthList, matrix=data.matrix;
-  const h1=monthList.slice(0,6), h2=monthList.slice(6,12);
+  const roleList=data.roleList, matrix=data.matrix;
+  const monthList=rsFilterMonths(data.monthList);
+  const {from,to}=rsGetRange();
+  const mOf=m=>Number(String(m.key).split('-').pop());
+  const h1=monthList.filter(m=>mOf(m)<=6), h2=monthList.filter(m=>mOf(m)>=7);
   const getCell=(role,mkey)=> (matrix[role] && matrix[role].byMonth[mkey]) || {unit:0,center:0};
-  document.getElementById('rsMatrixTableH1').innerHTML = buildHalfMatrixHtml('職類別', roleList, h1, getCell);
-  document.getElementById('rsMatrixTableH2').innerHTML = buildHalfMatrixHtml('職類別', roleList, h2, getCell);
+
+  // 上/下半年表：只顯示區間內的月份，整段不在區間內就隱藏
+  document.getElementById('rsSecH1').style.display = h1.length ? '' : 'none';
+  document.getElementById('rsSecH2').style.display = h2.length ? '' : 'none';
+  if(h1.length){
+    document.getElementById('rsLabelH1').textContent = `上半年（${mOf(h1[0])}~${mOf(h1[h1.length-1])}月）`;
+    document.getElementById('rsMatrixTableH1').innerHTML = buildHalfMatrixHtml('職類別', roleList, h1, getCell);
+  }
+  if(h2.length){
+    document.getElementById('rsLabelH2').textContent = `下半年（${mOf(h2[0])}~${mOf(h2[h2.length-1])}月）`;
+    document.getElementById('rsMatrixTableH2').innerHTML = buildHalfMatrixHtml('職類別', roleList, h2, getCell);
+  }
+
+  // 區間合計表（報告用）：各職類在選定月份內的 單位 / 中心 / 合計
+  const num=v=>(typeof v==='number')?v:0;
+  document.getElementById('rsRangeTotalLabel').textContent = `${data.year||document.getElementById('rsYear').value} 年 ${from}~${to} 月 區間合計`;
+  // 轉置：欄＝職類別，列＝單位／中心／合計
+  const th='background:#f8fafc;text-align:center;font-size:.8rem;font-weight:700;white-space:nowrap;padding:6px 4px';
+  const td='text-align:center;font-size:.85rem;padding:6px 4px';
+  const sums=roleList.map(role=>{
+    let u=0,c=0;
+    monthList.forEach(m=>{ const v=getCell(role,m.key)||{}; u+=num(v.unit); c+=num(v.center); });
+    return {u,c};
+  });
+  const gU=sums.reduce((a,x)=>a+x.u,0), gC=sums.reduce((a,x)=>a+x.c,0);
+  let html=`<thead><tr><th style="${th};width:70px"></th>`;
+  roleList.forEach(role=>html+=`<th style="${th}">${role}</th>`);
+  html+=`<th style="${th};background:#fef9c3">總計</th></tr></thead><tbody>`;
+  const rowHtml=(label,getV,total,bold)=>{
+    let r=`<tr${bold?' style="background:#fefce8;font-weight:700"':''}><td style="${td};font-weight:600">${label}</td>`;
+    sums.forEach(x=>{ const v=getV(x); r+=`<td style="${td};color:${v||bold?'#334155':'#cbd5e1'}">${v}</td>`; });
+    r+=`<td style="${td};font-weight:700;background:#fefce8">${total}</td></tr>`;
+    return r;
+  };
+  html+=rowHtml('單位',x=>x.u,gU,false);
+  html+=rowHtml('中心',x=>x.c,gC,false);
+  html+=rowHtml('合計',x=>x.u+x.c,gU+gC,true);
+  html+='</tbody>';
+  document.getElementById('rsRangeTotalTable').innerHTML = html;
 }
 
 function renderRoleToolDetail(data){
-  document.getElementById('rsDetailRoleLabel').textContent='－ '+data.role;
-  const monthList=data.monthList, toolList=data.toolList, toolMap=data.toolMap;
-  document.getElementById('rsDetailCount').textContent = toolList.length ? ('共 '+toolList.length+' 項教具') : '';
-  document.getElementById('rsDetailTable').innerHTML = buildDetailTableHtml(toolList, monthList, toolMap, 340);
+  const {from,to}=rsGetRange();
+  document.getElementById('rsDetailRoleLabel').textContent='－ '+data.role+'（'+from+'~'+to+'月）';
+  const monthList=rsFilterMonths(data.monthList), toolMap=data.toolMap;
+  // 顯示規則：
+  //  1. 單位內教具（職類填報）：一律顯示，沒借用就掛 0
+  //  2. 中心教具：查詢月份區間內有借用才顯示
+  const toolList=(data.toolList||[]).filter(tool=>{
+    const t=toolMap[tool];
+    if(isUnitTool(t)) return true;
+    return monthList.some(m=>{ const v=t && t.byMonth[m.key]; return v && Number(v.center)>0; });
+  });
+  // 依查詢區間內的使用量（單位＋中心）由多到少排序；同數量依名稱排序
+  const n=v=>(typeof v==='number')?v:0;
+  const rangeTotal=tool=>monthList.reduce((sum,m)=>{
+    const v=toolMap[tool] && toolMap[tool].byMonth[m.key];
+    return v ? sum+n(v.unit)+n(v.center) : sum;
+  },0);
+  const totals={}; toolList.forEach(tool=>totals[tool]=rangeTotal(tool));
+  toolList.sort((a,b)=>(totals[b]-totals[a]) || a.localeCompare(b,'zh-Hant'));
+  const unitCnt=toolList.filter(tool=>isUnitTool(toolMap[tool])).length;
+  document.getElementById('rsDetailCount').textContent = toolList.length
+    ? ('共 '+toolList.length+' 項教具（單位內 '+unitCnt+'、中心 '+(toolList.length-unitCnt)+'）') : '';
+  document.getElementById('rsDetailTable').innerHTML = buildDetailTableHtml(toolList, monthList, toolMap, 340, {unitTag:true});
 }
 
 // 使用明細表：單一教具在同一個月不會同時有「單位」跟「中心」兩邊數字（一定有一邊是 0），
 // 所以直接合併成一個數字顯示，12個月放同一張表，不用再分單位/中心、也不用再分上下半年
-function buildDetailTableHtml(toolList, monthList, toolMap, firstColWidth){
+// opts.unitTag = true 時，職類填報來的教具會在名稱後加「單位內教具」標籤（只有職類統計頁用）
+function isUnitTool(t){
+  if(!t) return false;
+  if(t.fromUnit) return true; // 後端標記
+  // 備援判斷（後端未更新或吃到舊快取時）：
+  // 中心借用的格子一定是 center>=1；只要出現 center 為 0 的格子，代表該格是職類填報寫入的（即使次數填 0）
+  return Object.values(t.byMonth||{}).some(v=>v && (
+    v.unit==='報廢' ||
+    (typeof v.unit==='number' && v.unit>0) ||
+    !(Number(v.center)>0)
+  ));
+}
+function buildDetailTableHtml(toolList, monthList, toolMap, firstColWidth, opts){
+  opts = opts || {};
   const totalCols = 1 + monthList.length + 1;
   if(!toolList.length){
     return `<tbody><tr><td colspan="${totalCols}" class="text-center text-muted py-4" style="font-size:.9rem">尚無資料</td></tr></tbody>`;
@@ -4800,7 +5226,10 @@ function buildDetailTableHtml(toolList, monthList, toolMap, firstColWidth){
   let tbody='<tbody>';
   toolList.forEach(tool=>{
     let rowTotal=0;
-    tbody+=`<tr><td style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:${maxW}px" title="${tool}">${tool}</td>`;
+    const tag = (opts.unitTag && isUnitTool(toolMap[tool]))
+      ? '<span style="display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:.7rem;font-weight:600;color:#15803d;background:#dcfce7;border:1px solid #bbf7d0;vertical-align:middle">單位內教具</span>'
+      : '';
+    tbody+=`<tr><td style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:${maxW}px" title="${tool}${tag?'（單位內教具）':''}">${tool}${tag}</td>`;
     monthList.forEach(m=>{
       const v=(toolMap[tool] && toolMap[tool].byMonth[m.key]) || {unit:0,center:0};
       const isRetired = v.unit==='報廢';
