@@ -20,15 +20,53 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 .tb-admin{background:rgba(255,255,255,.15);color:#fff;font-size:0.8rem;padding:5px 14px;border-radius:20px;display:flex;align-items:center;gap:6px;}
 /* Layout */
 .app-body{display:flex;flex:1;overflow:hidden;}
-/* Sidebar */
-.sidebar{width:215px;background:#fff;border-right:1px solid #e5e9f2;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;padding:12px 10px 20px;}
-.sb-section{font-size:0.67rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;font-weight:700;padding:14px 10px 5px;}
-.sb-link{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:8px;color:#64748b;font-size:0.85rem;cursor:pointer;margin-bottom:1px;text-decoration:none;transition:all .15s;position:relative;}
-.sb-link:hover{background:#f0f4ff;color:var(--ac);}
-.sb-link.active{background:#eff6ff;color:var(--ac);font-weight:600;}
-.sb-link i{font-size:.95rem;width:16px;text-align:center;flex-shrink:0;}
-.sb-badge{margin-left:auto;font-size:.65rem;background:var(--ac);color:#fff;padding:1px 7px;border-radius:10px;line-height:1.6;}
-.sb-dev{margin-left:auto;font-size:.62rem;background:#f1f5f9;color:#94a3b8;padding:2px 7px;border-radius:10px;}
+/* Top navigation (in blue topbar) — 選單靠左，緊接系統名稱 */
+.topbar{display:grid!important;grid-template-columns:auto 1fr auto;gap:22px;position:relative;z-index:1030;}
+.topnav{justify-self:start;}
+.tb-brand{min-width:0;}
+.tb-brand span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-right{justify-self:end;}
+.tb-ver{color:rgba(255,255,255,.6);font-size:.75rem;padding-left:12px;border-left:1px solid rgba(255,255,255,.25);}
+.topnav{display:flex;align-items:center;gap:4px;}
+.topnav>.sb-link,.nav-dd{display:flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:8px;color:rgba(255,255,255,.78);font-size:.86rem;font-weight:500;cursor:pointer;text-decoration:none;white-space:nowrap;background:none;border:none;transition:background .15s,color .15s;}
+.topnav>.sb-link:hover,.nav-dd:hover,.nav-dd.show{color:#fff;background:rgba(255,255,255,.12);}
+.topnav>.sb-link.active,.nav-group.active>.nav-dd{color:#fff;background:rgba(255,255,255,.22);font-weight:600;}
+.topnav>.sb-link:focus-visible,.nav-dd:focus-visible,.mnav-btn:focus-visible{outline:2px solid #fff;outline-offset:1px;}
+.topnav i{font-size:.95rem;}
+.nav-sep{width:1px;height:20px;background:rgba(255,255,255,.3);margin:0 6px;}
+.nav-dd .dd-caret{font-size:.62rem;margin-left:1px;transition:transform .15s;}
+.nav-dd.show .dd-caret{transform:rotate(180deg);}
+.nav-group{display:flex;}
+.nav-group .dropdown-menu{border:1px solid #e5e9f2;border-radius:10px;box-shadow:0 10px 28px rgba(15,23,42,.18);padding:6px;min-width:180px;margin-top:6px!important;}
+.nav-group .dropdown-menu .sb-link{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:7px;color:#475569;font-size:.85rem;cursor:pointer;text-decoration:none;}
+.nav-group .dropdown-menu .sb-link:hover{background:#f0f4ff;color:var(--ac);}
+.nav-group .dropdown-menu .sb-link.active{background:#eff6ff;color:var(--ac);font-weight:600;}
+.nav-group .dropdown-menu .sb-link i{width:16px;text-align:center;}
+.dropdown-divider{margin:4px 6px;border-color:#f1f5f9;}
+.sb-badge{font-size:.65rem;background:#fff;color:var(--ac);font-weight:700;padding:1px 7px;border-radius:10px;line-height:1.6;}
+/* 手機版：漢堡按鈕 + 側拉選單 */
+.mnav-btn{display:none;width:38px;height:38px;border:none;border-radius:9px;background:rgba(255,255,255,.15);color:#fff;font-size:1.35rem;align-items:center;justify-content:center;}
+.mnav-cur{display:none;color:#fff;font-weight:600;font-size:.95rem;white-space:nowrap;}
+#mobileNav{width:280px;}
+#mobileNav .offcanvas-header{background:var(--top);color:#fff;padding:14px 18px;}
+#mobileNav .offcanvas-body{padding:8px 12px 16px;}
+.mnav-sec{font-size:.72rem;color:#94a3b8;font-weight:700;padding:14px 10px 6px;}
+.mnav-sec:first-child{padding-top:6px;}
+#mobileNav .sb-link{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:9px;color:#475569;font-size:.92rem;text-decoration:none;cursor:pointer;}
+#mobileNav .sb-link i{font-size:1.05rem;width:20px;text-align:center;}
+#mobileNav .sb-link:active{background:#f0f4ff;}
+#mobileNav .sb-link.active{background:#eff6ff;color:var(--ac);font-weight:600;}
+#mobileNav .sb-badge{margin-left:auto;background:var(--ac);color:#fff;}
+.mnav-foot{border-top:1px solid #f1f5f9;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;font-size:.82rem;color:#64748b;}
+@media (max-width:1199.98px){.tb-time,.tb-ver{display:none;}.tb-brand span{display:none;}}
+@media (max-width:991.98px){
+  .topbar{grid-template-columns:auto 1fr auto;padding:0 12px;}
+  .topnav,.tb-right{display:none!important;}
+  .mnav-btn{display:flex;}
+  .mnav-cur{display:block;justify-self:start;}
+  .main{padding:16px!important;}
+}
+.sec-divider{border:0;border-top:1px solid #d5dce8;opacity:1;margin:20px 0;}
 /* Main */
 .main{flex:1;overflow-y:auto;padding:22px 26px;}
 .panel{display:none;}.panel.active{display:block;}
@@ -163,34 +201,72 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
     <div class="logo"><i class="bi bi-hospital-fill"></i></div>
     <span>臨床技能中心管理系統</span>
   </div>
+  <span class="mnav-cur" id="mnavCur">借用管理</span>
+  <button class="mnav-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-label="開啟選單"><i class="bi bi-list"></i></button>
+  <nav class="topnav" aria-label="主選單">
+    <a class="sb-link" data-panel="import" onclick="showPanel('import',this)"><i class="bi bi-cloud-upload"></i>匯入資料</a>
+    <a class="sb-link active" data-panel="query" onclick="showPanel('query',this)"><i class="bi bi-card-list"></i>借用管理<span class="sb-badge sb-count" id="sb-count" style="display:none">0</span></a>
+    <span class="nav-sep"></span>
+    <div class="dropdown nav-group">
+      <button class="nav-dd" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-building"></i>行政管理<i class="bi bi-chevron-down dd-caret"></i></button>
+      <ul class="dropdown-menu">
+        <li><a class="sb-link" data-panel="maintenance" onclick="showPanel('maintenance',this)"><i class="bi bi-tools"></i>設備維修</a></li>
+        <li><a class="sb-link" data-panel="requisition" onclick="showPanel('requisition',this)"><i class="bi bi-box-seam"></i>耗材請領</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="sb-link" data-panel="access" onclick="showPanel('access',this)"><i class="bi bi-credit-card-2-front"></i>門禁管理</a></li>
+        <li><a class="sb-link" data-panel="assets" onclick="showPanel('assets',this)"><i class="bi bi-archive"></i>財產總覽</a></li>
+        <li><a class="sb-link" data-panel="consumables" onclick="showPanel('consumables',this)"><i class="bi bi-clipboard2-data"></i>耗材清單</a></li>
+      </ul>
+    </div>
+    <div class="dropdown nav-group">
+      <button class="nav-dd" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-bar-chart-line"></i>統計分析<i class="bi bi-chevron-down dd-caret"></i></button>
+      <ul class="dropdown-menu">
+        <li><a class="sb-link" data-panel="analytics" onclick="showPanel('analytics',this)"><i class="bi bi-bar-chart-line"></i>中心統計</a></li>
+        <li><a class="sb-link" data-panel="rolestat" onclick="showPanel('rolestat',this)"><i class="bi bi-grid-3x3-gap"></i>職類統計</a></li>
+        <li><a class="sb-link" data-panel="cases" onclick="showPanel('cases',this)"><i class="bi bi-journal-richtext"></i>教案總覽</a></li>
+        <li><a class="sb-link" data-panel="jobreport" onclick="showPanel('jobreport',this)"><i class="bi bi-pencil-square"></i>職類填報</a></li>
+      </ul>
+    </div>
+    <a class="sb-link" data-panel="changelog" onclick="showPanel('changelog',this)"><i class="bi bi-clock-history"></i>更新日誌</a>
+  </nav>
   <div class="tb-right">
     <span class="tb-time" id="clock"></span>
+    <span class="tb-ver" id="sidebarVersion">版本 v—</span>
     <div class="tb-admin" style="cursor:pointer" onclick="doLogout()" title="點擊登出"><i class="bi bi-person-circle"></i><span id="currentUser">管理員</span><i class="bi bi-box-arrow-right ms-1" style="font-size:.75rem"></i></div>
   </div>
 </div>
 
-<div class="app-body">
-<!-- Sidebar -->
-<div class="sidebar">
-  <div class="sb-section">主要功能</div>
-  <a class="sb-link" onclick="showPanel('import',this)"><i class="bi bi-cloud-upload"></i>匯入資料</a>
-  <a class="sb-link active" onclick="showPanel('query',this)"><i class="bi bi-card-list"></i>借用管理<span class="sb-badge" id="sb-count" style="display:none">0</span></a>
-  <a class="sb-link" onclick="showPanel('maintenance',this)"><i class="bi bi-tools"></i>設備維修</a>
-  <a class="sb-link" onclick="showPanel('requisition',this)"><i class="bi bi-box-seam"></i>耗材請領</a>
-  <div class="sb-section">行政管理</div>
-  <a class="sb-link" onclick="showPanel('access',this)"><i class="bi bi-credit-card-2-front"></i>門禁管理</a>
-  <a class="sb-link" onclick="showPanel('assets',this)"><i class="bi bi-archive"></i>財產總覽</a>
-  <a class="sb-link" onclick="showPanel('consumables',this)"><i class="bi bi-clipboard2-data"></i>耗材清單</a>
-  <div class="sb-section">統計分析</div>
-  <a class="sb-link" onclick="showPanel('analytics',this)"><i class="bi bi-bar-chart-line"></i>中心統計</a>
-  <a class="sb-link" onclick="showPanel('rolestat',this)"><i class="bi bi-grid-3x3-gap"></i>職類統計</a>
-  <a class="sb-link" onclick="showPanel('cases',this)"><i class="bi bi-journal-richtext"></i>教案總覽</a>
-  <a class="sb-link" onclick="showPanel('jobreport',this)"><i class="bi bi-pencil-square"></i>職類填報</a>
-  <div class="sb-section">系統設定</div>
-  <a class="sb-link" onclick="showPanel('changelog',this)"><i class="bi bi-clock-history"></i>更新日誌</a>
-  <div id="sidebarVersion" style="margin-top:auto;padding:14px 12px 4px;border-top:1px solid #f1f5f9;font-size:.75rem;color:#94a3b8;text-align:center">版本 v—</div>
+<!-- Mobile Navigation Drawer -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileNav" aria-label="主選單">
+  <div class="offcanvas-header">
+    <div class="tb-brand"><div class="logo"><i class="bi bi-hospital-fill"></i></div><span style="display:inline">臨床技能中心</span></div>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="關閉"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="mnav-sec">主要功能</div>
+    <a class="sb-link" data-panel="import" onclick="showPanel('import',this)"><i class="bi bi-cloud-upload"></i>匯入資料</a>
+    <a class="sb-link active" data-panel="query" onclick="showPanel('query',this)"><i class="bi bi-card-list"></i>借用管理<span class="sb-badge sb-count" style="display:none">0</span></a>
+    <div class="mnav-sec">行政管理</div>
+    <a class="sb-link" data-panel="maintenance" onclick="showPanel('maintenance',this)"><i class="bi bi-tools"></i>設備維修</a>
+    <a class="sb-link" data-panel="requisition" onclick="showPanel('requisition',this)"><i class="bi bi-box-seam"></i>耗材請領</a>
+    <a class="sb-link" data-panel="access" onclick="showPanel('access',this)"><i class="bi bi-credit-card-2-front"></i>門禁管理</a>
+    <a class="sb-link" data-panel="assets" onclick="showPanel('assets',this)"><i class="bi bi-archive"></i>財產總覽</a>
+    <a class="sb-link" data-panel="consumables" onclick="showPanel('consumables',this)"><i class="bi bi-clipboard2-data"></i>耗材清單</a>
+    <div class="mnav-sec">統計分析</div>
+    <a class="sb-link" data-panel="analytics" onclick="showPanel('analytics',this)"><i class="bi bi-bar-chart-line"></i>中心統計</a>
+    <a class="sb-link" data-panel="rolestat" onclick="showPanel('rolestat',this)"><i class="bi bi-grid-3x3-gap"></i>職類統計</a>
+    <a class="sb-link" data-panel="cases" onclick="showPanel('cases',this)"><i class="bi bi-journal-richtext"></i>教案總覽</a>
+    <a class="sb-link" data-panel="jobreport" onclick="showPanel('jobreport',this)"><i class="bi bi-pencil-square"></i>職類填報</a>
+    <div class="mnav-sec">系統</div>
+    <a class="sb-link" data-panel="changelog" onclick="showPanel('changelog',this)"><i class="bi bi-clock-history"></i>更新日誌</a>
+  </div>
+  <div class="mnav-foot">
+    <span><i class="bi bi-person-circle me-1"></i><span id="mnavUser">管理員</span></span>
+    <button class="btn btn-sm btn-outline-secondary" onclick="doLogout()"><i class="bi bi-box-arrow-right me-1"></i>登出</button>
+  </div>
 </div>
 
+<div class="app-body">
 <!-- Main -->
 <div class="main">
 
@@ -925,7 +1001,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   </div>
 
   <!-- 臨時門禁卡：卡片狀態 -->
-  <div class="row g-3 mb-3" id="tcCardStatus"></div>
+  <div class="row g-3" id="tcCardStatus"></div>
+
+  <hr class="sec-divider">
 
   <!-- 臨時門禁卡：借用中 -->
   <div class="card mb-3">
@@ -1472,17 +1550,48 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 
   <datalist id="jrToolNames"></datalist>
 
+  <hr class="sec-divider">
+
   <div class="card">
     <div class="card-hd">
       <span><i class="bi bi-card-list me-2" style="color:var(--ac)"></i>已填報紀錄</span>
       <span id="jrListCount" style="font-size:.75rem;color:#94a3b8;font-weight:400"></span>
+    </div>
+    <div style="padding:14px 18px;border-bottom:1px solid #f1f5f9">
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-2">
+          <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">職類別</label>
+          <select class="form-select form-select-sm" id="jrqRole">
+            <option value="">全部</option>
+            <option>西醫師</option><option>牙醫師</option><option>中醫師</option><option>藥師</option>
+            <option>醫事放射師</option><option>醫事檢驗師</option><option>護理師</option>
+            <option>營養師</option><option>呼吸治療師</option><option>物理治療師</option>
+            <option>職能治療師</option><option>臨床心理師</option><option>其他</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">年度（民國）<span class="text-danger">*</span></label>
+          <input type="number" class="form-control form-control-sm" id="jrqYear" placeholder="例如 115" onkeydown="if(event.key==='Enter')loadJobReportList()">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px">期間</label>
+          <select class="form-select form-select-sm" id="jrqHalf">
+            <option value="">全年</option>
+            <option value="1">上半年（1~6月）</option>
+            <option value="2">下半年（7~12月）</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-auto">
+          <button class="btn btn-primary btn-sm" onclick="loadJobReportList()"><i class="bi bi-search me-1"></i>查詢紀錄</button>
+        </div>
+      </div>
     </div>
     <div class="table-responsive">
       <table class="table table-hover table-sm align-middle tbl-center" style="font-size:.82rem;margin:0">
         <thead class="table-light">
           <tr><th>職類別</th><th>年月</th><th>教具名稱</th><th>使用次數</th><th>填報人</th><th>更新時間</th><th>備註</th><th style="width:80px">操作</th></tr>
         </thead>
-        <tbody id="jrListBody"></tbody>
+        <tbody id="jrListBody"><tr><td colspan="8" class="text-center text-muted py-4">選好年度與期間後，按「查詢紀錄」顯示已填報資料</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -2062,8 +2171,12 @@ setInterval(()=>{
 function showPanel(name,el){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
-  document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('active'));
-  if(el)el.classList.add('active');
+  document.querySelectorAll('.sb-link').forEach(l=>l.classList.toggle('active',l.dataset.panel===name));
+  const curLink=document.querySelector('#mobileNav .sb-link[data-panel="'+name+'"]');
+  const cur=document.getElementById('mnavCur'); if(cur&&curLink) cur.textContent=curLink.textContent.replace(/\d+$/,'').trim();
+  const mn=document.getElementById('mobileNav'); if(mn&&mn.classList.contains('show')) bootstrap.Offcanvas.getInstance(mn)?.hide();
+  const mu=document.getElementById('mnavUser'),cu=document.getElementById('currentUser'); if(mu&&cu) mu.textContent=cu.textContent;
+  document.querySelectorAll('.nav-group').forEach(g=>g.classList.toggle('active',!!g.querySelector('.sb-link.active')));
   if(name==='query'&&!queryResults.length) queryToday();
   if(name==='assets'&&!allAssets.length) loadAssets();
   if(name==='analytics') loadAnalytics();
@@ -2074,7 +2187,7 @@ function showPanel(name,el){
   if(name==='access'&&!tcLoaded) loadTempCards(); // 門禁權限名單改為按「查詢」才載入
   if(name==='rolestat'&&!rsLoaded) loadRoleStat();
   if(name==='cases'&&!caseLoaded) loadCases();
-  if(name==='jobreport'&&!jrListLoaded) loadJobReportList();
+  if(name==='jobreport'){ const y=document.getElementById('jrqYear'); if(y&&!y.value) y.value=currentRocYear(); } // 不自動查詢，等使用者按「查詢紀錄」
 }
 
 // Import tabs
@@ -2584,8 +2697,7 @@ function updateStfCounts(){
   ['借用中','借用教室','今日到期','即將到期','已過期','已結案','取消','未借出'].forEach(s=>{
     const el=document.getElementById('cnt-'+s);if(el)el.textContent=counts[s]||0;
   });
-  const sb=document.getElementById('sb-count');
-  if(sb){sb.style.display=queryResults.length?'':'none';sb.textContent=queryResults.length;}
+  document.querySelectorAll('.sb-count').forEach(sb=>{sb.style.display=queryResults.length?'':'none';sb.textContent=queryResults.length;});
 }
 
 // Pagination
@@ -5367,11 +5479,30 @@ function jrSetCell(ri, ym, val){
 }
 
 // 把後端剛寫入/更新的紀錄直接併入畫面上的清單，不用再多打一次 API 重新整份查詢
+function jrListFilter(){
+  return {
+    role: document.getElementById('jrqRole').value,
+    year: String(document.getElementById('jrqYear').value||'').trim(),
+    half: document.getElementById('jrqHalf').value
+  };
+}
+let jrListQuery = null; // 最近一次查詢條件
+function jrListMatches(rec, q){
+  if(!q) return false;
+  if(q.role && rec['職類別']!==q.role) return false;
+  const ym=String(rec['年月']||'');
+  if(q.year && !ym.startsWith(q.year)) return false;
+  if(q.half){
+    const m=Number(ym.split('/')[1]||0);
+    if(q.half==='1' && !(m>=1&&m<=6)) return false;
+    if(q.half==='2' && !(m>=7&&m<=12)) return false;
+  }
+  return true;
+}
 function mergeJrRecordsIntoList(records){
-  if(!records || !records.length) return;
-  const roleFilter = document.getElementById('jrRole').value;
+  if(!records || !records.length || !jrListLoaded) return; // 尚未查詢過就不動清單
   records.forEach(rec=>{
-    if(roleFilter && rec['職類別']!==roleFilter) return; // 不符合目前清單的職類篩選就不放進畫面
+    if(!jrListMatches(rec, jrListQuery)) return; // 不符合目前清單的查詢條件就不放進畫面
     const i = jrListData.findIndex(r=>r._rowIndex===rec._rowIndex);
     if(i>=0) jrListData[i]=rec; else jrListData.push(rec);
   });
@@ -5411,16 +5542,18 @@ async function submitJobReport(){
 
 async function loadJobReportList(){
   if(!getToken())return;
-  const role=document.getElementById('jrRole').value;
+  const q=jrListFilter();
+  if(!q.year){toast('請輸入年度','查詢已填報紀錄需要指定年度','danger');return;}
   showLoad('讀取已填報紀錄...');
   try{
-    let url=API+'?action=queryJobReport&token='+encodeURIComponent(getToken());
-    if(role) url+='&role='+encodeURIComponent(role);
+    let url=API+'?action=queryJobReport&token='+encodeURIComponent(getToken())+'&year='+encodeURIComponent(q.year);
+    if(q.role) url+='&role='+encodeURIComponent(q.role);
     const data=await fetchJson(url);
     hideLoad();
     if(!data.success){toast('載入失敗',data.message,'danger');return;}
     jrListLoaded=true;
-    jrListData=data.data||[];
+    jrListQuery=q;
+    jrListData=(data.data||[]).filter(r=>jrListMatches(r,q));
     renderJobReportList();
   }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
   finally{hideLoad();}
@@ -5430,7 +5563,7 @@ function renderJobReportList(){
   const body=document.getElementById('jrListBody');
   document.getElementById('jrListCount').textContent = jrListData.length?('共 '+jrListData.length+' 筆'):'';
   if(!jrListData.length){
-    body.innerHTML='<tr><td colspan="8" class="text-center text-muted py-4">尚無填報紀錄</td></tr>';
+    body.innerHTML='<tr><td colspan="8" class="text-center text-muted py-4">'+(jrListLoaded?'此條件下沒有填報紀錄':'選好年度與期間後，按「查詢紀錄」顯示已填報資料')+'</td></tr>';
     return;
   }
   body.innerHTML = jrListData.map(rec=>{
