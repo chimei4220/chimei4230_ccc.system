@@ -596,10 +596,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
               <option>進行中</option><option>已完成</option><option>不維修</option>
             </select>
           </div>
-          <div class="col-md-6"><label class="form-label fw-semibold">設備/教具名稱</label>
-            <select class="form-select form-select-sm" id="mt設備名稱" onchange="onMaintEquipChange()">
-              <option value="">請選擇或留空...</option>
-            </select>
+          <div class="col-md-6" style="position:relative"><label class="form-label fw-semibold">設備/教具名稱<span style="font-weight:400;color:#94a3b8;font-size:.75rem">（可輸入關鍵字、材料編號或保管品號搜尋）</span></label>
+            <input type="text" class="form-control form-control-sm" id="mt設備名稱輸入" autocomplete="off"
+              placeholder="輸入名稱關鍵字搜尋，或留空..."
+              oninput="onMaintSearchInput()" onfocus="onMaintSearchInput()" onkeydown="onMaintSearchKeydown(event)">
+            <input type="hidden" id="mt設備名稱">
+            <div id="mt設備Dropdown" style="display:none;position:absolute;z-index:1060;top:100%;left:calc(var(--bs-gutter-x) * .5);right:calc(var(--bs-gutter-x) * .5);max-height:260px;overflow-y:auto;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.12);margin-top:2px;"></div>
           </div>
           <div class="col-md-6"><label class="form-label fw-semibold">維修/請購單位</label>
             <select class="form-select form-select-sm" id="mt單位">
@@ -4080,11 +4082,88 @@ function ensureOptionValue(selectEl, value){
   }
 }
 
+// 設備/教具名稱：可搜尋下拉（同耗材請領的做法）
+let maintEquipList = [];      // [{name, mats:[], custs:[], hay}]
+let maintComboFiltered = [];
+let maintComboActiveIndex = -1;
 function populateMaintEquipOptions(){
-  const sel=document.getElementById('mt設備名稱');
-  const names=[...new Set(maintAssetRows.map(a=>a._displayName))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
-  sel.innerHTML='<option value="">請選擇或留空...</option>'+names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+  const map = {};
+  maintAssetRows.forEach(a=>{
+    const n=a._displayName; if(!n) return;
+    const g = map[n] || (map[n]={name:n, mats:new Set(), custs:new Set()});
+    if(a['材料編號']) g.mats.add(String(a['材料編號']));
+    if(a['保管品號']) g.custs.add(String(a['保管品號']));
+  });
+  maintEquipList = Object.values(map).map(g=>({
+    name:g.name, mats:[...g.mats], custs:[...g.custs],
+    hay:[g.name,...g.mats,...g.custs].join('|').toLowerCase()
+  })).sort((a,b)=>a.name.localeCompare(b.name,'zh-Hant'));
 }
+function onMaintSearchInput(){
+  const kw = document.getElementById('mt設備名稱輸入').value.trim();
+  const hidden = document.getElementById('mt設備名稱');
+  if(hidden.value !== kw){ hidden.value = kw; onMaintEquipChange(); } // 可直接輸入清單外的名稱
+  const k = kw.toLowerCase();
+  maintComboFiltered = !k ? maintEquipList.slice(0,200) : maintEquipList.filter(g=>g.hay.includes(k));
+  renderMaintComboDropdown(k);
+}
+function renderMaintComboDropdown(k){
+  const dd = document.getElementById('mt設備Dropdown');
+  maintComboActiveIndex = -1;
+  if(!maintComboFiltered.length){
+    dd.innerHTML = '<div style="padding:10px 12px;font-size:.8rem;color:#94a3b8">查無符合項目，將直接使用您輸入的文字</div>';
+    dd.style.display='block'; return;
+  }
+  dd.innerHTML = maintComboFiltered.map((g,i)=>{
+    // 副標：有搜到編號就顯示命中的那個，否則顯示筆數
+    const hit = k ? [...g.mats,...g.custs].filter(v=>v.toLowerCase().includes(k)) : [];
+    const sub = hit.length ? '符合：'+hit.slice(0,3).join('、')+(hit.length>3?'…':'')
+      : (g.mats.length?('材料編號 '+g.mats.slice(0,2).join('、')+(g.mats.length>2?'…':'')):'')+(g.custs.length?`　保管品 ${g.custs.length} 筆`:'');
+    return `<div class="req-combo-item" data-idx="${i}" onmousedown="selectMaintItem(${i})"
+      style="padding:7px 12px;cursor:pointer;font-size:.83rem;border-bottom:1px solid #f1f5f9">
+      <div style="font-weight:600;color:#1e293b">${escapeHtml(g.name)}</div>
+      ${sub?`<div style="font-size:.72rem;color:#94a3b8">${escapeHtml(sub)}</div>`:''}
+    </div>`;
+  }).join('');
+  dd.style.display='block';
+}
+function selectMaintItem(i){
+  const g = maintComboFiltered[i]; if(!g) return;
+  const kw = document.getElementById('mt設備名稱輸入').value.trim();
+  document.getElementById('mt設備名稱輸入').value = g.name;
+  document.getElementById('mt設備名稱').value = g.name;
+  onMaintEquipChange();
+  // 若是用材料編號／保管品號搜到的，順便帶入該編號
+  const matSel=document.getElementById('mt材料編號'), custSel=document.getElementById('mt保管品編號');
+  if(kw && g.mats.includes(kw)){ matSel.value=kw; onMaintMaterialChange(); }
+  if(kw && g.custs.includes(kw)){
+    const a = maintAssetRows.find(x=>x._displayName===g.name && String(x['保管品號'])===kw);
+    if(a && a['材料編號']){ matSel.value=String(a['材料編號']); onMaintMaterialChange(); }
+    custSel.value=kw;
+  }
+  closeMaintDropdown();
+}
+function closeMaintDropdown(){
+  const dd=document.getElementById('mt設備Dropdown'); if(dd) dd.style.display='none';
+  maintComboActiveIndex=-1;
+}
+function onMaintSearchKeydown(e){
+  const dd=document.getElementById('mt設備Dropdown');
+  if(!dd || dd.style.display==='none') return;
+  const items=dd.querySelectorAll('.req-combo-item');
+  if(e.key==='ArrowDown'){ e.preventDefault(); if(!items.length) return; maintComboActiveIndex=Math.min(maintComboActiveIndex+1,items.length-1); hlMaint(items); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); if(!items.length) return; maintComboActiveIndex=Math.max(maintComboActiveIndex-1,0); hlMaint(items); }
+  else if(e.key==='Enter'){ e.preventDefault(); if(maintComboActiveIndex>=0) selectMaintItem(maintComboActiveIndex); else closeMaintDropdown(); }
+  else if(e.key==='Escape'){ e.stopPropagation(); closeMaintDropdown(); }
+}
+function hlMaint(items){
+  items.forEach((el,i)=>{ el.style.background = i===maintComboActiveIndex ? '#eff6ff' : '#fff'; });
+  if(maintComboActiveIndex>=0) items[maintComboActiveIndex].scrollIntoView({block:'nearest'});
+}
+document.addEventListener('click', function(e){
+  const input=document.getElementById('mt設備名稱輸入'), dd=document.getElementById('mt設備Dropdown');
+  if(input && dd && e.target!==input && !dd.contains(e.target)) dd.style.display='none';
+});
 
 function onMaintEquipChange(){
   const name=document.getElementById('mt設備名稱').value;
@@ -4128,13 +4207,13 @@ async function openMaintenanceModal(rowIndex){
   await ensureMaintAssetOptions();
   populateMaintEquipOptions();
 
-  const nameSel=document.getElementById('mt設備名稱');
   const matSel=document.getElementById('mt材料編號');
   const custSel=document.getElementById('mt保管品編號');
 
   const nameVal = row ? (row['設備/教具名稱']||'') : '';
-  ensureOptionValue(nameSel, nameVal);
-  nameSel.value = nameVal;
+  document.getElementById('mt設備名稱').value = nameVal;
+  document.getElementById('mt設備名稱輸入').value = nameVal;
+  closeMaintDropdown();
   onMaintEquipChange();
 
   const matVal = row ? (row['材料編號']||'') : '';
