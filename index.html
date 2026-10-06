@@ -67,6 +67,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   .main{padding:16px!important;}
 }
 .sec-divider{border:0;border-top:1px solid #d5dce8;opacity:1;margin:20px 0;}
+.tc-orig{font-size:.72rem;color:#b45309;margin-top:3px;min-height:0;}
+.tc-basic.tc-changed{border-color:#f59e0b;background:#fffbeb;}
 /* Main */
 .main{flex:1;overflow-y:auto;padding:22px 26px;}
 .panel{display:none;}.panel.active{display:block;}
@@ -1118,7 +1120,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 
 <!-- 臨時門禁卡 管理 Modal -->
 <div class="modal fade" id="tempCardModal" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content" style="border-radius:14px;border:none;">
       <div class="modal-header" style="border-bottom:1px solid #f1f5f9;">
         <h6 class="modal-title fw-bold"><i class="bi bi-person-badge me-2" style="color:var(--ac)"></i>臨時門禁卡管理</h6>
@@ -1126,7 +1128,33 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
       </div>
       <div class="modal-body">
         <input type="hidden" id="tcKey">
-        <div id="tcInfo" style="background:#f8fafc;border-radius:10px;padding:10px 14px;font-size:.82rem;margin-bottom:14px"></div>
+        <div id="tcInfo" style="font-size:.78rem;color:#64748b;margin-bottom:10px"></div>
+        <!-- 基本資料（來自 Google 表單，可修正） -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div style="font-weight:700;font-size:.88rem;color:#1e293b"><i class="bi bi-ui-checks me-1" style="color:var(--ac)"></i>基本資料</div>
+          <button type="button" class="btn btn-link btn-sm p-0" id="tcRestoreBtn" style="font-size:.78rem;display:none" onclick="tcRestoreOriginal()"><i class="bi bi-arrow-counterclockwise me-1"></i>全部還原為表單原始資料</button>
+        </div>
+        <div class="row g-3" style="font-size:.85rem" id="tcBasicFields">
+          <div class="col-6 col-md-3"><label class="form-label fw-semibold">借用卡別<span style="color:red">*</span></label>
+            <select class="form-select form-select-sm tc-basic" data-f="借用卡別" id="tcF借用卡別"></select><div class="tc-orig"></div></div>
+          <div class="col-6 col-md-3"><label class="form-label fw-semibold">借用人姓名<span style="color:red">*</span></label>
+            <input type="text" class="form-control form-control-sm tc-basic" data-f="借用人姓名"><div class="tc-orig"></div></div>
+          <div class="col-6 col-md-3"><label class="form-label fw-semibold">人事號</label>
+            <input type="text" class="form-control form-control-sm tc-basic" data-f="人事號"><div class="tc-orig"></div></div>
+          <div class="col-6 col-md-3"><label class="form-label fw-semibold">分機/群呼</label>
+            <input type="text" class="form-control form-control-sm tc-basic" data-f="聯絡分機or群呼"><div class="tc-orig"></div></div>
+          <div class="col-6 col-md-3"><label class="form-label fw-semibold">單位代號</label>
+            <input type="text" class="form-control form-control-sm tc-basic" data-f="單位代號"><div class="tc-orig"></div></div>
+          <div class="col-6 col-md-3"><label class="form-label fw-semibold">單位名稱</label>
+            <input type="text" class="form-control form-control-sm tc-basic" data-f="單位名稱"><div class="tc-orig"></div></div>
+          <div class="col-6 col-md-3"><label class="form-label fw-semibold">借用日期<span style="color:red">*</span></label>
+            <input type="date" class="form-control form-control-sm tc-basic" data-f="借用日期"><div class="tc-orig"></div></div>
+          <div class="col-6 col-md-3"><label class="form-label fw-semibold">預計歸還日期</label>
+            <input type="date" class="form-control form-control-sm tc-basic" data-f="預計歸還日期"><div class="tc-orig"></div></div>
+          <div class="col-12" style="font-size:.75rem;color:#64748b"><i class="bi bi-shield-check me-1"></i>修改基本資料不會變動 Google 表單的原始回覆；原始值會保留，改過的欄位會標示「原始：…」。</div>
+        </div>
+        <hr class="sec-divider" style="margin:16px 0">
+        <div style="font-weight:700;font-size:.88rem;color:#1e293b;margin-bottom:8px"><i class="bi bi-clipboard-check me-1" style="color:var(--ac)"></i>借還登記</div>
         <div class="row g-3" style="font-size:.85rem">
           <div class="col-md-6"><label class="form-label fw-semibold">借出者</label>
             <select class="form-select form-select-sm" id="tc借出者"><option value="">請選擇</option></select></div>
@@ -4332,6 +4360,7 @@ async function loadTempCards(){
     if(!data.success){toast('查詢失敗',data.message,'danger');return;}
     tcActive=data.data||[];
     tcLoaded=true;
+    if(data.missingCols&&data.missingCols.length) toast('表單欄位對不上','「門禁卡借用登記表」找不到：'+data.missingCols.join('、')+'。請確認表單題目名稱。','danger');
     renderTempCardStatus();
     renderTempCardsActive();
   }catch(err){toast('連線失敗',err.message,'danger');}
@@ -4382,7 +4411,7 @@ function renderTempCardStatus(){
 
 function tcInfoCells(r){
   return `<td style="${TC_TD}">${escapeHtml(r['借用卡別']||'')}</td>
-    <td style="${TC_TD}"><span style="color:var(--ac);font-weight:600">${escapeHtml(r['借用人姓名']||'')}</span></td>
+    <td style="${TC_TD}"><span style="color:var(--ac);font-weight:600">${escapeHtml(r['借用人姓名']||'')}</span>${(r._edited&&r._edited.length)?`<i class="bi bi-pencil-fill ms-1" style="font-size:.65rem;color:#f59e0b" title="已修正表單資料：${escapeHtml(r._edited.join('、'))}"></i>`:''}</td>
     <td style="${TC_TD}">${escapeHtml(r['人事號']||'')}</td>
     <td style="${TC_TD}">${escapeHtml(r['單位代號']||'')} ${escapeHtml(r['單位名稱']||'')}</td>
     <td style="${TC_TD}">${escapeHtml(r['聯絡分機or群呼']||'')}</td>
@@ -4450,10 +4479,15 @@ async function openTempCardModal(key){
   const opts='<option value="">請選擇</option>'+adminNameList.map(n=>`<option>${escapeHtml(n)}</option>`).join('');
   ['tc借出者','tc點收人'].forEach(id=>document.getElementById(id).innerHTML=opts);
   document.getElementById('tcKey').value=key;
-  document.getElementById('tcInfo').innerHTML = `
-    <div><b>${escapeHtml(r['借用卡別']||'')}</b>｜${escapeHtml(r['借用人姓名']||'')}（${escapeHtml(r['人事號']||'')}）</div>
-    <div style="color:#64748b">${escapeHtml(r['單位代號']||'')} ${escapeHtml(r['單位名稱']||'')}｜分機 ${escapeHtml(r['聯絡分機or群呼']||'')}</div>
-    <div style="color:#64748b">借用 ${escapeHtml(r['借用日期']||'')} → 預計歸還 ${escapeHtml(r['預計歸還日期']||'')}</div>`;
+  document.getElementById('tcInfo').innerHTML = `<i class="bi bi-google me-1"></i>表單登記時間 ${escapeHtml(r['時間戳記']||'')}`;
+  // 卡別選項：A/B/C + 目前值（若是其他卡）
+  const cards=[...TC_CARD_LIST]; [r['借用卡別'],(r._orig||{})['借用卡別']].forEach(c=>{ if(c&&!cards.includes(c)) cards.push(c); });
+  document.getElementById('tcF借用卡別').innerHTML=cards.map(c=>`<option>${escapeHtml(c)}</option>`).join('');
+  document.querySelectorAll('#tcBasicFields .tc-basic').forEach(el=>{
+    el.value=r[el.dataset.f]||'';
+    el.oninput=el.onchange=tcMarkChanged;
+  });
+  tcMarkChanged();
   document.getElementById('tc借出者').value=r['借出者']||'';
   document.getElementById('tc歸還日期').value=r['歸還日期']||'';
   document.getElementById('tc點收人').value=r['點收人']||'';
@@ -4462,6 +4496,28 @@ async function openTempCardModal(key){
 }
 
 // 「今日歸還」：帶入今天日期，點收人預設帶目前登入的管理員
+// 標示與表單原始值不同的欄位
+function tcCurrentRecord(){
+  const key=document.getElementById('tcKey').value;
+  return tcActive.find(x=>x.key===key) || tcClosed.find(x=>x.key===key) || {};
+}
+function tcMarkChanged(){
+  const orig=tcCurrentRecord()._orig||{};
+  let any=false;
+  document.querySelectorAll('#tcBasicFields .tc-basic').forEach(el=>{
+    const f=el.dataset.f, o=String(orig[f]===undefined?el.value:orig[f]||'');
+    const changed=String(el.value).trim()!==o;
+    any=any||changed;
+    el.classList.toggle('tc-changed',changed);
+    el.nextElementSibling.textContent = changed ? ('原始：'+(o||'（空白）')) : '';
+  });
+  document.getElementById('tcRestoreBtn').style.display=any?'':'none';
+}
+function tcRestoreOriginal(){
+  const orig=tcCurrentRecord()._orig||{};
+  document.querySelectorAll('#tcBasicFields .tc-basic').forEach(el=>{ if(orig[el.dataset.f]!==undefined) el.value=orig[el.dataset.f]; });
+  tcMarkChanged();
+}
 function tcFillReturnToday(){
   document.getElementById('tc歸還日期').value=tcToday();
   const me=(document.getElementById('currentUser').textContent||'').trim();
@@ -4472,15 +4528,25 @@ function tcFillReturnToday(){
 async function saveTempCard(){
   const key=document.getElementById('tcKey').value;
   const r = tcActive.find(x=>x.key===key) || tcClosed.find(x=>x.key===key) || {};
+  const fields={};
+  document.querySelectorAll('#tcBasicFields .tc-basic').forEach(el=>fields[el.dataset.f]=String(el.value).trim());
+  if(!fields['借用卡別']||!fields['借用人姓名']||!fields['借用日期']){toast('提示','借用卡別、借用人姓名、借用日期為必填','info');return;}
+  if(fields['預計歸還日期'] && fields['預計歸還日期']<fields['借用日期']){toast('提示','預計歸還日期不可早於借用日期','info');return;}
   const data={
-    key,
-    '借用卡別':r['借用卡別']||'', '借用人姓名':r['借用人姓名']||'',
+    key, fields,
+    '借用卡別':fields['借用卡別'], '借用人姓名':fields['借用人姓名'],
     '借出者':document.getElementById('tc借出者').value,
     '歸還日期':document.getElementById('tc歸還日期').value,
     '點收人':document.getElementById('tc點收人').value,
     '備註':document.getElementById('tc備註').value.trim()
   };
   if(!!data['歸還日期'] !== !!data['點收人']){toast('提示','歸還日期與點收人需同時填寫才能結案','info');return;}
+  // 換卡別時檢查：該卡是否已有其他人借用中
+  const willActive=!data['歸還日期'];
+  if(willActive && fields['借用卡別']!==r['借用卡別']){
+    const clash=tcActive.find(x=>x.key!==key && x['借用卡別']===fields['借用卡別']);
+    if(clash && !confirm(`${fields['借用卡別']} 目前由「${clash['借用人姓名']}」借用中，仍要改成這張卡嗎？`)) return;
+  }
   showLoad('儲存中...');
   try{
     const res=await (await fetch(API,{method:'POST',body:JSON.stringify({action:'saveTempCardMgmt', token:getToken(), data})})).json();
@@ -4488,7 +4554,8 @@ async function saveTempCard(){
     bootstrap.Modal.getInstance(document.getElementById('tempCardModal')).hide();
     toast(res.message||'已儲存','','success');
     // 前端直接更新，不重新呼叫後端
-    const merged=Object.assign({}, r, data, {'狀態':res.status});
+    const {fields:_f, ...mgmtData}=data;
+    const merged=Object.assign({}, r, mgmtData, res.record||fields, {'狀態':res.status, _edited:res.edited||[], _orig:res.orig||r._orig});
     tcActive=tcActive.filter(x=>x.key!==key);
     tcClosed=tcClosed.filter(x=>x.key!==key);
     if(res.status==='已結案'){
