@@ -212,7 +212,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
     <div class="dropdown nav-group">
       <button class="nav-dd" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-building"></i>行政管理<i class="bi bi-chevron-down dd-caret"></i></button>
       <ul class="dropdown-menu">
-        <li><a class="sb-link" data-panel="maintenance" onclick="showPanel('maintenance',this)"><i class="bi bi-tools"></i>設備維修</a></li>
+        <li><a class="sb-link" data-panel="maintenance" onclick="showPanel('maintenance',this)"><i class="bi bi-tools"></i>設備維修/請購</a></li>
         <li><a class="sb-link" data-panel="requisition" onclick="showPanel('requisition',this)"><i class="bi bi-box-seam"></i>耗材請領</a></li>
         <li><hr class="dropdown-divider"></li>
         <li><a class="sb-link" data-panel="access" onclick="showPanel('access',this)"><i class="bi bi-credit-card-2-front"></i>門禁管理</a></li>
@@ -249,7 +249,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
     <a class="sb-link" data-panel="import" onclick="showPanel('import',this)"><i class="bi bi-cloud-upload"></i>匯入資料</a>
     <a class="sb-link active" data-panel="query" onclick="showPanel('query',this)"><i class="bi bi-card-list"></i>借用管理<span class="sb-badge sb-count" style="display:none">0</span></a>
     <div class="mnav-sec">行政管理</div>
-    <a class="sb-link" data-panel="maintenance" onclick="showPanel('maintenance',this)"><i class="bi bi-tools"></i>設備維修</a>
+    <a class="sb-link" data-panel="maintenance" onclick="showPanel('maintenance',this)"><i class="bi bi-tools"></i>設備維修/請購</a>
     <a class="sb-link" data-panel="requisition" onclick="showPanel('requisition',this)"><i class="bi bi-box-seam"></i>耗材請領</a>
     <a class="sb-link" data-panel="access" onclick="showPanel('access',this)"><i class="bi bi-credit-card-2-front"></i>門禁管理</a>
     <a class="sb-link" data-panel="assets" onclick="showPanel('assets',this)"><i class="bi bi-archive"></i>財產總覽</a>
@@ -491,12 +491,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   </div>
 </div>
 
-<!-- 設備維修 -->
+<!-- 設備維修/請購 -->
 <div id="panel-maintenance" class="panel">
   <div class="pg-head">
     <div class="pg-title">
       <div class="pg-icon"><i class="bi bi-tools"></i></div>
-      <div><h5>設備維修</h5><div class="pg-sub">設備維修、汰換、保養、新增紀錄管理</div></div>
+      <div><h5>設備維修/請購</h5><div class="pg-sub">設備維修、新增請購、汰換、保養、報廢紀錄管理</div></div>
     </div>
     <button class="btn btn-primary btn-sm" onclick="openMaintenanceModal()"><i class="bi bi-plus-lg me-1"></i>新增紀錄</button>
   </div>
@@ -528,7 +528,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
         <label class="form-label" style="font-size:.78rem;font-weight:600;color:#475569">分類</label>
         <select class="form-select form-select-sm" id="maintCategory">
           <option value="">全部</option>
-          <option>維修</option><option>新增</option><option>汰換</option><option>保養</option>
+          <option>維修</option><option>新增</option><option>汰換</option><option>保養</option><option>報廢</option>
         </select>
       </div>
       <div class="col-auto">
@@ -574,12 +574,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   </div>
 </div>
 
-<!-- 設備維修 新增/編輯 Modal -->
+<!-- 設備維修/請購 新增/編輯 Modal -->
 <div class="modal fade" id="maintenanceModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content" style="border-radius:14px;border:none;">
       <div class="modal-header" style="border-bottom:1px solid #f1f5f9;">
-        <h6 class="modal-title fw-bold" id="maintModalTitle"><i class="bi bi-tools me-2" style="color:var(--ac)"></i>新增維修紀錄</h6>
+        <h6 class="modal-title fw-bold" id="maintModalTitle"><i class="bi bi-tools me-2" style="color:var(--ac)"></i>新增維修/請購紀錄</h6>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -588,7 +588,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
           <div class="col-md-4"><label class="form-label fw-semibold">發生日期<span style="color:red">*</span></label><input type="date" class="form-control form-control-sm" id="mt發生日期"></div>
           <div class="col-md-4"><label class="form-label fw-semibold">分類<span style="color:red">*</span></label>
             <select class="form-select form-select-sm" id="mt分類">
-              <option>維修</option><option>新增</option><option>汰換</option><option>保養</option>
+              <option>維修</option><option>新增</option><option>汰換</option><option>保養</option><option>報廢</option>
             </select>
           </div>
           <div class="col-md-4"><label class="form-label fw-semibold">狀態<span style="color:red">*</span></label>
@@ -3223,6 +3223,32 @@ function fmtROC(v) {
   return String(v);
 }
 
+// 子項（配件）一律緊接在父項後面：先照原規則排序，再把有父項在清單中的子項搬到父項最後一筆之後
+//（父項是教室設備、或分類不在排序清單中時，也不會跑到別的群組）
+function attachChildrenAfterParent(sorted){
+  const pOf = r => String(r['父項']||'').trim();
+  const nOf = r => String(r['掛網名稱']||'').trim();
+  const isPart = r => { const p=pOf(r); return !!p && p!=='教室設備'; };
+  const parentNames = new Set(sorted.filter(r=>!isPart(r)).map(nOf).filter(Boolean));
+  const kids = {}, rest = [];
+  sorted.forEach(r => {
+    const p = pOf(r);
+    if (isPart(r) && parentNames.has(p) && nOf(r)!==p) (kids[p]=kids[p]||[]).push(r);
+    else rest.push(r);
+  });
+  const out = [];
+  rest.forEach((r,i) => {
+    out.push(r);
+    const n = nOf(r);
+    if (isPart(r) || !kids[n]) return;
+    const next = rest[i+1];
+    if (next && !isPart(next) && nOf(next)===n) return; // 同名主體還沒結束，等最後一筆再接子項
+    out.push(...kids[n]); delete kids[n];
+  });
+  Object.values(kids).forEach(list => out.push(...list)); // 保險：理論上不會剩
+  return out;
+}
+
 function renderListView() {
   const tbody = document.getElementById('assetListBody');
   document.getElementById('assetListCount').textContent = '共 ' + filteredAssets.length + ' 筆';
@@ -3260,6 +3286,7 @@ function renderListView() {
     // 3. 主體(0)在前，配件(1)在後
     return ka[2] - kb[2];
   });
+  const sortedFinal = attachChildrenAfterParent(sorted);
 
   const tagBadge2 = v => v==='有'
     ? '<span style="background:#d1fae5;color:#065f46;padding:1px 7px;border-radius:10px;font-size:.72rem">有</span>'
@@ -3276,7 +3303,7 @@ function renderListView() {
     return `<span style="background:${bg};color:${col};padding:1px 7px;border-radius:10px;font-size:.72rem;font-weight:600;white-space:nowrap">${v}</span>`;
   };
 
-  tbody.innerHTML = sorted.map(r => {
+  tbody.innerHTML = sortedFinal.map(r => {
     const isRoom = r['父項'] === '教室設備';
     const _isPart = r['父項'] && r['父項'] !== '教室設備';
     const rowBg  = _isPart ? 'background:#fffceb' : isRoom ? 'background:#f8fafc' : '';
@@ -3566,9 +3593,10 @@ async function loadRetired() {
       if (ka[1]!==kb[1]) return ka[1].localeCompare(kb[1],'zh-TW');
       return ka[2]-kb[2];
     });
+    const sortedRFinal = attachChildrenAfterParent(sortedR);
 
-    document.getElementById('retiredBody').innerHTML = sortedR.length
-      ? sortedR.map(r => {
+    document.getElementById('retiredBody').innerHTML = sortedRFinal.length
+      ? sortedRFinal.map(r => {
           const isRm = r['父項']==='教室設備';
           const isPt = r['父項'] && r['父項']!=='教室設備';
           const bg   = isPt ? 'background:#fffceb' : isRm ? 'background:#f8fafc' : 'background:#fff8f8';
@@ -4081,8 +4109,8 @@ async function openMaintenanceModal(rowIndex){
   const row = rowIndex ? maintResults.find(r=>r._rowIndex===rowIndex) : null;
   document.getElementById('maintRowIndex').value = row ? row._rowIndex : '';
   document.getElementById('maintModalTitle').innerHTML = row
-    ? '<i class="bi bi-tools me-2" style="color:var(--ac)"></i>編輯維修紀錄'
-    : '<i class="bi bi-tools me-2" style="color:var(--ac)"></i>新增維修紀錄';
+    ? '<i class="bi bi-tools me-2" style="color:var(--ac)"></i>編輯維修/請購紀錄'
+    : '<i class="bi bi-tools me-2" style="color:var(--ac)"></i>新增維修/請購紀錄';
   document.getElementById('maintSubmitBtn').textContent = row ? '儲存' : '新增';
   document.getElementById('maintDeleteBtn').style.display = row ? '' : 'none';
 
