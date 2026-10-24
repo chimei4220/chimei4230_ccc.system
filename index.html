@@ -214,8 +214,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 #dnCapture .empty{color:#94a3b8;font-size:14px;padding:4px 12px;}
 #dnCapture .cap-foot{font-size:12px;color:#94a3b8;text-align:right;margin-top:6px;}
 /* ===== 財產照片 ===== */
-.as-thumb{width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;cursor:zoom-in;background:#f8fafc;display:block;}
-.as-thumb-empty{width:44px;height:44px;border-radius:6px;border:1px dashed #cbd5e1;color:#cbd5e1;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.as-thumb{width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;cursor:zoom-in;background:#f8fafc;display:block;margin:0 auto;}
+.as-thumb-empty{margin:0 auto;width:44px;height:44px;border-radius:6px;border:1px dashed #cbd5e1;color:#cbd5e1;display:flex;align-items:center;justify-content:center;font-size:1rem;}
 .am-photo-frame{width:132px;height:132px;border-radius:10px;border:1.5px dashed #cbd5e1;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;color:#94a3b8;font-size:.78rem;text-align:center;}
 .am-photo-frame img{width:100%;height:100%;object-fit:cover;cursor:zoom-in;}
 .am-photo-frame.has{border-style:solid;border-color:#e2e8f0;}
@@ -3466,7 +3466,7 @@ function renderListView() {
       ? `<span style="color:#92400e"><i class="bi bi-arrow-return-right me-1"></i>${r['父項']||''}</span><span style="color:#57534e;margin-left:4px">${r['掛網名稱']||''}</span>`
       : (r['掛網名稱']||'');
     return `<tr style="${rowBg}">
-      <td style="vertical-align:middle">${assetThumb(r)}</td>
+      <td style="vertical-align:middle;text-align:center">${assetThumb(r)}</td>
       <td style="white-space:nowrap;text-align:center"><span style="color:var(--ac);font-weight:600">${r['保管品號']||'—'}</span></td>
       <td>${displayName}</td>
       <td style="text-align:center">${catBadge(String(r['分類']||'').trim())}</td>
