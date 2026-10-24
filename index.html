@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>臨床技能中心管理系統</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <style>
@@ -170,6 +172,55 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 .login-btn:disabled{opacity:.7;transform:none;box-shadow:none;}
 .login-error{color:#dc2626;font-size:.8rem;margin-top:10px;text-align:center;min-height:20px;}
 .login-footer{text-align:center;font-size:.75rem;color:#cbd5e1;margin-top:20px;}
+/* ===== 借還工作單 ===== */
+#dailyNoteModal .modal-body{background:#f4f6fb;}
+.dn-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;}
+.dn-bar .form-control{width:auto;}
+.dn-sec{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(15,23,42,.06);margin-bottom:14px;overflow:hidden;}
+.dn-sec-h{display:flex;align-items:center;gap:8px;padding:10px 14px;font-weight:700;font-size:.92rem;border-bottom:1px solid #e2e8f0;}
+.dn-sec-h .dn-n{font-size:.75rem;font-weight:600;border-radius:10px;padding:1px 9px;}
+.dn-out .dn-sec-h{color:#1d4ed8;background:#eff6ff;} .dn-out .dn-n{background:#dbeafe;}
+.dn-in  .dn-sec-h{color:#047857;background:#ecfdf5;} .dn-in  .dn-n{background:#d1fae5;}
+.dn-due .dn-sec-h{color:#be185d;background:#fdf2f8;} .dn-due .dn-n{background:#fce7f3;}
+.dn-sum .dn-sec-h{color:#475569;background:#f8fafc;} .dn-sum .dn-n{background:#e2e8f0;}
+.dn-tbl{width:100%;font-size:.82rem;border-collapse:collapse;}
+.dn-tbl th{background:#f8fafc;color:#64748b;font-weight:600;padding:6px 8px;white-space:nowrap;border-bottom:1px solid #e2e8f0;text-align:left;}
+.dn-tbl td{padding:6px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+.dn-tbl td:nth-child(3){min-width:84px;} .dn-tbl td:nth-child(6){min-width:160px;} .dn-out td:nth-child(8),.dn-in td:nth-child(8){white-space:nowrap;}
+.dn-tbl tr.dn-off td{opacity:.4;text-decoration:line-through;}
+.dn-tbl tr.dn-off td.dn-act{opacity:1;text-decoration:none;}
+.dn-tbl textarea.dn-note{min-width:200px;padding:3px 6px;font-size:.8rem;line-height:1.4;resize:none;overflow:hidden;white-space:pre-wrap;}
+.dn-tbl td:last-child:has(textarea),.dn-tbl td:nth-last-child(2):has(textarea){width:24%;}
+.dn-tag{display:inline-block;font-size:.68rem;border-radius:6px;padding:0 6px;margin-left:4px;background:#fef9c3;color:#854d0e;white-space:nowrap;}
+.dn-tag.c{background:#e2e8f0;color:#475569;}
+.dn-tag.d{background:#fce7f3;color:#be185d;}
+.dn-tag.r{background:#ede9fe;color:#6d28d9;}
+.dn-room .dn-sec-h{color:#854d0e;background:#fefce8;} .dn-room .dn-n{background:#fef9c3;}
+.dn-empty{padding:14px;color:#94a3b8;font-size:.82rem;text-align:center;}
+.dn-hint{font-size:.75rem;color:#94a3b8;}
+/* 產生圖片用的版面（畫面外，固定寬度） */
+#dnCapture{position:fixed;left:-10000px;top:0;width:1200px;background:#fff;padding:28px 30px;font-family:'Microsoft JhengHei','PingFang TC','Noto Sans TC','Segoe UI',sans-serif;color:#0f172a;line-height:1.45;}
+#dnCapture h2{font-size:26px;font-weight:800;margin:0;line-height:1.3;}
+#dnCapture .cap-sub{font-size:14px;color:#64748b;margin:6px 0 18px;}
+#dnCapture .cap-sec{margin-bottom:20px;}
+#dnCapture .cap-h{font-size:17px;font-weight:800;padding:7px 12px;border-radius:6px;margin-bottom:8px;line-height:1.4;}
+#dnCapture table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:15px;}
+#dnCapture th,#dnCapture td{padding:8px 10px;border:1px solid #cbd5e1;text-align:left;vertical-align:middle;word-break:break-word;}
+#dnCapture th{background:#f1f5f9;color:#334155;font-weight:700;white-space:nowrap;}
+#dnCapture td.c,#dnCapture th.c{text-align:center;}
+#dnCapture td.nw{white-space:nowrap;}
+#dnCapture .box{display:block;margin:0 auto;width:18px;height:18px;border:2px solid #475569;border-radius:3px;}
+#dnCapture .tag{display:block;font-size:12.5px;font-weight:700;margin-top:2px;}
+#dnCapture .empty{color:#94a3b8;font-size:14px;padding:4px 12px;}
+#dnCapture .cap-foot{font-size:12px;color:#94a3b8;text-align:right;margin-top:6px;}
+/* ===== 財產照片 ===== */
+.as-thumb{width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;cursor:zoom-in;background:#f8fafc;display:block;}
+.as-thumb-empty{width:44px;height:44px;border-radius:6px;border:1px dashed #cbd5e1;color:#cbd5e1;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.am-photo-frame{width:132px;height:132px;border-radius:10px;border:1.5px dashed #cbd5e1;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;color:#94a3b8;font-size:.78rem;text-align:center;}
+.am-photo-frame img{width:100%;height:100%;object-fit:cover;cursor:zoom-in;}
+.am-photo-frame.has{border-style:solid;border-color:#e2e8f0;}
+.am-photo-name{font-size:.78rem;color:#475569;word-break:break-all;background:#f1f5f9;border-radius:6px;padding:4px 8px;}
+#photoViewerImg{max-width:100%;max-height:75vh;display:block;margin:0 auto;border-radius:8px;}
 </style>
 </head>
 <body>
@@ -208,6 +259,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   <nav class="topnav" aria-label="主選單">
     <a class="sb-link" data-panel="import" onclick="showPanel('import',this)"><i class="bi bi-cloud-upload"></i>匯入資料</a>
     <a class="sb-link active" data-panel="query" onclick="showPanel('query',this)"><i class="bi bi-card-list"></i>借用管理<span class="sb-badge sb-count" id="sb-count" style="display:none">0</span></a>
+    <a class="sb-link" data-panel="access" onclick="showPanel('access',this)"><i class="bi bi-credit-card-2-front"></i>門禁管理</a>
     <span class="nav-sep"></span>
     <div class="dropdown nav-group">
       <button class="nav-dd" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-building"></i>行政管理<i class="bi bi-chevron-down dd-caret"></i></button>
@@ -215,7 +267,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
         <li><a class="sb-link" data-panel="maintenance" onclick="showPanel('maintenance',this)"><i class="bi bi-tools"></i>設備維修/請購</a></li>
         <li><a class="sb-link" data-panel="requisition" onclick="showPanel('requisition',this)"><i class="bi bi-box-seam"></i>耗材請領</a></li>
         <li><hr class="dropdown-divider"></li>
-        <li><a class="sb-link" data-panel="access" onclick="showPanel('access',this)"><i class="bi bi-credit-card-2-front"></i>門禁管理</a></li>
         <li><a class="sb-link" data-panel="assets" onclick="showPanel('assets',this)"><i class="bi bi-archive"></i>財產總覽</a></li>
         <li><a class="sb-link" data-panel="consumables" onclick="showPanel('consumables',this)"><i class="bi bi-clipboard2-data"></i>耗材清單</a></li>
       </ul>
@@ -248,10 +299,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
     <div class="mnav-sec">主要功能</div>
     <a class="sb-link" data-panel="import" onclick="showPanel('import',this)"><i class="bi bi-cloud-upload"></i>匯入資料</a>
     <a class="sb-link active" data-panel="query" onclick="showPanel('query',this)"><i class="bi bi-card-list"></i>借用管理<span class="sb-badge sb-count" style="display:none">0</span></a>
+    <a class="sb-link" data-panel="access" onclick="showPanel('access',this)"><i class="bi bi-credit-card-2-front"></i>門禁管理</a>
     <div class="mnav-sec">行政管理</div>
     <a class="sb-link" data-panel="maintenance" onclick="showPanel('maintenance',this)"><i class="bi bi-tools"></i>設備維修/請購</a>
     <a class="sb-link" data-panel="requisition" onclick="showPanel('requisition',this)"><i class="bi bi-box-seam"></i>耗材請領</a>
-    <a class="sb-link" data-panel="access" onclick="showPanel('access',this)"><i class="bi bi-credit-card-2-front"></i>門禁管理</a>
     <a class="sb-link" data-panel="assets" onclick="showPanel('assets',this)"><i class="bi bi-archive"></i>財產總覽</a>
     <a class="sb-link" data-panel="consumables" onclick="showPanel('consumables',this)"><i class="bi bi-clipboard2-data"></i>耗材清單</a>
     <div class="mnav-sec">統計分析</div>
@@ -376,7 +427,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
       <div class="pg-icon"><i class="bi bi-card-list"></i></div>
       <div><h5>借用管理</h5><div class="pg-sub">查詢、編輯、匯出借用紀錄</div></div>
     </div>
-    <button class="btn btn-outline-success btn-sm" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i>匯出 Excel</button>
+    <div class="d-flex gap-2 flex-wrap justify-content-end">
+      <button class="btn btn-primary btn-sm" onclick="openDailyNote()"><i class="bi bi-journal-check me-1"></i>借還工作單</button>
+      <button class="btn btn-outline-success btn-sm" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i>匯出 Excel</button>
+    </div>
   </div>
 
   <!-- 狀態快篩 -->
@@ -877,6 +931,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
         <table class="table table-hover table-bordered">
           <thead>
             <tr>
+              <th style="width:60px;text-align:center">照片</th>
               <th style="width:108px;text-align:center">保管品號</th>
               <th style="width:220px">掛網/設備名稱</th>
               <th style="width:100px;text-align:center">分類</th>
@@ -1911,6 +1966,21 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 </div><!-- app-body -->
 
 <!-- Asset Modal (新增/編輯財產) -->
+<div class="modal fade" id="photoViewerModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px;border:none;">
+      <div class="modal-header py-2">
+        <h6 class="modal-title" id="photoViewerTitle" style="font-size:.88rem;word-break:break-all"></h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center"><img id="photoViewerImg" alt=""></div>
+      <div class="modal-footer py-2">
+        <a class="btn btn-outline-secondary btn-sm" id="photoViewerLink" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1"></i>在雲端硬碟開啟</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="assetModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content" style="border-radius:14px;border:none;">
@@ -1921,6 +1991,24 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
       <div class="modal-body">
         <input type="hidden" id="assetRowIndex">
         <div class="row g-3" style="font-size:.85rem">
+          <!-- 財產照片 -->
+          <div class="col-12">
+            <label class="form-label fw-semibold">財產照片</label>
+            <div class="d-flex gap-3 align-items-start flex-wrap">
+              <div class="am-photo-frame" id="amPhotoFrame"><span><i class="bi bi-camera" style="font-size:1.4rem"></i><br>尚無照片</span></div>
+              <div style="flex:1;min-width:220px">
+                <div class="d-flex gap-2 flex-wrap mb-2">
+                  <label class="btn btn-outline-primary btn-sm mb-0"><i class="bi bi-image me-1"></i>選擇／拍攝照片
+                    <input type="file" accept="image/*" id="amPhotoInput" hidden onchange="amPhotoPick(this)"></label>
+                  <button type="button" class="btn btn-outline-danger btn-sm" id="amPhotoRemoveBtn" onclick="amPhotoRemove()" style="display:none"><i class="bi bi-x-lg me-1"></i>移除照片</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="amPhotoUndoBtn" onclick="amPhotoUndo()" style="display:none"><i class="bi bi-arrow-counterclockwise me-1"></i>復原</button>
+                </div>
+                <div class="form-text mt-0 mb-1">雲端檔名（依下方欄位自動產生）：</div>
+                <div class="am-photo-name" id="amPhotoName">—</div>
+                <div class="form-text" id="amPhotoHint">照片會在按「儲存」時一起上傳，並自動縮小壓縮。</div>
+              </div>
+            </div>
+          </div>
           <!-- 類型選擇 -->
           <div class="col-12">
             <label class="form-label fw-semibold">財產類型<span style="color:red">*</span></label>
@@ -2095,10 +2183,69 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
   <div id="toast" class="toast"><div class="toast-header" id="toastH"><i class="bi me-2" id="toastIcon"></i><strong class="me-auto" id="toastT"></strong><button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button></div><div class="toast-body" id="toastB"></div></div>
 </div>
 
+<!-- ===== 借還工作單 ===== -->
+<div class="modal fade" id="dailyNoteModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-fullscreen-lg-down modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title"><i class="bi bi-journal-check me-2 text-primary"></i>借還工作單</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="dn-bar">
+          <div class="input-group input-group-sm" style="width:auto">
+            <button class="btn btn-outline-secondary" onclick="dnShiftDay(-1)" title="前一天"><i class="bi bi-chevron-left"></i></button>
+            <input type="date" class="form-control form-control-sm" id="dnDate" onchange="dnLoad()">
+            <button class="btn btn-outline-secondary" onclick="dnShiftDay(1)" title="後一天"><i class="bi bi-chevron-right"></i></button>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary" onclick="dnSetToday()">今天</button>
+          <button class="btn btn-sm btn-outline-primary" onclick="dnLoad()"><i class="bi bi-arrow-clockwise me-1"></i>重新整理</button>
+          <div class="form-check form-switch ms-1 mb-0">
+            <input class="form-check-input" type="checkbox" id="dnShowDue" onchange="dnToggleDue()">
+            <label class="form-check-label" for="dnShowDue" style="font-size:.82rem">歸還含逾期未還</label>
+          </div>
+          <div class="ms-auto d-flex gap-2 flex-wrap">
+            <button class="btn btn-sm btn-outline-secondary" onclick="dnOpenAdd()"><i class="bi bi-plus-lg me-1"></i>手動新增</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="dnResetEdits()"><i class="bi bi-arrow-counterclockwise me-1"></i>還原編輯</button>
+            <button class="btn btn-sm btn-primary" onclick="dnCopyImage()"><i class="bi bi-clipboard-check me-1"></i>複製成圖片</button>
+            <button class="btn btn-sm btn-success" onclick="dnSaveImage()"><i class="bi bi-download me-1"></i>下載／分享圖片</button>
+          </div>
+        </div>
+        <div class="dn-hint mb-2">借出／歸還不列在技能中心內使用的項目（另列在「借用教室」）。取消勾選＝這次不借出／不需處理（不會出現在圖片上，也不會改到借用紀錄）。備註可直接修改，編輯內容會自動保存在這台電腦。</div>
+        <div id="dnAddBox" class="dn-sec p-3" style="display:none">
+          <div class="fw-bold mb-2" style="font-size:.88rem"><i class="bi bi-plus-circle me-1"></i>手動新增項目</div>
+          <div class="row g-2 align-items-end">
+            <div class="col-6 col-md-2"><label class="form-label small mb-1">類別</label>
+              <select class="form-select form-select-sm" id="dnAddSec"><option value="out">借出</option><option value="in">歸還</option></select></div>
+            <div class="col-6 col-md-2"><label class="form-label small mb-1">單位</label><input class="form-control form-control-sm" id="dnAddUnit"></div>
+            <div class="col-6 col-md-2"><label class="form-label small mb-1">姓名</label><input class="form-control form-control-sm" id="dnAddName"></div>
+            <div class="col-6 col-md-2"><label class="form-label small mb-1">分機</label><input class="form-control form-control-sm" id="dnAddExt"></div>
+            <div class="col-8 col-md-3"><label class="form-label small mb-1">教具名稱 <span class="text-danger">*</span></label><input class="form-control form-control-sm" id="dnAddTool"></div>
+            <div class="col-4 col-md-1"><label class="form-label small mb-1">組數</label><input type="number" min="1" class="form-control form-control-sm" id="dnAddQty" value="1"></div>
+            <div class="col-6 col-md-3"><label class="form-label small mb-1">時間</label><input class="form-control form-control-sm" id="dnAddTime" placeholder="例：09:00~16:00"></div>
+            <div class="col-6 col-md-3"><label class="form-label small mb-1">場地</label><input class="form-control form-control-sm" id="dnAddVenue"></div>
+            <div class="col-12 col-md-4"><label class="form-label small mb-1">備註</label><input class="form-control form-control-sm" id="dnAddNote"></div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+              <button class="btn btn-primary btn-sm flex-fill" onclick="dnAddSubmit()">新增</button>
+              <button class="btn btn-outline-secondary btn-sm" onclick="dnCloseAdd()">取消</button>
+            </div>
+          </div>
+        </div>
+        <div id="dnBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="dnCapture"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const API='https://script.google.com/macros/s/AKfycbzunzd5pHXhZ7ayc6YnNMRXbZWddA0aQ_nmqQs1eU09LxUrRKYEnk7850YbZ3o9PGar/exec';
+// 台灣時間（UTC+8）的日期：不管電腦時區設定，一律以台灣 0:00～24:00 為一天
+function twToday(d){ return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(d||new Date()); }
+function twTimeHM(d){ return new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',hour12:false}).format(d||new Date()); }
 
 // ══════════════════════════════════════════════
 //  Apps Script Web App 有個已知怪癖：/exec 會先 302 轉址到一個
@@ -2699,7 +2846,7 @@ async function queryRecords(){
   }catch(err){hideLoad();toast('錯誤','無法連線：'+err.message,'danger');}
 }
 function queryToday(){
-  const today=new Date().toISOString().split('T')[0];
+  const today=twToday();
   document.getElementById('queryStart').value=today;
   document.getElementById('queryEnd').value=today;
   document.getElementById('queryKeyword').value='';
@@ -2897,7 +3044,7 @@ function exportExcel(){
   const fields=['狀態','借出者','單位','人事號','姓名','場地','日期(起)','日期(迄)','時段(起)','時段(迄)','會議名稱','院內人數','院外人數','分機','手機','教具名稱','組數','備註','課程類別','上課對象','職員別','職類別','完成狀態','點收者','借用天數','借用時數'];
   const ws=XLSX.utils.aoa_to_sheet([fields,...queryResults.map(r=>fields.map(f=>r[f]??''))]);
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'借用記錄查詢');
-  const today=new Date().toISOString().split('T')[0];
+  const today=twToday();
   XLSX.writeFile(wb,`借用紀錄_${today}.xlsx`);
   toast('匯出成功',`已下載借用紀錄_${today}.xlsx`,'success');
 }
@@ -3038,6 +3185,7 @@ function renderGroupView() {
 
   // 固定欄寬 colgroup（每張 card 相同，視覺對齊）
   const colgroup = `<colgroup>
+    <col style="width:60px">
     <col style="width:108px">
     <col style="width:128px">
     <col style="width:260px">
@@ -3051,6 +3199,7 @@ function renderGroupView() {
 
   const thead = `<thead>
     <tr style="font-size:.85rem;color:#64748b;background:#f8fafc">
+      <th style="padding:6px 8px;font-weight:600;white-space:nowrap">照片</th>
       <th style="padding:6px 10px;font-weight:600;white-space:nowrap">保管品號</th>
       <th style="font-weight:600;white-space:nowrap">材料編號</th>
       <th style="font-weight:600;white-space:nowrap">規格／型號</th>
@@ -3068,6 +3217,7 @@ function renderGroupView() {
     : '<span style="color:#cbd5e1;font-size:.78rem">—</span>';
 
   const mainRow = r => `<tr>
+    <td style="padding:6px 8px;vertical-align:top">${assetThumb(r)}</td>
     <td style="padding:6px 10px;vertical-align:top"><span style="color:var(--ac);font-weight:600;font-size:.9rem">${r['保管品號']||'—'}</span></td>
     <td style="font-size:.82rem;color:#64748b;vertical-align:top">${r['材料編號']||'—'}</td>
     <td style="font-size:.9rem;word-break:break-all;vertical-align:top">${r['規格']||'—'}</td>
@@ -3080,6 +3230,7 @@ function renderGroupView() {
   </tr>`;
 
   const partRow = r => `<tr style="background:#fffdf5">
+    <td style="padding:5px 8px;vertical-align:top">${assetThumb(r)}</td>
     <td style="padding:5px 10px 5px 20px;vertical-align:top">
       <i class="bi bi-arrow-return-right me-1" style="color:#d97706;font-size:.65rem"></i>
       <span style="color:#92400e;font-weight:600;font-size:.88rem">${r['保管品號']||'—'}</span>
@@ -3120,7 +3271,7 @@ function renderGroupView() {
           ${colgroup}${thead}
           <tbody>
             ${items.map(r => mainRow(r)).join('')}
-            ${parts.length ? `<tr style="background:#fffbeb"><td colspan="9" style="padding:3px 10px 3px 20px;font-size:.72rem;color:#92400e;font-weight:600"><i class="bi bi-paperclip me-1"></i>配件 ${parts.length} 件</td></tr>` : ''}
+            ${parts.length ? `<tr style="background:#fffbeb"><td colspan="10" style="padding:3px 10px 3px 20px;font-size:.72rem;color:#92400e;font-weight:600"><i class="bi bi-paperclip me-1"></i>配件 ${parts.length} 件</td></tr>` : ''}
             ${parts.map(r => partRow(r)).join('')}
           </tbody>
         </table>
@@ -3169,11 +3320,12 @@ function renderGroupView() {
       <div id="${gid}" style="display:none" class="table-responsive">
         <table class="table table-hover mb-0" style="font-size:.82rem;table-layout:fixed;width:100%">
           <colgroup>
-            <col style="width:108px"><col style="width:130px"><col><col style="width:44px">
+            <col style="width:60px"><col style="width:108px"><col style="width:130px"><col><col style="width:44px">
             <col style="width:84px"><col style="width:64px"><col style="width:150px"><col style="width:40px">
           </colgroup>
           <thead>
             <tr style="font-size:.77rem;color:#64748b;background:#f1f5f9">
+              <th style="padding:6px 8px;font-weight:600">照片</th>
               <th style="padding:6px 10px;font-weight:600">保管品號</th>
               <th style="font-weight:600">材料編號</th>
               <th style="font-weight:600">品名／規格</th>
@@ -3186,6 +3338,7 @@ function renderGroupView() {
           </thead>
           <tbody>
             ${classroom.map(r => `<tr style="background:#fafafa">
+              <td style="padding:6px 8px;vertical-align:top">${assetThumb(r)}</td>
               <td style="padding:6px 10px;vertical-align:top"><span style="color:#475569;font-weight:600;font-size:.83rem">${r['保管品號']||'—'}</span></td>
               <td style="font-size:.75rem;color:#64748b;vertical-align:top">${r['材料編號']||'—'}</td>
               <td style="font-size:.82rem;word-break:break-all;vertical-align:top;font-weight:500">${r['_displayName']||r['規格']||'—'}</td>
@@ -3255,7 +3408,7 @@ function renderListView() {
   const tbody = document.getElementById('assetListBody');
   document.getElementById('assetListCount').textContent = '共 ' + filteredAssets.length + ' 筆';
   if (!filteredAssets.length) {
-    tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted py-5">查無資料</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted py-5">查無資料</td></tr>';
     return;
   }
   // 排序：分類 → 主體掛網名稱 → 配件緊跟主體後面
@@ -3313,6 +3466,7 @@ function renderListView() {
       ? `<span style="color:#92400e"><i class="bi bi-arrow-return-right me-1"></i>${r['父項']||''}</span><span style="color:#57534e;margin-left:4px">${r['掛網名稱']||''}</span>`
       : (r['掛網名稱']||'');
     return `<tr style="${rowBg}">
+      <td style="vertical-align:middle">${assetThumb(r)}</td>
       <td style="white-space:nowrap;text-align:center"><span style="color:var(--ac);font-weight:600">${r['保管品號']||'—'}</span></td>
       <td>${displayName}</td>
       <td style="text-align:center">${catBadge(String(r['分類']||'').trim())}</td>
@@ -3396,6 +3550,7 @@ function openAssetModal(rowIndex, prefillType, prefillParent) {
     }
     if (prefillParent) document.getElementById('am父項').value = decodeURIComponent(prefillParent);
   }
+  amPhotoInit(rowIndex ? (allAssets.find(a => a._rowIndex === rowIndex) || {})['照片'] : '');
   bootstrap.Modal.getOrCreateInstance(document.getElementById('assetModal')).show();
 }
 
@@ -3437,19 +3592,137 @@ async function saveAsset() {
   };
 
   const rowIndex = document.getElementById('assetRowIndex').value;
-  payload.action = rowIndex ? 'updateAsset' : 'insertAsset';
+  payload.action = rowIndex ? 'updateAssetV2' : 'insertAssetV2';
   if (rowIndex) payload.rowIndex = parseInt(rowIndex);
+  const photoOp = amPhoto.pending ? 'upload' : (amPhoto.remove && amPhoto.orig ? 'delete' : '');
 
   showLoad('儲存中...');
   bootstrap.Modal.getInstance(document.getElementById('assetModal')).hide();
   try {
-    const r = await fetch(API, { method:'POST', body: JSON.stringify(payload) });
-    const data = await r.json();
-    if (data.success) { toast('儲存成功', data.message||'財產資料已更新', 'success'); await loadAssets(); }
-    else toast('儲存失敗', data.message, 'danger');
+    let data = await assetPost(payload);
+    if (!data.success && data.message === '未知的action') {   // 後端還沒更新：退回舊版動作，資料照存
+      payload.action = rowIndex ? 'updateAsset' : 'insertAsset';
+      data = await assetPost(payload);
+      if (data.success && photoOp) { toast('資料已儲存', '照片功能需要先更新後端程式（財產照片.gs）才能使用', 'info'); await loadAssets(); return; }
+    }
+    if (!data.success) { toast('儲存失敗', data.message, 'danger'); return; }
+    const targetRow = rowIndex ? parseInt(rowIndex) : data.rowIndex;
+    const expect = { '保管品號': payload.data['保管品號'], '材料編號': payload.data['材料編號'] };
+    if (photoOp && targetRow) {
+      showLoad(photoOp === 'upload' ? '上傳照片中...' : '移除照片中...');
+      const pr = await assetPost(photoOp === 'upload'
+        ? { action:'uploadAssetPhoto', token:getToken(), data:{ rowIndex:targetRow, expect, base64:amPhoto.pending.base64, mimeType:amPhoto.pending.mime } }
+        : { action:'deleteAssetPhoto', token:getToken(), data:{ rowIndex:targetRow, expect } });
+      if (pr.success) toast('儲存成功', (data.message||'財產資料已更新') + '；' + pr.message, 'success');
+      else toast('資料已儲存，但照片處理失敗', pr.message, 'danger');
+    } else {
+      toast('儲存成功', data.message||'財產資料已更新', 'success');
+    }
+    await loadAssets();
   } catch(e) { toast('連線失敗', e.message, 'danger'); }
   finally { hideLoad(); }
 }
+async function assetPost(body){ const r = await fetch(API, { method:'POST', body: JSON.stringify(body) }); return r.json(); }
+
+// ── 財產照片 ─────────────────────────────────────────────
+//  照片存在雲端硬碟（後端 財產照片.gs），財產總清單「照片」欄存檔案 ID
+let amPhoto = { orig:'', pending:null, remove:false };
+function driveThumbUrl(id, w){ return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + (w||200); }
+function driveAltUrl(id, w){ return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w' + (w||200); }
+function driveViewUrl(id){ return 'https://drive.google.com/file/d/' + encodeURIComponent(id) + '/view'; }
+// 縮圖：第一個網址失敗時改用另一個網址再試一次
+function assetThumb(r){
+  const id = String(r['照片']||'').trim();
+  if (!id) return '<div class="as-thumb-empty" title="尚無照片"><i class="bi bi-camera"></i></div>';
+  return `<img class="as-thumb" loading="lazy" alt="照片" src="${driveThumbUrl(id,160)}"
+    onerror="if(!this.dataset.r){this.dataset.r=1;this.src='${driveAltUrl(id,160)}';}"
+    onclick="event.stopPropagation();openPhotoViewer(${r._rowIndex})">`;
+}
+function openPhotoViewer(rowIndex){
+  const r = allAssets.find(a => a._rowIndex === rowIndex); if (!r || !r['照片']) return;
+  const id = String(r['照片']).trim();
+  const img = document.getElementById('photoViewerImg');
+  img.removeAttribute('data-r');
+  img.onerror = function(){ if(!this.dataset.r){ this.dataset.r = 1; this.src = driveAltUrl(id, 1600); } };
+  img.src = driveThumbUrl(id, 1600);
+  document.getElementById('photoViewerTitle').textContent = assetPhotoBaseName(r);
+  document.getElementById('photoViewerLink').href = driveViewUrl(id);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('photoViewerModal')).show();
+}
+// 檔名規則（和後端 assetPhotoBaseName_ 相同，用來在畫面上預覽）
+function assetPhotoBaseName(r){
+  const c = s => String(s==null?'':s).replace(/[\\\/:*?"<>|\t\r\n]+/g,' ').replace(/\s+/g,' ').trim();
+  const keep = c(r['保管品號']), mat = c(r['材料編號']), parent = c(r['父項']);
+  let parts;
+  if (parent === '教室設備') parts = [c(r['掛網名稱']) || c(String(r['規格']||'').replace(/\(.*?\)/g,'')) || c(r['品名'])];
+  else if (parent) parts = [parent, c(r['掛網名稱']) || c(r['規格']) || c(r['品名'])];
+  else parts = [c(r['掛網名稱']) || c(r['品名']) || c(r['規格'])];
+  parts = parts.filter(Boolean);
+  return keep ? [keep].concat(parts, mat ? [mat] : []).join('_') : ['無保管品號'].concat(parts).join('_');
+}
+// 從視窗目前的欄位組出資料（預覽檔名用）
+function amFormRecord(){
+  const v = id => (document.getElementById(id)||{}).value || '';
+  const type = (document.querySelector('input[name="amType"]:checked')||{}).value;
+  return {
+    '掛網名稱': type==='main' ? v('am掛網名稱') : type==='part' ? v('am掛網名稱2') : v('am掛網名稱3'),
+    '父項': type==='part' ? v('am父項') : type==='room' ? '教室設備' : '',
+    '保管品號': v('am保管品號'), '材料編號': v('am材料編號'), '品名': v('am品名'), '規格': v('am規格')
+  };
+}
+function amPhotoInit(id){
+  amPhoto = { orig: String(id||'').trim(), pending:null, remove:false };
+  const inp = document.getElementById('amPhotoInput'); if (inp) inp.value = '';
+  amPhotoRender();
+}
+function amPhotoRender(){
+  const f = document.getElementById('amPhotoFrame');
+  let src = '';
+  if (amPhoto.pending) src = amPhoto.pending.dataUrl;
+  else if (amPhoto.orig && !amPhoto.remove) src = driveThumbUrl(amPhoto.orig, 400);
+  f.classList.toggle('has', !!src);
+  f.innerHTML = src ? `<img src="${src}" alt="照片" onclick="amPhotoZoom()">`
+    : `<span><i class="bi bi-camera" style="font-size:1.4rem"></i><br>${amPhoto.remove ? '儲存後移除照片' : '尚無照片'}</span>`;
+  document.getElementById('amPhotoRemoveBtn').style.display = src ? '' : 'none';
+  document.getElementById('amPhotoUndoBtn').style.display = (amPhoto.pending || amPhoto.remove) ? '' : 'none';
+  document.getElementById('amPhotoHint').textContent = amPhoto.pending ? '新照片會在按「儲存」時上傳（已自動縮小壓縮）。'
+    : amPhoto.remove ? '按「儲存」後會從雲端硬碟移除這張照片。' : '照片會在按「儲存」時一起上傳，並自動縮小壓縮。';
+  amPhotoNameRefresh();
+}
+function amPhotoNameRefresh(){
+  const el = document.getElementById('amPhotoName'); if (!el) return;
+  el.textContent = assetPhotoBaseName(amFormRecord()) + '.jpg';
+}
+function amPhotoZoom(){ if (!amPhoto.pending && amPhoto.orig) window.open(driveViewUrl(amPhoto.orig), '_blank'); }
+function amPhotoRemove(){ if (amPhoto.pending) amPhoto.pending = null; else amPhoto.remove = true; document.getElementById('amPhotoInput').value=''; amPhotoRender(); }
+function amPhotoUndo(){ amPhoto.pending = null; amPhoto.remove = false; document.getElementById('amPhotoInput').value=''; amPhotoRender(); }
+// 選照片後先在瀏覽器縮小（長邊 1600px、JPEG 品質 0.85），上傳快、雲端也不佔空間
+async function amPhotoPick(input){
+  const file = input.files && input.files[0]; if (!file) return;
+  try {
+    const url = URL.createObjectURL(file);
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = () => rej(new Error('這個格式的圖片無法讀取，請改用 JPG 或 PNG（iPhone 可直接用「拍照」）'));
+      i.src = url;
+    });
+    const max = 1600, scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(img.naturalWidth * scale); cv.height = Math.round(img.naturalHeight * scale);
+    const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(img, 0, 0, cv.width, cv.height);
+    URL.revokeObjectURL(url);
+    const dataUrl = cv.toDataURL('image/jpeg', 0.85);
+    amPhoto.pending = { dataUrl, base64: dataUrl.split(',')[1], mime: 'image/jpeg' };
+    amPhoto.remove = false;
+    amPhotoRender();
+  } catch(err) { toast('無法讀取照片', err.message, 'danger'); input.value = ''; }
+}
+// 修改名稱、保管品號等欄位時，即時更新檔名預覽
+['input','change'].forEach(ev => document.addEventListener(ev, e => {
+  if (e.target && e.target.id !== 'amPhotoInput' && e.target.closest && e.target.closest('#assetModal')) amPhotoNameRefresh();
+}));
 
 async function confirmRetire() {
   const rowIndex = parseInt(document.getElementById('assetRowIndex').value);
@@ -3459,8 +3732,8 @@ async function confirmRetire() {
   bootstrap.Modal.getInstance(document.getElementById('assetModal')).hide();
   showLoad('處理中...');
   try {
-    const r = await fetch(API, { method:'POST', body: JSON.stringify({ action:'retireAsset', token:getToken(), rowIndex }) });
-    const data = await r.json();
+    let data = await assetPost({ action:'retireAssetV2', token:getToken(), rowIndex });
+    if (!data.success && data.message === '未知的action') data = await assetPost({ action:'retireAsset', token:getToken(), rowIndex });
     if (data.success) { toast('已報廢', data.message||'已移至已報廢清單', 'success'); await loadAssets(); }
     else toast('操作失敗', data.message, 'danger');
   } catch(e) { toast('連線失敗', e.message, 'danger'); }
@@ -3632,11 +3905,11 @@ function anaQuickRange(type){
   const today=new Date();
   let start='',end='';
   if(type==='month'){
-    start=new Date(today.getFullYear(),today.getMonth(),1).toISOString().split('T')[0];
-    end=today.toISOString().split('T')[0];
+    start=twToday().slice(0,8)+'01';
+    end=twToday();
   } else if(type==='year'){
-    start=new Date(today.getFullYear(),0,1).toISOString().split('T')[0];
-    end=today.toISOString().split('T')[0];
+    start=twToday().slice(0,4)+'-01-01';
+    end=twToday();
   } else {
     start=''; end='';
   }
@@ -4193,7 +4466,7 @@ async function openMaintenanceModal(rowIndex){
   document.getElementById('maintSubmitBtn').textContent = row ? '儲存' : '新增';
   document.getElementById('maintDeleteBtn').style.display = row ? '' : 'none';
 
-  document.getElementById('mt發生日期').value = row ? (row['發生日期']||'') : new Date().toISOString().split('T')[0];
+  document.getElementById('mt發生日期').value = row ? (row['發生日期']||'') : twToday();
   document.getElementById('mt分類').value = row ? (row['分類']||'維修') : '維修';
   document.getElementById('mt狀態').value = row ? (row['狀態']||'進行中') : '進行中';
   document.getElementById('mt單位').value = row ? (row['維修/請購單位']||'') : '';
@@ -4448,8 +4721,7 @@ const TC_TH = 'text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1p
 const TC_TD = 'font-size:.85rem;white-space:nowrap;text-align:center';
 
 function tcToday(){
-  const d=new Date();
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  return twToday();
 }
 // 剩餘天數：<0 逾期、0 今日到期
 function tcDaysLeft(due){
@@ -4777,7 +5049,7 @@ async function openAccessModal(rowIndex){
   document.getElementById('acc姓名').value = row ? (row['姓名']||'') : '';
   document.getElementById('acc人事號').value = row ? (row['人事號']||'') : '';
   document.getElementById('acc感應卡卡號').value = row ? (row['感應卡卡號']||'') : '';
-  document.getElementById('acc權限起始日期').value = row ? (row['權限起始日期']||'') : new Date().toISOString().split('T')[0];
+  document.getElementById('acc權限起始日期').value = row ? (row['權限起始日期']||'') : twToday();
   document.getElementById('acc狀態').value = row ? (row['狀態']||'已開通') : '已開通';
   document.getElementById('acc核准人').value = row ? (row['核准人']||'') : '';
   document.getElementById('acc備註').value = row ? (row['備註']||'') : '';
@@ -4860,7 +5132,7 @@ async function exportAccessTxt(){
     const blob = new Blob([content], {type:'text/plain;charset=utf-8'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const today = new Date().toISOString().split('T')[0];
+    const today = twToday();
     a.href = url;
     a.download = `門禁開通名單_${today}.txt`;
     document.body.appendChild(a);
@@ -5066,7 +5338,7 @@ async function openRequisitionModal(rowIndex){
   document.getElementById('reqSubmitBtn').textContent = row ? '儲存' : '新增';
   document.getElementById('reqDeleteBtn').style.display = row ? '' : 'none';
 
-  document.getElementById('rq採購日期').value = row ? (row['採購日期']||'') : new Date().toISOString().split('T')[0];
+  document.getElementById('rq採購日期').value = row ? (row['採購日期']||'') : twToday();
   document.getElementById('rq狀態').value = row ? (row['狀態']||'採購中') : '採購中';
   document.getElementById('rq請購單編號').value = row ? (row['請購單編號']||'') : '';
   document.getElementById('rq數量').value = row ? (row['數量']||'') : '';
@@ -5234,7 +5506,7 @@ function openChangelogModal(item){
     document.getElementById('clgVersion').value = item.版次 || '';
     document.getElementById('clgType').value = item.類型 || '新增項目';
     document.getElementById('clgContent').value = item.內容 || '';
-    document.getElementById('clgDate').value = item.日期 || new Date().toISOString().split('T')[0];
+    document.getElementById('clgDate').value = item.日期 || twToday();
   } else {
     _clgEditRowIndex = null;
     document.getElementById('clgModalTitle').textContent = '新增更新日誌';
@@ -5242,7 +5514,7 @@ function openChangelogModal(item){
     document.getElementById('clgVersion').value='';
     document.getElementById('clgType').value='新增項目';
     document.getElementById('clgContent').value='';
-    document.getElementById('clgDate').value=new Date().toISOString().split('T')[0];
+    document.getElementById('clgDate').value=twToday();
   }
   bootstrap.Modal.getOrCreateInstance(document.getElementById('changelogModal')).show();
 }
@@ -5292,7 +5564,7 @@ async function deleteChangelogRow(rowIndex){
 
 function rocToWestern(r){ r=Number(r); return r?String(r+1911):''; }
 function westernToRoc(w){ w=Number(w); return w?String(w-1911):''; }
-function currentRocYear(){ return new Date().getFullYear()-1911; }
+function currentRocYear(){ return Number(twToday().slice(0,4))-1911; }
 
 // ---------- 職類統計 ----------
 let rsLoaded = false;
@@ -5336,7 +5608,7 @@ function rsRangeChanged(){
 
 async function loadRoleStat(){
   if(!getToken())return;
-  if(!document.getElementById('rsYear').value) document.getElementById('rsYear').value = new Date().getFullYear();
+  if(!document.getElementById('rsYear').value) document.getElementById('rsYear').value = Number(twToday().slice(0,4));
   rsInitMonthSelects();
   const year=document.getElementById('rsYear').value;
   const role=document.getElementById('rsRole').value;
@@ -6083,10 +6355,343 @@ document.addEventListener('hidden.bs.modal', ()=>{
 });
 
 window.onload=()=>{
-  const today=new Date().toISOString().split('T')[0];
+  const today=twToday();
   document.getElementById('queryStart').value=today;
   document.getElementById('queryEnd').value=today;
 };
+
+// ══════════════════════════════════════════════
+//  借還工作單（整理指定日期要借出／歸還的教具，可編輯、存成圖片）
+//  ・資料來源：現有 action=query，不需要改後端
+//  ・編輯內容（排除、組數、備註、手動新增）只存在這台電腦的瀏覽器，不會改到借用紀錄
+// ══════════════════════════════════════════════
+let dnRecords = [], dnState = null, dnModal = null;
+const DN_WEEK = ['日','一','二','三','四','五','六'];
+
+function dnYmd(d){ if(!d) return twToday(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function dnDate(){ return document.getElementById('dnDate').value || dnYmd(); }
+function dnFmtMD(s){ if(!s) return ''; const p = String(s).split('-'); return p.length===3 ? (+p[1])+'/'+(+p[2]) : s; }
+function dnFmtFull(s){ const d = new Date(s+'T00:00:00'); return s.replace(/-/g,'/')+'（'+DN_WEEK[d.getDay()]+'）'; }
+function dnKey(r){ return [r['人事號'],r['日期(起)'],r['時段(起)'],r['教具名稱'],r['組數']].map(v=>String(v??'').trim()).join('_'); }
+
+function dnStoreKey(){ return 'dailyNote_'+dnDate(); }
+function dnLoadState(){
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(dnStoreKey()) || 'null'); } catch(e){}
+  dnState = Object.assign({ excluded:{}, qty:{}, note:{}, custom:[] }, s || {});
+}
+function dnSaveState(){
+  try { localStorage.setItem(dnStoreKey(), JSON.stringify(dnState)); } catch(e){}
+  // 只保留最近 14 天的編輯紀錄，避免越積越多
+  try {
+    const limit = dnYmd(new Date(Date.now()-14*86400000));
+    Object.keys(localStorage).filter(k=>k.startsWith('dailyNote_2') && k.slice(10) < limit).forEach(k=>localStorage.removeItem(k));
+  } catch(e){}
+}
+function dnShowDue(){ try { return localStorage.getItem('dailyNote_showDue') !== '0'; } catch(e){ return true; } }
+
+function openDailyNote(){
+  if(!dnModal) dnModal = new bootstrap.Modal(document.getElementById('dailyNoteModal'));
+  document.getElementById('dnDate').value = dnYmd();
+  document.getElementById('dnShowDue').checked = dnShowDue();
+  dnCloseAdd();
+  dnModal.show();
+  dnLoad();
+}
+function dnSetToday(){ document.getElementById('dnDate').value = dnYmd(); dnLoad(); }
+function dnShiftDay(n){
+  const d = new Date(dnDate()+'T00:00:00'); d.setDate(d.getDate()+n);
+  document.getElementById('dnDate').value = dnYmd(d); dnLoad();
+}
+function dnToggleDue(){
+  try { localStorage.setItem('dailyNote_showDue', document.getElementById('dnShowDue').checked ? '1' : '0'); } catch(e){}
+  dnRender();
+}
+
+async function dnLoad(){
+  const date = dnDate();
+  dnLoadState();
+  document.getElementById('dnBody').innerHTML = '<div class="dn-empty"><span class="spinner-border spinner-border-sm me-2"></span>整理 '+dnFmtFull(date)+' 的借還資料中...</div>';
+  try {
+    const params = new URLSearchParams({ action:'query', token:getToken(), startDate:date, endDate:date, keyword:'', status:'', course:'' });
+    const r = await (await fetch(API+'?'+params)).json();
+    if(!r.success){ document.getElementById('dnBody').innerHTML = '<div class="dn-empty text-danger">'+escapeHtml(r.message||'查詢失敗')+'</div>'; return; }
+    if(date !== dnDate()) return; // 使用者已切到別天，丟掉這次結果
+    dnRecords = r.data || [];
+    dnRender();
+  } catch(err){
+    document.getElementById('dnBody').innerHTML = '<div class="dn-empty text-danger">無法連線：'+escapeHtml(err.message)+'</div>';
+  }
+}
+
+// 把原始紀錄整理成 借出／歸還／逾期 三組項目
+function dnItems(){
+  const date = dnDate();
+  const showDue = document.getElementById('dnShowDue').checked;
+  const skip = s => s==='取消' || s==='已結案';
+  const isRoom = r => String(r['場地']||'').trim()==='臨床技能中心';
+  const extOf = r => [r['分機'], r['手機']].filter(v=>v&&String(v).trim()).join(' / ');
+  const timeOf = r => { const st = String(r['時段(起)']||''), et = String(r['時段(迄)']||''); return st&&et ? st+'~'+et : (st||et); };
+  const toItem = (r, sec) => ({
+    id: sec[0]+'|'+dnKey(r), sec, custom:false,
+    unit: r['單位']||'', name: r['姓名']||'', empNo: r['人事號']||'', ext: extOf(r),
+    tool: r['教具名稱']||'', origQty: Number(r['組數'])||1, time: timeOf(r),
+    venue: r['場地']||'', start: r['日期(起)']||'', end: r['日期(迄)']||'',
+    overdue: sec==='due', origNote: r['備註']||''
+  });
+  const sortFn = (a,b) => String(a.time).localeCompare(String(b.time)) || String(a.unit).localeCompare(String(b.unit),'zh-Hant');
+  const valid = dnRecords.filter(r => !skip(String(r['狀態']||'')));
+
+  // 借出／歸還：場地是臨床技能中心（在中心內使用）的不需要搬運，不列在這裡
+  const rows = valid.filter(r => String(r['教具名稱']||'').trim() && !isRoom(r));
+  const out = rows.filter(r => r['日期(起)']===date).map(r=>toItem(r,'out'));
+  const inn = rows.filter(r => r['日期(迄)']===date).map(r=>toItem(r,'in'));
+  const due = showDue ? rows.filter(r => r['狀態']==='已過期' && r['日期(迄)'] < date).map(r=>toItem(r,'due')) : [];
+  (dnState.custom||[]).forEach(c => {
+    const it = Object.assign({ custom:true, origQty:Number(c.qty)||1, origNote:c.note||'', start:'', end:'', overdue:false }, c);
+    (c.sec==='in' ? inn : out).push(it);
+  });
+  out.sort(sortFn); inn.sort(sortFn); due.sort((a,b)=>String(a.end).localeCompare(String(b.end)));
+
+  // 借用教室：當天有在使用中心教室的預約，同一場（人事號＋起日＋時段＋課程）的多筆教具合併成一列
+  const roomMap = {};
+  valid.filter(r => isRoom(r) && r['日期(起)']<=date && (r['日期(迄)']||r['日期(起)'])>=date).forEach(r => {
+    const k = [r['人事號'],r['日期(起)'],r['時段(起)'],r['會議名稱']].map(v=>String(v??'').trim()).join('_');
+    if(!roomMap[k]) roomMap[k] = {
+      id:'r|'+k, sec:'room', unit:r['單位']||'', name:r['姓名']||'', empNo:r['人事號']||'', ext:extOf(r), time:timeOf(r),
+      course:r['會議名稱']||'', people:(Number(r['院內人數'])||0)+(Number(r['院外人數'])||0),
+      start:r['日期(起)']||'', end:r['日期(迄)']||'', tools:[], notes:[]
+    };
+    const g = roomMap[k];
+    const tool = String(r['教具名稱']||'').trim();
+    if(tool) g.tools.push(tool+' ×'+(Number(r['組數'])||1));
+    const n = String(r['備註']||'').trim();
+    if(n && !g.notes.includes(n)) g.notes.push(n);
+  });
+  const room = Object.values(roomMap).map(g => Object.assign(g, { origNote: g.notes.join('；') })).sort(sortFn);
+
+  const resolve = it => Object.assign(it, {
+    on: !dnState.excluded[it.id],
+    qty: it.origQty,
+    note: dnState.note[it.id] !== undefined ? dnState.note[it.id] : it.origNote
+  });
+  const g = { out: out.map(resolve), in: inn.map(resolve).concat(due.map(resolve)), room: room.map(resolve) };
+
+  // 轉借提示：同一種教具今天有人還、也有人借 → 歸還的可以直接轉給借出的人（逾期未還的不算，因為不確定今天會還）
+  const rec = i => i.id.slice(2), tl = i => String(i.tool).trim();
+  const backs = g.in.filter(i=>i.on && !i.overdue), outs = g.out.filter(i=>i.on);
+  g.out.forEach(i => { i.relay = i.on && backs.some(b => tl(b)===tl(i) && rec(b)!==rec(i)); });
+  g.in.forEach(i  => { i.relay = i.on && !i.overdue && outs.some(o => tl(o)===tl(i) && rec(o)!==rec(i)); });
+  return g;
+}
+function dnDueDays(it){ const a = new Date(it.end+'T00:00:00'), b = new Date(dnDate()+'T00:00:00'); return Math.round((b-a)/86400000); }
+
+function dnRender(){
+  const g = dnItems();
+  const e = escapeHtml;
+  const tags = it =>
+      (it.overdue ? `<span class="dn-tag d">逾期 ${dnDueDays(it)} 天・應還 ${e(dnFmtMD(it.end))}</span>` : '')
+    + (it.relay ? `<span class="dn-tag r">${it.sec==='out'?'↺ 今日有人歸還，可直接轉借':'→ 今日有人要借'}</span>` : '')
+    + (it.custom ? '<span class="dn-tag c">手動</span>' : '');
+  const row = (it, dateCol) => `
+    <tr class="${it.on?'':'dn-off'}" data-id="${e(it.id)}">
+      <td class="dn-act"><input class="form-check-input" type="checkbox" ${it.on?'checked':''} onchange="dnToggle(this)"></td>
+      <td style="white-space:nowrap">${e(it.time)}</td>
+      <td>${e(it.unit)}</td>
+      <td style="white-space:nowrap">${e(it.name)}${it.empNo?`<div class="dn-hint">${e(it.empNo)}</div>`:''}</td>
+      <td style="white-space:nowrap">${e(it.ext)}</td>
+      <td>${e(it.tool)}${tags(it)}</td>
+      <td style="text-align:center">${String(it.qty)}</td>
+      <td>${e(it.venue)}</td>
+      <td style="white-space:nowrap">${e(dnFmtMD(it[dateCol]))}</td>
+      <td class="dn-act"><textarea class="form-control dn-note" rows="1" placeholder="備註" oninput="dnFitNote(this)" onchange="dnSetNote(this)">${e(it.note)}</textarea></td>
+      <td class="dn-act">${it.custom?`<button class="btn btn-sm btn-link text-danger p-0" title="刪除" onclick="dnDelCustom(this)"><i class="bi bi-trash"></i></button>`:''}</td>
+    </tr>`;
+  const head = (cls, icon, title, list) => {
+    const n = list.filter(i=>i.on).length;
+    return `<div class="dn-sec-h"><i class="bi ${icon}"></i>${title}<span class="dn-n">${n} ${cls==='dn-room'?'場':'項'}${list.length!==n?'（排除 '+(list.length-n)+'）':''}</span></div>`;
+  };
+  const sec = (cls, icon, title, list, dateLabel, dateCol, emptyText) => `<div class="dn-sec ${cls}">${head(cls,icon,title,list)}
+      ${list.length ? `<div class="table-responsive"><table class="dn-tbl"><thead><tr>
+        <th></th><th>時間</th><th>單位</th><th>姓名</th><th>分機</th><th>教具名稱</th><th>組數</th><th>場地</th><th>${dateLabel}</th><th>備註</th><th></th>
+      </tr></thead><tbody>${list.map(it=>row(it,dateCol)).join('')}</tbody></table></div>`
+      : `<div class="dn-empty">${emptyText}</div>`}
+    </div>`;
+  const roomRow = it => `
+    <tr class="${it.on?'':'dn-off'}" data-id="${e(it.id)}">
+      <td class="dn-act"><input class="form-check-input" type="checkbox" ${it.on?'checked':''} onchange="dnToggle(this)"></td>
+      <td style="white-space:nowrap">${e(it.time)}</td>
+      <td>${e(it.unit)}</td>
+      <td style="white-space:nowrap">${e(it.name)}${it.empNo?`<div class="dn-hint">${e(it.empNo)}</div>`:''}</td>
+      <td style="white-space:nowrap">${e(it.ext)}</td>
+      <td>${e(it.course)}</td>
+      <td style="text-align:center">${it.people||''}</td>
+      <td>${it.tools.length ? e(it.tools.join('、')) : '<span class="dn-hint">—</span>'}</td>
+      <td style="white-space:nowrap">${it.start===it.end||!it.end ? e(dnFmtMD(it.start)) : e(dnFmtMD(it.start))+'~'+e(dnFmtMD(it.end))}</td>
+      <td class="dn-act"><textarea class="form-control dn-note" rows="1" placeholder="備註" oninput="dnFitNote(this)" onchange="dnSetNote(this)">${e(it.note)}</textarea></td>
+    </tr>`;
+  const roomSec = `<div class="dn-sec dn-room">${head('dn-room','bi-door-open','借用教室',g.room)}
+      ${g.room.length ? `<div class="table-responsive"><table class="dn-tbl"><thead><tr>
+        <th></th><th>時間</th><th>單位</th><th>姓名</th><th>分機</th><th>課程名稱</th><th>人數</th><th>使用教具</th><th>日期</th><th>備註</th>
+      </tr></thead><tbody>${g.room.map(roomRow).join('')}</tbody></table></div>`
+      : '<div class="dn-empty">這天沒有借用教室</div>'}
+    </div>`;
+  document.getElementById('dnBody').innerHTML =
+      sec('dn-out','bi-box-arrow-up-right','借出', g.out, '歸還日', 'end', '這天沒有要借出的教具')
+    + sec('dn-in','bi-box-arrow-in-down-left','歸還', g.in, '借出日', 'start', '這天沒有要歸還的教具')
+    + roomSec;
+  document.querySelectorAll('#dnBody .dn-note').forEach(dnFitNote);
+}
+function dnFitNote(el){ el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
+
+function dnRowId(el){ return el.closest('tr').dataset.id; }
+function dnToggle(el){ const id = dnRowId(el), on = el.checked; if(on) delete dnState.excluded[id]; else dnState.excluded[id] = 1; dnSaveState(); dnRender(); }
+function dnSetNote(el){ const id = dnRowId(el), v = el.value; dnState.note[id] = v; dnSaveState(); }
+function dnDelCustom(el){
+  const id = dnRowId(el);
+  dnState.custom = (dnState.custom||[]).filter(c=>c.id!==id);
+  delete dnState.excluded[id]; delete dnState.qty[id]; delete dnState.note[id];
+  dnSaveState(); dnRender();
+}
+function dnResetEdits(){
+  if(!confirm('要還原 '+dnFmtFull(dnDate())+' 的所有編輯嗎？\n（排除的項目會恢復、修改的備註會還原、手動新增的項目會刪除）')) return;
+  try { localStorage.removeItem(dnStoreKey()); } catch(e){}
+  dnLoadState(); dnRender();
+}
+function dnOpenAdd(){ document.getElementById('dnAddBox').style.display=''; document.getElementById('dnAddTool').focus(); }
+function dnCloseAdd(){
+  document.getElementById('dnAddBox').style.display='none';
+  ['dnAddUnit','dnAddName','dnAddExt','dnAddTool','dnAddTime','dnAddVenue','dnAddNote'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('dnAddQty').value = 1;
+}
+function dnAddSubmit(){
+  const v = i => document.getElementById(i).value.trim();
+  if(!v('dnAddTool')){ toast('提示','請填寫教具名稱','info'); return; }
+  dnState.custom = dnState.custom || [];
+  dnState.custom.push({
+    id: 'c|'+Date.now(), sec: v('dnAddSec'), unit: v('dnAddUnit'), name: v('dnAddName'), empNo:'', ext: v('dnAddExt'),
+    tool: v('dnAddTool'), qty: Math.max(1, Number(v('dnAddQty'))||1), time: v('dnAddTime'), venue: v('dnAddVenue'), note: v('dnAddNote')
+  });
+  dnSaveState(); dnCloseAdd(); dnRender();
+}
+
+// ---------- 產生圖片 ----------
+function dnBuildCapture(){
+  const g = dnItems();
+  const e = escapeHtml;
+  const out = g.out.filter(i=>i.on), inn = g.in.filter(i=>i.on), room = g.room.filter(i=>i.on);
+  const dueN = inn.filter(i=>i.overdue).length;
+  const capTags = it =>
+      (it.overdue ? `<span class="tag" style="color:#be185d">⚠ 逾期 ${dnDueDays(it)} 天（應還 ${e(dnFmtMD(it.end))}）</span>` : '')
+    + (it.relay ? `<span class="tag" style="color:#7c3aed">${it.sec==='out'?'↺ 可用今日歸還的轉借':'→ 歸還後轉借給今日借出者'}</span>` : '');
+  const dateRange = it => (it.start===it.end || !it.end) ? dnFmtMD(it.start) : dnFmtMD(it.start)+'~'+dnFmtMD(it.end);
+  // 固定欄寬（px），沒寫寬度的欄位平分剩下的空間
+  const cols = ws => '<colgroup>'+ws.map(w=>w?`<col style="width:${w}px">`:'<col>').join('')+'</colgroup>';
+  const table = (list, dateLabel, dateCol) => `<table>${cols([44,112,110,76,96,0,52,104,64,200])}<thead><tr>
+      <th class="c">✓</th><th>時間</th><th>單位</th><th>姓名</th><th>分機</th><th>教具名稱</th><th class="c">組數</th><th>場地</th><th>${dateLabel}</th><th>備註</th>
+    </tr></thead><tbody>${list.map(it=>`<tr>
+      <td><span class="box"></span></td>
+      <td class="nw">${e(it.time)}</td><td>${e(it.unit)}</td><td>${e(it.name)}</td>
+      <td>${e(it.ext)}</td>
+      <td><b>${e(it.tool)}</b>${capTags(it)}</td>
+      <td class="c"><b>${String(it.qty)}</b></td><td>${e(it.venue)}</td>
+      <td class="nw">${e(dnFmtMD(it[dateCol]))}</td><td>${e(it.note)}</td>
+    </tr>`).join('')}</tbody></table>`;
+  const roomTable = list => `<table>${cols([44,112,110,76,96,0,52,210,100,150])}<thead><tr>
+      <th class="c">✓</th><th>時間</th><th>單位</th><th>姓名</th><th>分機</th><th>課程名稱</th><th class="c">人數</th><th>使用教具</th><th>日期</th><th>備註</th>
+    </tr></thead><tbody>${list.map(it=>`<tr>
+      <td><span class="box"></span></td>
+      <td class="nw">${e(it.time)}</td><td>${e(it.unit)}</td><td>${e(it.name)}</td>
+      <td>${e(it.ext)}</td><td><b>${e(it.course)}</b></td>
+      <td class="c">${it.people||''}</td><td>${e(it.tools.join('、'))}</td>
+      <td class="nw">${e(dateRange(it))}</td><td>${e(it.note)}</td>
+    </tr>`).join('')}</tbody></table>`;
+  const sec = (color, bg, title, list, body, emptyText, unit='項') => `<div class="cap-sec">
+      <div class="cap-h" style="color:${color};background:${bg}">${title}（${list.length} ${unit}）</div>
+      ${list.length ? body : `<div class="empty">${emptyText}</div>`}
+    </div>`;
+  const now = new Date();
+  const user = (document.getElementById('currentUser')||{}).textContent || '';
+  const html = `<h2>📋 借還工作單　${dnFmtFull(dnDate())}</h2>
+    <div class="cap-sub">臨床技能中心｜借出 ${out.length} 項・歸還 ${inn.length} 項${dueN?'（含逾期 '+dueN+' 項）':''}・借用教室 ${room.length} 場</div>`
+    + sec('#1d4ed8','#dbeafe','⬆ 借出', out, table(out,'歸還日','end'), '這天沒有要借出的教具')
+    + sec('#047857','#d1fae5','⬇ 歸還', inn, table(inn,'借出日','start'), '這天沒有要歸還的教具')
+    + sec('#854d0e','#fef9c3','🚪 借用教室', room, roomTable(room), '這天沒有借用教室', '場')
+    + `<div class="cap-foot">產生時間：${twToday(now).replace(/-/g,'/')} ${twTimeHM(now)}${user?'　製表：'+e(user):''}</div>`;
+  const box = document.getElementById('dnCapture');
+  box.innerHTML = html;
+  return box;
+}
+function dnLoadScript(src, globalName){
+  if(window[globalName]) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve; s.onerror = () => reject(new Error('圖片元件載入失敗，請確認網路連線'));
+    document.head.appendChild(s);
+  });
+}
+// Safari（含 iPhone/iPad 上所有瀏覽器）對瀏覽器原生截圖支援不穩，改用 html2canvas
+function dnIsSafariEngine(){
+  const ua = navigator.userAgent;
+  return /iPhone|iPad|iPod/.test(ua) || (/Safari/.test(ua) && !/Chrome|Chromium|Edg|OPR|Firefox/.test(ua));
+}
+async function dnMakeBlob(){
+  const box = dnBuildCapture();
+  if(document.fonts && document.fonts.ready) await document.fonts.ready;
+  if(!dnIsSafariEngine()){
+    try {
+      await dnLoadScript('https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js', 'htmlToImage');
+      const blob = await htmlToImage.toBlob(box, {
+        pixelRatio: 2, backgroundColor: '#ffffff', skipFonts: true, cacheBust: false,
+        width: box.offsetWidth, height: box.offsetHeight,
+        style: { position: 'static', left: '0', top: '0', margin: '0' }
+      });
+      if(blob && blob.size > 2000) return blob;
+    } catch(err){ console.warn('html-to-image 失敗，改用 html2canvas', err); }
+  }
+  await dnLoadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'html2canvas');
+  // 截圖時暫時移回畫面內（壓在最底層，使用者看不到），截完再移走
+  box.style.left = '0'; box.style.zIndex = '-1';
+  try {
+    const canvas = await html2canvas(box, { scale:2, backgroundColor:'#ffffff', logging:false, windowWidth:1300, scrollX:0, scrollY:0 });
+    return await new Promise(res => canvas.toBlob(res, 'image/png'));
+  } finally { box.style.left = '-10000px'; box.style.zIndex = ''; }
+}
+function dnFileName(){ return '借還工作單_'+dnDate()+'.png'; }
+function dnDownload(blob){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = dnFileName();
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+}
+async function dnCopyImage(){
+  if(!navigator.clipboard || !window.ClipboardItem){
+    toast('提示','這個瀏覽器不支援直接複製圖片，改為下載／分享','info');
+    return dnSaveImage();
+  }
+  try {
+    // 直接把 Promise 交給 ClipboardItem，Safari 才不會因為等待產圖而拒絕
+    await navigator.clipboard.write([ new ClipboardItem({ 'image/png': dnMakeBlob() }) ]);
+    toast('已複製圖片','可以直接貼到 LINE、Teams 或訊息裡（Ctrl+V）','success');
+  } catch(err){
+    toast('無法複製','改為下載圖片：'+err.message,'danger');
+    try { dnDownload(await dnMakeBlob()); } catch(e){}
+  }
+}
+async function dnSaveImage(){
+  try {
+    const blob = await dnMakeBlob();
+    const file = new File([blob], dnFileName(), { type:'image/png' });
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    if(isMobile && navigator.canShare && navigator.canShare({ files:[file] })){
+      try { await navigator.share({ files:[file], title:'借還工作單 '+dnDate() }); return; }
+      catch(e){ if(e.name==='AbortError') return; }
+    }
+    dnDownload(blob);
+    toast('已下載', dnFileName(), 'success');
+  } catch(err){ toast('錯誤', err.message, 'danger'); }
+}
 </script>
 </body>
 </html>
