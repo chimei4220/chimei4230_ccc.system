@@ -819,6 +819,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
     </div>
     <div class="d-flex gap-2">
       <button class="btn btn-outline-secondary btn-sm" onclick="loadAssets()"><i class="bi bi-arrow-clockwise me-1"></i>重新整理</button>
+      <button class="btn btn-outline-success btn-sm" onclick="exportAssetsExcel()"><i class="bi bi-file-earmark-excel me-1"></i>匯出 Excel</button>
       <button class="btn btn-primary btn-sm" onclick="openAssetModal()"><i class="bi bi-plus-lg me-1"></i>新增財產</button>
     </div>
   </div>
@@ -995,6 +996,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
       <table class="table table-hover table-bordered">
         <thead>
           <tr>
+            <th style="width:64px;text-align:center;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">照片</th>
             <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">材料編號</th>
             <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">系統上品名</th>
             <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #e2e8f0">名稱</th>
@@ -1006,7 +1008,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
           </tr>
         </thead>
         <tbody id="csBody">
-          <tr><td colspan="8" class="text-center text-muted py-5" style="font-size:.85rem">載入中...</td></tr>
+          <tr><td colspan="9" class="text-center text-muted py-5" style="font-size:.85rem">載入中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -1024,6 +1026,23 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
       <div class="modal-body">
         <input type="hidden" id="csRowIndex">
         <div class="row g-3" style="font-size:.85rem">
+          <div class="col-12">
+            <label class="form-label fw-semibold">耗材照片</label>
+            <div class="d-flex gap-3 align-items-start flex-wrap">
+              <div class="am-photo-frame" id="csPhotoFrame"><span><i class="bi bi-camera" style="font-size:1.4rem"></i><br>尚無照片</span></div>
+              <div style="flex:1;min-width:200px">
+                <div class="d-flex gap-2 flex-wrap mb-2">
+                  <label class="btn btn-outline-primary btn-sm mb-0"><i class="bi bi-image me-1"></i>選擇／拍攝照片
+                    <input type="file" accept="image/*" id="csPhotoInput" hidden onchange="csPhotoPick(this)"></label>
+                  <button type="button" class="btn btn-outline-danger btn-sm" id="csPhotoRemoveBtn" onclick="csPhotoRemove()" style="display:none"><i class="bi bi-x-lg me-1"></i>移除</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="csPhotoUndoBtn" onclick="csPhotoUndo()" style="display:none"><i class="bi bi-arrow-counterclockwise me-1"></i>復原</button>
+                </div>
+                <div class="form-text mt-0 mb-1">雲端檔名（材料編號_名稱）：</div>
+                <div class="am-photo-name" id="csPhotoName">—</div>
+                <div class="form-text" id="csPhotoHint">照片會在按「儲存」時一起上傳，並自動縮小壓縮。</div>
+              </div>
+            </div>
+          </div>
           <div class="col-12"><label class="form-label fw-semibold">分類<span style="color:red">*</span></label>
             <select class="form-select form-select-sm" id="csCatSel"></select>
           </div>
@@ -3408,6 +3427,7 @@ function renderListView() {
   const tbody = document.getElementById('assetListBody');
   document.getElementById('assetListCount').textContent = '共 ' + filteredAssets.length + ' 筆';
   if (!filteredAssets.length) {
+    assetListSorted = [];
     tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted py-5">查無資料</td></tr>';
     return;
   }
@@ -3442,6 +3462,7 @@ function renderListView() {
     return ka[2] - kb[2];
   });
   const sortedFinal = attachChildrenAfterParent(sorted);
+  assetListSorted = sortedFinal;
 
   const tagBadge2 = v => v==='有'
     ? '<span style="background:#d1fae5;color:#065f46;padding:1px 7px;border-radius:10px;font-size:.72rem">有</span>'
@@ -3516,9 +3537,12 @@ function openAssetModal(rowIndex, prefillType, prefillParent) {
     if (r['父項'] === '教室設備') {
       document.getElementById('amTypeRoom').checked = true;
       document.getElementById('am掛網名稱3').value = r['掛網名稱'] || '';
-    } else if (r['父項'] && !r['掛網名稱']) {
+    } else if (r['父項']) {
+      // 有父項就是配件（不論配件有沒有自己的掛網名稱），避免存檔時父項被清掉
       document.getElementById('amTypePart').checked = true;
-      document.getElementById('am父項').value = r['父項'] || '';
+      const parent = String(r['父項']).trim();
+      if (![...sel.options].some(o => o.value === parent)) sel.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(parent)}">${escapeHtml(parent)}</option>`);
+      document.getElementById('am父項').value = parent;
     } else {
       document.getElementById('amTypeMain').checked = true;
     }
@@ -3624,6 +3648,128 @@ async function saveAsset() {
 }
 async function assetPost(body){ const r = await fetch(API, { method:'POST', body: JSON.stringify(body) }); return r.json(); }
 
+// ── 財產清單匯出 Excel（依目前的搜尋／分類篩選與畫面排序）──────────
+let assetListSorted = [];
+function exportAssetsExcel(){
+  const list = assetListSorted.length ? assetListSorted : filteredAssets;
+  if (!list || !list.length) { toast('提示','目前沒有可匯出的財產資料','info'); return; }
+  const typeOf = r => r['父項']==='教室設備' ? '教室設備' : (r['父項'] ? '配件' : '教具主體');
+  const nameOf = r => {
+    if (r['父項']==='教室設備') return r['掛網名稱'] || r['_displayName'] || r['規格'] || '';
+    if (r['父項']) return r['父項'] + ' ＞ ' + (r['掛網名稱'] || r['規格'] || r['品名'] || '');
+    return r['掛網名稱'] || r['品名'] || '';
+  };
+  const head = ['保管品號','掛網/設備名稱','類型','父項','分類','品名','規格','材料編號','單位','數量','取得日期','廠牌/型號','財產標籤','備註','註記','照片'];
+  const rows = list.map(r => [
+    r['保管品號']||'', nameOf(r), typeOf(r), r['父項']||'', r['分類']||'', r['品名']||'', r['規格']||'',
+    r['材料編號']||'', r['單位']||'', Number(r['數量'])||1, fmtROC(r['取得日期']), r['廠牌/型號']||'',
+    r['財產標籤']||'', r['備註']||'', r['註記']||'', r['照片'] ? '查看照片' : ''
+  ]);
+  const ws = XLSX.utils.aoa_to_sheet([head, ...rows]);
+  // 照片欄做成可點的連結
+  const pc = head.indexOf('照片');
+  list.forEach((r, i) => {
+    const id = String(r['照片']||'').trim(); if (!id) return;
+    const ref = XLSX.utils.encode_cell({ r:i+1, c:pc });
+    if (ws[ref]) ws[ref].l = { Target: driveViewUrl(id), Tooltip: assetPhotoBaseName(r) };
+  });
+  ws['!cols'] = [10,42,10,26,12,24,30,18,6,6,11,20,8,24,10,10].map(w => ({ wch:w }));
+  ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:rows.length, c:head.length-1} }) };
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, '財產清單');
+  const fn = `財產清單_${twToday()}.xlsx`;
+  XLSX.writeFile(wb, fn);
+  const filtered = list.length !== allAssets.length;
+  toast('匯出成功', `已下載 ${fn}（${list.length} 筆${filtered ? '，依目前篩選條件' : ''}）`, 'success');
+}
+
+// ── 照片共用工具 ─────────────────────────────────────────
+// 選照片後先在瀏覽器縮小（長邊 1600px、JPEG 品質 0.85）
+async function photoResizeFile(file){
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = () => rej(new Error('這個格式的圖片無法讀取，請改用 JPG 或 PNG（iPhone 可直接用「拍照」）'));
+      i.src = url;
+    });
+    const max = 1600, scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(img.naturalWidth * scale); cv.height = Math.round(img.naturalHeight * scale);
+    const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(img, 0, 0, cv.width, cv.height);
+    const dataUrl = cv.toDataURL('image/jpeg', 0.85);
+    return { dataUrl, base64: dataUrl.split(',')[1], mime: 'image/jpeg' };
+  } finally { URL.revokeObjectURL(url); }
+}
+function photoThumbHtml(id, onclickJs){
+  id = String(id||'').trim();
+  if (!id) return '<div class="as-thumb-empty" title="尚無照片"><i class="bi bi-camera"></i></div>';
+  return `<img class="as-thumb" loading="lazy" alt="照片" src="${driveThumbUrl(id,160)}"
+    onerror="if(!this.dataset.r){this.dataset.r=1;this.src='${driveAltUrl(id,160)}';}"
+    onclick="event.stopPropagation();${onclickJs}">`;
+}
+function showPhotoViewer(id, title){
+  id = String(id||'').trim(); if (!id) return;
+  const img = document.getElementById('photoViewerImg');
+  img.removeAttribute('data-r');
+  img.onerror = function(){ if(!this.dataset.r){ this.dataset.r = 1; this.src = driveAltUrl(id, 1600); } };
+  img.src = driveThumbUrl(id, 1600);
+  document.getElementById('photoViewerTitle').textContent = title || '';
+  document.getElementById('photoViewerLink').href = driveViewUrl(id);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('photoViewerModal')).show();
+}
+
+// ── 耗材照片 ─────────────────────────────────────────────
+let csPhoto = { orig:'', pending:null, remove:false };
+function consumablePhotoBaseName(r){
+  const c = s => String(s==null?'':s).replace(/[\\\/:*?"<>|\t\r\n]+/g,' ').replace(/\s+/g,' ').trim();
+  const mat = c(r['材料編號']), name = c(r['名稱']) || c(r['系統上品名']);
+  return (mat || '無材料編號') + (name ? '_' + name : '');
+}
+function openCsPhotoViewer(rowIndex){
+  const r = csResults.find(x => x._rowIndex === rowIndex); if (!r) return;
+  showPhotoViewer(r['照片'], consumablePhotoBaseName(r));
+}
+function csPhotoInit(id){
+  csPhoto = { orig: String(id||'').trim(), pending:null, remove:false };
+  const inp = document.getElementById('csPhotoInput'); if (inp) inp.value = '';
+  csPhotoRender();
+}
+function csPhotoRender(){
+  const f = document.getElementById('csPhotoFrame');
+  let src = '';
+  if (csPhoto.pending) src = csPhoto.pending.dataUrl;
+  else if (csPhoto.orig && !csPhoto.remove) src = driveThumbUrl(csPhoto.orig, 400);
+  f.classList.toggle('has', !!src);
+  f.innerHTML = src ? `<img src="${src}" alt="照片" onclick="csPhotoZoom()">`
+    : `<span><i class="bi bi-camera" style="font-size:1.4rem"></i><br>${csPhoto.remove ? '儲存後移除照片' : '尚無照片'}</span>`;
+  document.getElementById('csPhotoRemoveBtn').style.display = src ? '' : 'none';
+  document.getElementById('csPhotoUndoBtn').style.display = (csPhoto.pending || csPhoto.remove) ? '' : 'none';
+  document.getElementById('csPhotoHint').textContent = csPhoto.pending ? '新照片會在按「儲存」時上傳（已自動縮小壓縮）。'
+    : csPhoto.remove ? '按「儲存」後會從雲端硬碟移除這張照片。' : '照片會在按「儲存」時一起上傳，並自動縮小壓縮。';
+  csPhotoNameRefresh();
+}
+function csPhotoNameRefresh(){
+  const el = document.getElementById('csPhotoName'); if (!el) return;
+  el.textContent = consumablePhotoBaseName({
+    '材料編號': document.getElementById('cs材料編號').value,
+    '名稱': document.getElementById('cs名稱').value,
+    '系統上品名': document.getElementById('cs系統上品名').value
+  }) + '.jpg';
+}
+function csPhotoZoom(){ if (!csPhoto.pending && csPhoto.orig) window.open(driveViewUrl(csPhoto.orig), '_blank'); }
+function csPhotoRemove(){ if (csPhoto.pending) csPhoto.pending = null; else csPhoto.remove = true; document.getElementById('csPhotoInput').value=''; csPhotoRender(); }
+function csPhotoUndo(){ csPhoto.pending = null; csPhoto.remove = false; document.getElementById('csPhotoInput').value=''; csPhotoRender(); }
+async function csPhotoPick(input){
+  const file = input.files && input.files[0]; if (!file) return;
+  try { csPhoto.pending = await photoResizeFile(file); csPhoto.remove = false; csPhotoRender(); }
+  catch(err){ toast('無法讀取照片', err.message, 'danger'); input.value = ''; }
+}
+['input','change'].forEach(ev => document.addEventListener(ev, e => {
+  if (e.target && e.target.id !== 'csPhotoInput' && e.target.closest && e.target.closest('#consumableModal')) csPhotoNameRefresh();
+}));
+
 // ── 財產照片 ─────────────────────────────────────────────
 //  照片存在雲端硬碟（後端 財產照片.gs），財產總清單「照片」欄存檔案 ID
 let amPhoto = { orig:'', pending:null, remove:false };
@@ -3631,23 +3777,10 @@ function driveThumbUrl(id, w){ return 'https://drive.google.com/thumbnail?id=' +
 function driveAltUrl(id, w){ return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w' + (w||200); }
 function driveViewUrl(id){ return 'https://drive.google.com/file/d/' + encodeURIComponent(id) + '/view'; }
 // 縮圖：第一個網址失敗時改用另一個網址再試一次
-function assetThumb(r){
-  const id = String(r['照片']||'').trim();
-  if (!id) return '<div class="as-thumb-empty" title="尚無照片"><i class="bi bi-camera"></i></div>';
-  return `<img class="as-thumb" loading="lazy" alt="照片" src="${driveThumbUrl(id,160)}"
-    onerror="if(!this.dataset.r){this.dataset.r=1;this.src='${driveAltUrl(id,160)}';}"
-    onclick="event.stopPropagation();openPhotoViewer(${r._rowIndex})">`;
-}
+function assetThumb(r){ return photoThumbHtml(r['照片'], `openPhotoViewer(${r._rowIndex})`); }
 function openPhotoViewer(rowIndex){
   const r = allAssets.find(a => a._rowIndex === rowIndex); if (!r || !r['照片']) return;
-  const id = String(r['照片']).trim();
-  const img = document.getElementById('photoViewerImg');
-  img.removeAttribute('data-r');
-  img.onerror = function(){ if(!this.dataset.r){ this.dataset.r = 1; this.src = driveAltUrl(id, 1600); } };
-  img.src = driveThumbUrl(id, 1600);
-  document.getElementById('photoViewerTitle').textContent = assetPhotoBaseName(r);
-  document.getElementById('photoViewerLink').href = driveViewUrl(id);
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('photoViewerModal')).show();
+  showPhotoViewer(r['照片'], assetPhotoBaseName(r));
 }
 // 檔名規則（和後端 assetPhotoBaseName_ 相同，用來在畫面上預覽）
 function assetPhotoBaseName(r){
@@ -3699,25 +3832,8 @@ function amPhotoUndo(){ amPhoto.pending = null; amPhoto.remove = false; document
 // 選照片後先在瀏覽器縮小（長邊 1600px、JPEG 品質 0.85），上傳快、雲端也不佔空間
 async function amPhotoPick(input){
   const file = input.files && input.files[0]; if (!file) return;
-  try {
-    const url = URL.createObjectURL(file);
-    const img = await new Promise((res, rej) => {
-      const i = new Image();
-      i.onload = () => res(i);
-      i.onerror = () => rej(new Error('這個格式的圖片無法讀取，請改用 JPG 或 PNG（iPhone 可直接用「拍照」）'));
-      i.src = url;
-    });
-    const max = 1600, scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-    const cv = document.createElement('canvas');
-    cv.width = Math.round(img.naturalWidth * scale); cv.height = Math.round(img.naturalHeight * scale);
-    const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
-    ctx.drawImage(img, 0, 0, cv.width, cv.height);
-    URL.revokeObjectURL(url);
-    const dataUrl = cv.toDataURL('image/jpeg', 0.85);
-    amPhoto.pending = { dataUrl, base64: dataUrl.split(',')[1], mime: 'image/jpeg' };
-    amPhoto.remove = false;
-    amPhotoRender();
-  } catch(err) { toast('無法讀取照片', err.message, 'danger'); input.value = ''; }
+  try { amPhoto.pending = await photoResizeFile(file); amPhoto.remove = false; amPhotoRender(); }
+  catch(err) { toast('無法讀取照片', err.message, 'danger'); input.value = ''; }
 }
 // 修改名稱、保管品號等欄位時，即時更新檔名預覽
 ['input','change'].forEach(ev => document.addEventListener(ev, e => {
@@ -4612,7 +4728,7 @@ function renderConsumables(){
   const tbody=document.getElementById('csBody');
   document.getElementById('csCount').textContent = `共 ${csResults.length} 筆`;
   if(!csResults.length){
-    tbody.innerHTML='<tr><td colspan="8" class="text-center text-muted py-5" style="font-size:.85rem">查無資料</td></tr>';
+    tbody.innerHTML='<tr><td colspan="9" class="text-center text-muted py-5" style="font-size:.85rem">查無資料</td></tr>';
     return;
   }
   let html='';
@@ -4621,7 +4737,8 @@ function renderConsumables(){
     const cat = row['分類']||'';
     const catStyle = CS_CAT_COLORS[cat] || '#f1f5f9;color:#64748b';
     html += `<tr>
-      <td style="font-size:.85rem;white-space:nowrap">${escapeHtml(row['材料編號']||'')}</td>
+      <td style="vertical-align:middle;text-align:center">${photoThumbHtml(row['照片'], `openCsPhotoViewer(${row._rowIndex})`)}</td>
+      <td style="font-size:.85rem;white-space:nowrap;vertical-align:middle">${escapeHtml(row['材料編號']||'')}</td>
       <td style="font-size:.85rem;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(row['系統上品名']||'')}">${escapeHtml(row['系統上品名']||'')}</td>
       <td style="font-size:.85rem;white-space:nowrap"><span style="color:var(--ac);font-weight:600">${escapeHtml(row['名稱']||'')}</span></td>
       <td style="font-size:.85rem;white-space:nowrap;text-align:center">${escapeHtml(row['庫房']||'')}</td>
@@ -4651,6 +4768,7 @@ async function openConsumableModal(rowIndex){
   document.getElementById('cs庫房').value = row ? (row['庫房']||'') : '';
   document.getElementById('cs請領方式').value = row ? (row['請領方式']||'') : '';
   document.getElementById('cs備註').value = row ? (row['備註']||'') : '';
+  csPhotoInit(row ? row['照片'] : '');
 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('consumableModal')).show();
 }
@@ -4676,17 +4794,35 @@ async function saveConsumable(){
     '備註': document.getElementById('cs備註').value.trim()
   };
   const isEdit = !!rowIndex;
+  const photoOp = csPhoto.pending ? 'upload' : (csPhoto.remove && csPhoto.orig ? 'delete' : '');
   showLoad(isEdit?'儲存中...':'新增中...');
   try{
     const body = isEdit
-      ? {action:'updateConsumable', token:getToken(), rowIndex:parseInt(rowIndex), data}
-      : {action:'insertConsumable', token:getToken(), data};
-    const r=await fetch(API,{method:'POST',body:JSON.stringify(body)});
-    const res=await r.json();
-    hideLoad();
-    if(!res.success){toast(isEdit?'儲存失敗':'新增失敗',res.message,'danger');return;}
+      ? {action:'updateConsumableV2', token:getToken(), rowIndex:parseInt(rowIndex), data}
+      : {action:'insertConsumableV2', token:getToken(), data};
+    let res = await assetPost(body);
+    let oldBackend = false;
+    if(!res.success && res.message==='未知的action'){   // 後端還沒更新：退回舊版動作，資料照存
+      body.action = isEdit ? 'updateConsumable' : 'insertConsumable';
+      res = await assetPost(body); oldBackend = true;
+    }
+    if(!res.success){hideLoad();toast(isEdit?'儲存失敗':'新增失敗',res.message,'danger');return;}
     bootstrap.Modal.getInstance(document.getElementById('consumableModal')).hide();
-    toast(isEdit?'儲存成功':'新增成功','','success');
+    const targetRow = isEdit ? parseInt(rowIndex) : res.rowIndex;
+    if(photoOp && oldBackend){
+      toast('資料已儲存','照片功能需要先更新後端程式才能使用','info');
+    } else if(photoOp && targetRow){
+      showLoad(photoOp==='upload'?'上傳照片中...':'移除照片中...');
+      const expect = {'材料編號':data['材料編號'], '名稱':data['名稱']};
+      const pr = await assetPost(photoOp==='upload'
+        ? {action:'uploadConsumablePhoto', token:getToken(), data:{rowIndex:targetRow, expect, base64:csPhoto.pending.base64, mimeType:csPhoto.pending.mime}}
+        : {action:'deleteConsumablePhoto', token:getToken(), data:{rowIndex:targetRow, expect}});
+      if(pr.success) toast(isEdit?'儲存成功':'新增成功', pr.message, 'success');
+      else toast('資料已儲存，但照片處理失敗', pr.message, 'danger');
+    } else {
+      toast(isEdit?'儲存成功':'新增成功','','success');
+    }
+    hideLoad();
     loadConsumables();
   }catch(err){hideLoad();toast('連線失敗',err.message,'danger');}
   finally{hideLoad();}
@@ -4698,8 +4834,8 @@ async function deleteConsumableRow(){
   if(!confirm('確定要刪除這筆耗材嗎？'))return;
   showLoad('刪除中...');
   try{
-    const r=await fetch(API,{method:'POST',body:JSON.stringify({action:'deleteConsumable', token:getToken(), rowIndex})});
-    const data=await r.json();
+    let data = await assetPost({action:'deleteConsumableV2', token:getToken(), rowIndex});
+    if(!data.success && data.message==='未知的action') data = await assetPost({action:'deleteConsumable', token:getToken(), rowIndex});
     hideLoad();
     if(!data.success){toast('刪除失敗',data.message,'danger');return;}
     bootstrap.Modal.getInstance(document.getElementById('consumableModal')).hide();
