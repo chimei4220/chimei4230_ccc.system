@@ -2230,7 +2230,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
             <button class="btn btn-sm btn-success" onclick="dnSaveImage()"><i class="bi bi-download me-1"></i>下載／分享圖片</button>
           </div>
         </div>
-        <div class="dn-hint mb-2">歸還列的是到期日在這天之前的項目（借到當天的，隔天早上才列入歸還）。借出／歸還不列在技能中心內使用的項目（另列在「借用教室」）。取消勾選＝這次不借出／不需處理（不會出現在圖片上，也不會改到借用紀錄）。備註可直接修改，編輯內容會自動保存在這台電腦。</div>
+        <div class="dn-hint mb-2">歸還列的是到期日在這天之前的項目（借到當天的，隔天早上才列入歸還）。已填借出者的項目視為已借出，不再列出。借出／歸還不列在技能中心內使用的項目（另列在「借用教室」）。取消勾選＝這次不借出／不需處理（不會出現在圖片上，也不會改到借用紀錄）。備註可直接修改，編輯內容會自動保存在這台電腦。</div>
         <div id="dnAddBox" class="dn-sec p-3" style="display:none">
           <div class="fw-bold mb-2" style="font-size:.88rem"><i class="bi bi-plus-circle me-1"></i>手動新增項目</div>
           <div class="row g-2 align-items-end">
@@ -6580,7 +6580,10 @@ function dnItems(){
 
   // 借出／歸還：場地是臨床技能中心（在中心內使用）的不需要搬運，不列在這裡
   const rows = valid.filter(r => String(r['教具名稱']||'').trim() && !isRoom(r));
-  const out = rows.filter(r => r['日期(起)']===date).map(r=>toItem(r,'out'));
+  // 借出：已填「借出者」＝已經交給單位了，不再列出（只在標題顯示已借出幾項）
+  const lentBy = r => String(r['借出者']||'').trim();
+  const out = rows.filter(r => r['日期(起)']===date && !lentBy(r)).map(r=>toItem(r,'out'));
+  const outDone = rows.filter(r => r['日期(起)']===date && lentBy(r)).length;
   // 歸還：借用到「今天」的單位今天還在用，隔天早上才會拿回來
   //  → 列出到期日在今天之前、尚未結案的項目；未借出（沒有借出者）的不算
   //  → 應還日＝到期日的下一個上班日（週五到期→週一早上還）；過了應還日才標「逾期」
@@ -6615,7 +6618,7 @@ function dnItems(){
     qty: it.origQty,
     note: dnState.note[it.id] !== undefined ? dnState.note[it.id] : it.origNote
   });
-  const g = { out: out.map(resolve), in: inn.map(resolve).concat(due.map(resolve)), room: room.map(resolve) };
+  const g = { out: out.map(resolve), in: inn.map(resolve).concat(due.map(resolve)), room: room.map(resolve), outDone };
 
   // 轉借提示：同一種教具今天有人還、也有人借 → 歸還的可以直接轉給借出的人（逾期未還的不算，因為不確定今天會還）
   const rec = i => i.id.slice(2), tl = i => String(i.tool).trim();
@@ -6652,7 +6655,7 @@ function dnRender(){
     </tr>`;
   const head = (cls, icon, title, list) => {
     const n = list.filter(i=>i.on).length;
-    return `<div class="dn-sec-h"><i class="bi ${icon}"></i>${title}<span class="dn-n">${n} ${cls==='dn-room'?'場':'項'}${list.length!==n?'（排除 '+(list.length-n)+'）':''}</span></div>`;
+    return `<div class="dn-sec-h"><i class="bi ${icon}"></i>${title}<span class="dn-n">${n} ${cls==='dn-room'?'場':'項'}${list.length!==n?'（排除 '+(list.length-n)+'）':''}</span>${cls==='dn-out'&&g.outDone?`<span class="dn-hint fw-normal ms-1"><i class="bi bi-check2-circle me-1"></i>已借出 ${g.outDone} 項（已填借出者）</span>`:''}</div>`;
   };
   const sec = (cls, icon, title, list, dateLabel, dateCol, emptyText) => `<div class="dn-sec ${cls}">${head(cls,icon,title,list)}
       ${list.length ? `<div class="table-responsive"><table class="dn-tbl"><thead><tr>
@@ -6680,7 +6683,7 @@ function dnRender(){
       : '<div class="dn-empty">這天沒有借用教室</div>'}
     </div>`;
   document.getElementById('dnBody').innerHTML =
-      sec('dn-out','bi-box-arrow-up-right','借出', g.out, '歸還日', 'end', '這天沒有要借出的教具')
+      sec('dn-out','bi-box-arrow-up-right','借出', g.out, '歸還日', 'end', g.outDone ? '這天要借出的教具都已借出' : '這天沒有要借出的教具')
     + sec('dn-in','bi-box-arrow-in-down-left','歸還', g.in, '到期日', 'end', '這天沒有要歸還的教具')
     + roomSec;
   document.querySelectorAll('#dnBody .dn-note').forEach(dnFitNote);
@@ -6757,7 +6760,7 @@ function dnBuildCapture(){
   const user = (document.getElementById('currentUser')||{}).textContent || '';
   const html = `<h2>📋 借還工作單　${dnFmtFull(dnDate())}</h2>
     <div class="cap-sub">臨床技能中心｜借出 ${out.length} 項・歸還 ${inn.length} 項${dueN?'（含逾期 '+dueN+' 項）':''}・借用教室 ${room.length} 場</div>`
-    + sec('#1d4ed8','#dbeafe','⬆ 借出', out, table(out,'歸還日','end'), '這天沒有要借出的教具')
+    + sec('#1d4ed8','#dbeafe','⬆ 借出', out, table(out,'歸還日','end'), g.outDone ? '這天要借出的教具都已借出' : '這天沒有要借出的教具')
     + sec('#047857','#d1fae5','⬇ 歸還', inn, table(inn,'到期日','end'), '這天沒有要歸還的教具')
     + sec('#854d0e','#fef9c3','🚪 借用教室', room, roomTable(room), '這天沒有借用教室', '場')
     + `<div class="cap-foot">產生時間：${twToday(now).replace(/-/g,'/')} ${twTimeHM(now)}${user?'　製表：'+e(user):''}</div>`;
