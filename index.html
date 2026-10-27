@@ -2230,7 +2230,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
             <button class="btn btn-sm btn-success" onclick="dnSaveImage()"><i class="bi bi-download me-1"></i>下載／分享圖片</button>
           </div>
         </div>
-        <div class="dn-hint mb-2">借出／歸還不列在技能中心內使用的項目（另列在「借用教室」）。取消勾選＝這次不借出／不需處理（不會出現在圖片上，也不會改到借用紀錄）。備註可直接修改，編輯內容會自動保存在這台電腦。</div>
+        <div class="dn-hint mb-2">歸還列的是到期日在這天之前的項目（借到當天的，隔天早上才列入歸還）。借出／歸還不列在技能中心內使用的項目（另列在「借用教室」）。取消勾選＝這次不借出／不需處理（不會出現在圖片上，也不會改到借用紀錄）。備註可直接修改，編輯內容會自動保存在這台電腦。</div>
         <div id="dnAddBox" class="dn-sec p-3" style="display:none">
           <div class="fw-bold mb-2" style="font-size:.88rem"><i class="bi bi-plus-circle me-1"></i>手動新增項目</div>
           <div class="row g-2 align-items-end">
@@ -6549,7 +6549,7 @@ async function dnLoad(){
   dnLoadState();
   document.getElementById('dnBody').innerHTML = '<div class="dn-empty"><span class="spinner-border spinner-border-sm me-2"></span>整理 '+dnFmtFull(date)+' 的借還資料中...</div>';
   try {
-    const params = new URLSearchParams({ action:'query', token:getToken(), startDate:date, endDate:date, keyword:'', status:'', course:'' });
+    const params = new URLSearchParams({ action:'query', token:getToken(), startDate:dnAddDays(date,-14), endDate:date, keyword:'', status:'', course:'' });
     const r = await (await fetch(API+'?'+params)).json();
     if(!r.success){ document.getElementById('dnBody').innerHTML = '<div class="dn-empty text-danger">'+escapeHtml(r.message||'查詢失敗')+'</div>'; return; }
     if(date !== dnDate()) return; // 使用者已切到別天，丟掉這次結果
@@ -6581,8 +6581,12 @@ function dnItems(){
   // 借出／歸還：場地是臨床技能中心（在中心內使用）的不需要搬運，不列在這裡
   const rows = valid.filter(r => String(r['教具名稱']||'').trim() && !isRoom(r));
   const out = rows.filter(r => r['日期(起)']===date).map(r=>toItem(r,'out'));
-  const inn = rows.filter(r => r['日期(迄)']===date).map(r=>toItem(r,'in'));
-  const due = showDue ? rows.filter(r => r['狀態']==='已過期' && r['日期(迄)'] < date).map(r=>toItem(r,'due')) : [];
+  // 歸還：借用到「今天」的單位今天還在用，隔天早上才會拿回來
+  //  → 列出到期日在今天之前、尚未結案的項目；未借出（沒有借出者）的不算
+  //  → 應還日＝到期日的下一個上班日（週五到期→週一早上還）；過了應還日才標「逾期」
+  const back = rows.filter(r => r['日期(迄)'] && r['日期(迄)'] < date && String(r['狀態']||'') !== '未借出');
+  const inn = back.filter(r => dnReturnDay(r['日期(迄)']) >= date).map(r=>toItem(r,'in'));
+  const due = showDue ? back.filter(r => dnReturnDay(r['日期(迄)']) < date).map(r=>toItem(r,'due')) : [];
   (dnState.custom||[]).forEach(c => {
     const it = Object.assign({ custom:true, origQty:Number(c.qty)||1, origNote:c.note||'', start:'', end:'', overdue:false }, c);
     (c.sec==='in' ? inn : out).push(it);
@@ -6620,13 +6624,16 @@ function dnItems(){
   g.in.forEach(i  => { i.relay = i.on && !i.overdue && outs.some(o => tl(o)===tl(i) && rec(o)!==rec(i)); });
   return g;
 }
-function dnDueDays(it){ const a = new Date(it.end+'T00:00:00'), b = new Date(dnDate()+'T00:00:00'); return Math.round((b-a)/86400000); }
+function dnAddDays(ymd, n){ const d = new Date(ymd+'T00:00:00'); d.setDate(d.getDate()+n); return dnYmd(d); }
+// 應還日：到期日的下一個上班日（跳過週六、週日；國定假日不判斷）
+function dnReturnDay(end){ let d = dnAddDays(end, 1); while([0,6].includes(new Date(d+'T00:00:00').getDay())) d = dnAddDays(d, 1); return d; }
+function dnDueDays(it){ const a = new Date(dnReturnDay(it.end)+'T00:00:00'), b = new Date(dnDate()+'T00:00:00'); return Math.round((b-a)/86400000); }
 
 function dnRender(){
   const g = dnItems();
   const e = escapeHtml;
   const tags = it =>
-      (it.overdue ? `<span class="dn-tag d">逾期 ${dnDueDays(it)} 天・應還 ${e(dnFmtMD(it.end))}</span>` : '')
+      (it.overdue ? `<span class="dn-tag d">逾期 ${dnDueDays(it)} 天・應還 ${e(dnFmtMD(dnReturnDay(it.end)))}</span>` : '')
     + (it.relay ? `<span class="dn-tag r">${it.sec==='out'?'↺ 今日有人歸還，可直接轉借':'→ 今日有人要借'}</span>` : '')
     + (it.custom ? '<span class="dn-tag c">手動</span>' : '');
   const row = (it, dateCol) => `
@@ -6674,7 +6681,7 @@ function dnRender(){
     </div>`;
   document.getElementById('dnBody').innerHTML =
       sec('dn-out','bi-box-arrow-up-right','借出', g.out, '歸還日', 'end', '這天沒有要借出的教具')
-    + sec('dn-in','bi-box-arrow-in-down-left','歸還', g.in, '借出日', 'start', '這天沒有要歸還的教具')
+    + sec('dn-in','bi-box-arrow-in-down-left','歸還', g.in, '到期日', 'end', '這天沒有要歸還的教具')
     + roomSec;
   document.querySelectorAll('#dnBody .dn-note').forEach(dnFitNote);
 }
@@ -6718,7 +6725,7 @@ function dnBuildCapture(){
   const out = g.out.filter(i=>i.on), inn = g.in.filter(i=>i.on), room = g.room.filter(i=>i.on);
   const dueN = inn.filter(i=>i.overdue).length;
   const capTags = it =>
-      (it.overdue ? `<span class="tag" style="color:#be185d">⚠ 逾期 ${dnDueDays(it)} 天（應還 ${e(dnFmtMD(it.end))}）</span>` : '')
+      (it.overdue ? `<span class="tag" style="color:#be185d">⚠ 逾期 ${dnDueDays(it)} 天（應還 ${e(dnFmtMD(dnReturnDay(it.end)))}）</span>` : '')
     + (it.relay ? `<span class="tag" style="color:#7c3aed">${it.sec==='out'?'↺ 可用今日歸還的轉借':'→ 歸還後轉借給今日借出者'}</span>` : '');
   const dateRange = it => (it.start===it.end || !it.end) ? dnFmtMD(it.start) : dnFmtMD(it.start)+'~'+dnFmtMD(it.end);
   // 固定欄寬（px），沒寫寬度的欄位平分剩下的空間
@@ -6751,7 +6758,7 @@ function dnBuildCapture(){
   const html = `<h2>📋 借還工作單　${dnFmtFull(dnDate())}</h2>
     <div class="cap-sub">臨床技能中心｜借出 ${out.length} 項・歸還 ${inn.length} 項${dueN?'（含逾期 '+dueN+' 項）':''}・借用教室 ${room.length} 場</div>`
     + sec('#1d4ed8','#dbeafe','⬆ 借出', out, table(out,'歸還日','end'), '這天沒有要借出的教具')
-    + sec('#047857','#d1fae5','⬇ 歸還', inn, table(inn,'借出日','start'), '這天沒有要歸還的教具')
+    + sec('#047857','#d1fae5','⬇ 歸還', inn, table(inn,'到期日','end'), '這天沒有要歸還的教具')
     + sec('#854d0e','#fef9c3','🚪 借用教室', room, roomTable(room), '這天沒有借用教室', '場')
     + `<div class="cap-foot">產生時間：${twToday(now).replace(/-/g,'/')} ${twTimeHM(now)}${user?'　製表：'+e(user):''}</div>`;
   const box = document.getElementById('dnCapture');
