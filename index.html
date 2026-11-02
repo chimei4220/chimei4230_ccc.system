@@ -988,7 +988,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
       <div class="pg-icon"><i class="bi bi-clipboard2-data"></i></div>
       <div><h5>耗材清單</h5><div class="pg-sub">臨床技能中心耗材品項總覽</div></div>
     </div>
-    <button class="btn btn-primary btn-sm" onclick="openConsumableModal()"><i class="bi bi-plus-lg me-1"></i>新增耗材</button>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-success btn-sm" onclick="exportConsumablesExcel()"><i class="bi bi-file-earmark-excel me-1"></i>匯出 Excel</button>
+      <button class="btn btn-primary btn-sm" onclick="openConsumableModal()"><i class="bi bi-plus-lg me-1"></i>新增耗材</button>
+    </div>
   </div>
 
   <!-- 篩選列 -->
@@ -4935,6 +4938,27 @@ async function openConsumableModal(rowIndex){
   csPhotoInit(row ? row['照片'] : '');
 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('consumableModal')).show();
+}
+
+// 耗材清單匯出 Excel（依目前的分類／關鍵字篩選，排序與畫面相同）
+function exportConsumablesExcel(){
+  if(!csResults.length){toast('提示','目前沒有可匯出的耗材資料，請先查詢','info');return;}
+  const head=['分類','名稱','系統上品名','材料編號','庫房','請領方式','備註','照片'];
+  const rows=csResults.map(r=>[r['分類']||'',r['名稱']||'',r['系統上品名']||'',r['材料編號']||'',r['庫房']||'',r['請領方式']||'',r['備註']||'',r['照片']?'查看照片':'']);
+  const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
+  const pc=head.indexOf('照片');
+  csResults.forEach((r,i)=>{
+    const id=String(r['照片']||'').trim(); if(!id) return;
+    const ref=XLSX.utils.encode_cell({r:i+1,c:pc});
+    if(ws[ref]) ws[ref].l={Target:driveViewUrl(id),Tooltip:consumablePhotoBaseName(r)};
+  });
+  ws['!cols']=[18,24,34,18,14,16,30,10].map(w=>({wch:w}));
+  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:head.length-1}})};
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'耗材清單');
+  const fn=`耗材清單_${twToday()}.xlsx`;
+  XLSX.writeFile(wb,fn);
+  const filtered=!!(document.getElementById('csCategory').value||document.getElementById('csKeyword').value.trim());
+  toast('匯出成功',`已下載 ${fn}（${csResults.length} 筆${filtered?'，依目前篩選條件':''}）`,'success');
 }
 
 async function loadConsumableCategoriesIfNeeded(){
