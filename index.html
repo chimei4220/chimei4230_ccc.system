@@ -90,6 +90,24 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 .st{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.73rem;font-weight:600;white-space:nowrap;}
 .st-借用中{background:#dbeafe;color:#1d4ed8;}
 .st-借用教室{background:#fef9c3;color:#854d0e;}
+.st-尚未結案{background:#fff7ed;color:#c2410c;box-shadow:inset 0 0 0 1px #fb923c;}
+.venue-room{color:#854d0e;font-weight:700;}
+.acc-click{cursor:pointer;}
+.acc-click:hover{filter:brightness(.95);box-shadow:0 0 0 1px rgba(0,0,0,.08);}
+.acc{display:inline-flex;align-items:center;font-size:.73rem;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;}
+.acc-ok{background:#dcfce7;color:#15803d;}
+.acc-no{background:#ffedd5;color:#c2410c;}
+.acc-peer{background:#dbeafe;color:#1d4ed8;}
+.acc-wait{background:#fee2e2;color:#b91c1c;}
+.acc-lent{background:#ede9fe;color:#6d28d9;}
+.acc-loading{background:#f1f5f9;color:#94a3b8;font-weight:500;}
+#accMenu{position:fixed;z-index:2000;display:none;background:#fff;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.18);padding:6px;min-width:170px;}
+.acc-menu-h{font-size:.72rem;color:#94a3b8;padding:2px 8px 6px;}
+.acc-menu-i{display:flex;align-items:center;width:100%;border:0;background:none;padding:6px 8px;border-radius:6px;font-size:.8rem;text-align:left;}
+.acc-menu-i:hover{background:#f1f5f9;}
+.acc-menu-i.on{background:#f8fafc;}
+.need-pick{border-color:#ef4444!important;box-shadow:0 0 0 .18rem rgba(239,68,68,.22)!important;}
+.need-pick-hint{font-size:.72rem;color:#dc2626;font-weight:600;white-space:nowrap;}
 .st-即將到期{background:#ffedd5;color:#9a3412;}
 .st-今日到期{background:#fee2e2;color:#991b1b;}
 .st-已過期{background:#fce7f3;color:#9d174d;}
@@ -103,6 +121,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 .stf-btn[data-status=""].active,.stf-btn[data-status="all"].active{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
 .stf-btn[data-status="借用中"].active{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd;}
 .stf-btn[data-status="借用教室"].active{background:#fef9c3;color:#854d0e;border-color:#fde047;}
+.stf-btn[data-status="尚未結案"].active{background:#fff7ed;color:#c2410c;border-color:#fb923c;}
 .stf-btn[data-status="今日到期"].active{background:#fee2e2;color:#991b1b;border-color:#fca5a5;}
 .stf-btn[data-status="即將到期"].active{background:#ffedd5;color:#9a3412;border-color:#fdba74;}
 .stf-btn[data-status="已過期"].active{background:#fce7f3;color:#9d174d;border-color:#f9a8d4;}
@@ -125,6 +144,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 .ec.editing{padding:0!important;}
 .ec input,.ec select{border:none;outline:2px solid var(--ac);width:100%;min-width:60px;font-size:.79rem;padding:5px 7px;background:#eff6ff;border-radius:4px;}
 .ew{background:#fffbeb!important;}
+.ejob{background:#fef2f2!important;box-shadow:inset 0 0 0 1.5px #f87171;}
+#previewBody tr.job-pending>td:first-child{box-shadow:inset 3px 0 0 #ef4444;}
 .em{background:#eff6ff!important;}
 /* Filter card */
 .filter-card{background:#fff;border-radius:12px;padding:14px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:14px;}
@@ -134,6 +155,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 .stf-btn[data-status=""]{background:#eff6ff;color:#475569;border-color:#bfdbfe;}
 .stf-btn[data-status="借用中"]{background:#eff6ff;color:#475569;border-color:#bfdbfe;}
 .stf-btn[data-status="借用教室"]{background:#fefce8;color:#475569;border-color:#fde68a;}
+.stf-btn[data-status="尚未結案"]{background:#fffaf5;color:#475569;border-color:#fed7aa;}
 .stf-btn[data-status="今日到期"]{background:#fff5f5;color:#475569;border-color:#fecaca;}
 .stf-btn[data-status="即將到期"]{background:#fff7ed;color:#475569;border-color:#fed7aa;}
 .stf-btn[data-status="已過期"]{background:#fdf2f8;color:#475569;border-color:#fbcfe8;}
@@ -367,7 +389,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
       <div style="padding:10px 18px 6px">
         <div class="alert alert-info py-2 mb-2" style="font-size:.8rem">
           <i class="bi bi-info-circle me-1"></i>點擊任何欄位可直接修改。
-          <span class="badge bg-warning text-dark" style="font-size:.72rem">⚠ 職員別</span> 表示系統自動帶入，請確認。
+          <span class="badge bg-warning text-dark" style="font-size:.72rem">⚠ 職員別</span> 表示系統依上課對象自動改為護理／護理師。
+          <span class="badge bg-danger" style="font-size:.72rem">✕</span> 表示職員別／職類別空白、不在選單或兩者不符，<b>選完才能儲存</b>。
           相同人事號可批次修改職員別／職類別。
         </div>
         <!-- 批次修改 -->
@@ -409,10 +432,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
           <span class="badge bg-secondary" style="font-size:.72rem">已存在（略過）</span>
           <span class="badge bg-light text-secondary border" style="font-size:.72rem">無教具（預設不勾選）</span>
           <span class="badge bg-warning text-dark" style="font-size:.72rem">⚠ 請確認</span>
+          <span class="badge bg-danger" style="font-size:.72rem">✕ 必須選擇</span>
         </div>
         <div class="d-flex gap-2">
           <button class="btn btn-outline-danger btn-sm" onclick="deleteSelectedRows()" title="從預覽清單移除已勾選的列（不會影響已儲存資料）"><i class="bi bi-trash me-1"></i>刪除選取</button>
           <button class="btn btn-outline-secondary btn-sm" onclick="cancelImport()">取消</button>
+          <span id="jobPending" class="align-self-center text-danger fw-semibold" style="font-size:.78rem;display:none;cursor:pointer" onclick="jumpToJobPending()"></span>
           <button class="btn btn-success btn-sm" onclick="confirmImport()"><i class="bi bi-cloud-upload me-1"></i>確認儲存到 Google Sheets</button>
         </div>
       </div>
@@ -438,6 +463,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
     <button class="stf-btn active" data-status="" onclick="setStf('',this)">全部<span class="cnt" id="cnt-all">—</span></button>
     <button class="stf-btn" data-status="借用中" onclick="setStf('借用中',this)">借用中<span class="cnt" id="cnt-借用中">—</span></button>
     <button class="stf-btn" data-status="借用教室" onclick="setStf('借用教室',this)">借用教室<span class="cnt" id="cnt-借用教室">—</span></button>
+    <button class="stf-btn" data-status="尚未結案" onclick="setStf('尚未結案',this)" title="借用教室使用完隔天仍未結案（已結案＋點收者）">尚未結案<span class="cnt" id="cnt-尚未結案">—</span></button>
     <button class="stf-btn" data-status="今日到期" onclick="setStf('今日到期',this)">今日到期<span class="cnt" id="cnt-今日到期">—</span></button>
     <button class="stf-btn" data-status="即將到期" onclick="setStf('即將到期',this)">即將到期<span class="cnt" id="cnt-即將到期">—</span></button>
     <button class="stf-btn" data-status="已過期" onclick="setStf('已過期',this)">已過期<span class="cnt" id="cnt-已過期">—</span></button>
@@ -483,17 +509,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
       <span style="font-size:.82rem;color:#1d4ed8;font-weight:600"><i class="bi bi-check2-square me-1"></i>已選取 <span id="bqCount">0</span> 筆</span>
       <div style="width:1px;height:20px;background:#bfdbfe;margin:0 4px"></div>
       <span style="font-size:.8rem;color:#475569">批次修改：</span>
-      <select class="form-select form-select-sm" id="bq借出者" style="width:120px">
+      <select class="form-select form-select-sm" id="bq借出者" style="width:120px" onchange="bqReceiverCheck()">
         <option value="">借出者...</option>
         <option>沈俞汎</option><option>王馨珮</option><option>歐馨憶</option><option>楊琇淳</option>
       </select>
       <input type="date" class="form-control form-control-sm" id="bq日期起" style="width:150px" title="日期(起)">
       <span style="font-size:.8rem;color:#64748b">～</span>
       <input type="date" class="form-control form-control-sm" id="bq日期迄" style="width:150px" title="日期(迄)">
-      <select class="form-select form-select-sm" id="bq點收者" style="width:120px">
-        <option value="">點收者...</option>
-        <option>沈俞汎</option><option>王馨珮</option><option>歐馨憶</option><option>楊琇淳</option>
-      </select>
       <select class="form-select form-select-sm" id="bq職員別" style="width:110px">
         <option value="">職員別...</option>
         <option>醫師</option><option>醫技</option><option>護理</option><option>行政</option>
@@ -506,10 +528,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
         <option>職能治療師</option><option>臨床心理師</option><option>語言治療師</option>
         <option>聽力師</option><option>其他</option>
       </select>
-      <select class="form-select form-select-sm" id="bq完成狀態" style="width:120px">
+      <select class="form-select form-select-sm" id="bq完成狀態" style="width:120px" onchange="bqReceiverCheck()">
         <option value="">完成狀態...</option>
         <option>已結案</option><option>取消</option>
       </select>
+      <select class="form-select form-select-sm" id="bq點收者" style="width:120px" onchange="bqReceiverCheck()">
+        <option value="">點收者...</option>
+        <option>沈俞汎</option><option>王馨珮</option><option>歐馨憶</option><option>楊琇淳</option>
+      </select>
+      <span class="need-pick-hint" id="bqReceiverHint" style="display:none"></span>
       <button class="btn btn-primary btn-sm" onclick="applyBatchQuery()"><i class="bi bi-check2-all me-1"></i>套用</button>
       <button class="btn btn-outline-secondary btn-sm" onclick="clearBatchQuery()">取消選取</button>
     </div>
@@ -528,12 +555,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
             <th style="width:36px"><input type="checkbox" id="bqChkAll" onclick="toggleBqAll(this)"></th>
             <th>狀態</th><th>單位</th><th>人事號</th><th>姓名</th>
             <th>教具名稱</th><th>組數</th><th>日期(起)</th><th>日期(迄)</th>
-            <th>時段</th><th>分機</th><th>手機</th><th>課程名稱</th><th>場地</th><th>職員別</th>
+            <th>時段</th><th>分機</th><th>手機</th><th>課程名稱</th><th>場地</th><th style="white-space:nowrap">門禁</th><th>職員別</th>
             <th>職類別</th><th>借出者</th><th>備</th><th>操作</th>
           </tr>
         </thead>
         <tbody id="queryBody">
-          <tr><td colspan="19" class="text-center text-muted py-5" style="font-size:.85rem">請設定條件後按查詢，或點「查今天」</td></tr>
+          <tr><td colspan="20" class="text-center text-muted py-5" style="font-size:.85rem">請設定條件後按查詢，或點「查今天」</td></tr>
         </tbody>
       </table>
     </div>
@@ -2149,7 +2176,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
         <input type="hidden" id="editRowIndex">
         <div class="row g-3" style="font-size:.85rem">
           <div class="col-md-4"><label class="form-label fw-semibold">借出者</label>
-            <select class="form-select form-select-sm" id="edit借出者"><option value="">請選擇</option><option>沈俞汎</option><option>王馨珮</option><option>歐馨憶</option><option>楊琇淳</option></select></div>
+            <select class="form-select form-select-sm" id="edit借出者" onchange="editReceiverCheck()"><option value="">請選擇</option><option>沈俞汎</option><option>王馨珮</option><option>歐馨憶</option><option>楊琇淳</option></select><div class="need-pick-hint mt-1" id="editBorrowerHint" style="display:none"><i class="bi bi-exclamation-circle me-1"></i>結案須選借出者</div></div>
           <div class="col-md-4"><label class="form-label fw-semibold">單位</label><input type="text" class="form-control form-control-sm" id="edit單位"></div>
           <div class="col-md-4"><label class="form-label fw-semibold">人事號</label><input type="text" class="form-control form-control-sm" id="edit人事號"></div>
           <div class="col-md-4"><label class="form-label fw-semibold">姓名</label><input type="text" class="form-control form-control-sm" id="edit姓名"></div>
@@ -2172,9 +2199,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
           <div class="col-md-4"><label class="form-label fw-semibold">職類別</label>
             <select class="form-select form-select-sm" id="edit職類別"><option value="">請選擇</option><option>西醫師</option><option>牙醫師</option><option>中醫師</option><option>藥師</option><option>醫事放射師</option><option>醫事檢驗師</option><option>護理師</option><option>營養師</option><option>呼吸治療師</option><option>物理治療師</option><option>職能治療師</option><option>臨床心理師</option><option>語言治療師</option><option>聽力師</option><option>其他</option></select></div>
           <div class="col-md-4"><label class="form-label fw-semibold">完成狀態</label>
-            <select class="form-select form-select-sm" id="edit完成狀態"><option value="">—</option><option>已結案</option><option>取消</option></select></div>
+            <select class="form-select form-select-sm" id="edit完成狀態" onchange="editReceiverCheck()"><option value="">—</option><option>已結案</option><option>取消</option></select></div>
           <div class="col-md-4"><label class="form-label fw-semibold">點收者</label>
-            <select class="form-select form-select-sm" id="edit點收者"><option value="">請選擇</option><option>沈俞汎</option><option>王馨珮</option><option>歐馨憶</option><option>楊琇淳</option></select></div>
+            <select class="form-select form-select-sm" id="edit點收者" onchange="editReceiverCheck()"><option value="">請選擇</option><option>沈俞汎</option><option>王馨珮</option><option>歐馨憶</option><option>楊琇淳</option></select><div class="need-pick-hint mt-1" id="editReceiverHint" style="display:none"><i class="bi bi-exclamation-circle me-1"></i>結案須選點收者</div></div>
           <div class="col-12"><label class="form-label fw-semibold">備註</label><textarea class="form-control form-control-sm" id="edit備註" rows="2"></textarea></div>
         </div>
       </div>
@@ -2462,9 +2489,9 @@ function parseRowCols(cols){
     會議名稱:cols[5]||'',院內人數:cols[6]||'',院外人數:cols[7]||'',
     分機:cols[9]||'',手機:cols[10]||'',
     課程類別:cols[13]||'',上課對象:cols[15]||'',
-    職員別:cols[18]||aj.職員別,職類別:cols[17]||aj.職類別,
+    職員別:aj.職員別||cols[18]||'',職類別:aj.職類別||cols[17]||'',
     備註:cols[16]||'',完成狀態:'',借出者:'',點收者:'',
-    _aj:aj,_origJob:cols[18]||'',
+    _aj:aj,_origJob:cols[18]||'',_origCls:cols[17]||'',
   };
   if(!tools.length)tools.push({name:'',qty:''});
   return tools.map(t=>({...base,教具名稱:t.name,組數:t.qty}));
@@ -2499,11 +2526,11 @@ function parseExcelRow(cols){
     手機: String(cols[12]||'').trim(),
     課程類別: String(cols[15]||'').trim(),
     上課對象: String(cols[17]||'').trim(),
-    職員別: cols[20]||aj.職員別,
-    職類別: cols[19]||aj.職類別,
+    職員別: aj.職員別||cols[20]||'',
+    職類別: aj.職類別||cols[19]||'',
     備註: cleanNote,
     完成狀態:'', 借出者:'', 點收者:'',
-    _aj: aj, _origJob: cols[20]||'',
+    _aj: aj, _origJob: cols[20]||'', _origCls: cols[19]||'',
   };
   if(!tools.length) tools.push({name:'',qty:''});
   return tools.map(t=>({...base, 教具名稱:t.name, 組數:t.qty}));
@@ -2657,16 +2684,21 @@ function updateBatchBar(){
   const bar=document.getElementById('batchBar');
   bar.style.display=chk>0?'flex':'none';
   document.getElementById('batchCount').textContent=chk;
+  refreshJobFlags();
 }
 function applyBatch(){
   const jv=document.getElementById('batch職員別').value;
   const kv=document.getElementById('batch職類別').value;
-  document.querySelectorAll('.row-chk:checked').forEach(c=>{
-    const ri=parseInt(c.dataset.ri);
+  const picked=[...document.querySelectorAll('.row-chk:checked')].map(c=>parseInt(c.dataset.ri));
+  picked.forEach(ri=>{
     if(jv){parsedRows[ri].職員別=jv;}
     if(kv){parsedRows[ri].職類別=kv;}
+    if(jv&&!kv)jobAutoPair(ri,'職員別'); else if(kv&&!jv)jobAutoPair(ri,'職類別');
   });
   renderPreview(parsedRows);
+  // 保留原本的勾選，方便繼續操作
+  picked.forEach(ri=>{const c=document.querySelector(`.row-chk[data-ri="${ri}"]`);if(c&&!c.disabled)c.checked=true;});
+  updateBatchBar();
 }
 function clearBatch(){document.querySelectorAll('.row-chk').forEach(c=>c.checked=false);updateBatchBar();}
 
@@ -2678,9 +2710,21 @@ const VALID_OPTIONS={
 
 function makeCell(ri,field,isWarn){
   const td=document.createElement('td');td.className='ec'+(isWarn?' ew':'');td.title='點擊修改';
+  const isJob=(field==='職員別'||field==='職類別');
   function render(){
     td.classList.remove('editing');
     const v=parsedRows[ri][field]??'';
+    // 會新增的資料：職員別／職類別有問題就標紅，必須選完才能儲存
+    if(isJob){
+      const issue=jobIssueForCell(ri,field);
+      td.classList.toggle('ejob',!!issue);
+      if(issue){
+        td.innerHTML=`<span class="badge bg-danger" style="font-size:.7rem" title="${escapeHtml(issue)}">✕ ${escapeHtml(v||'請選擇')}</span>`;
+        td.title=issue+'（點擊選擇）';
+        return;
+      }
+      td.title='點擊修改';
+    }
     // 檢查值是否在有效選單內
     const validList=VALID_OPTIONS[field];
     const isInvalid=validList&&v&&!validList.includes(v);
@@ -2696,8 +2740,8 @@ function makeCell(ri,field,isWarn){
     const cur=parsedRows[ri][field]??'';
     if(DD[field]){
       const sel=document.createElement('select');
-      DD[field].forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o||'（空白）';if(o===cur)op.selected=true;sel.appendChild(op);});
-      sel.onchange=()=>{parsedRows[ri][field]=sel.value;td.classList.add('em');isWarn=false;render();};
+      DD[field].forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o||((field==='職員別'||field==='職類別')?'請選擇':'（空白）');if(o===cur)op.selected=true;sel.appendChild(op);});
+      sel.onchange=()=>{parsedRows[ri][field]=sel.value;if(isJob)jobAutoPair(ri,field);td.classList.add('em');isWarn=false;td.classList.remove('ew');render();if(isJob)refreshJobFlags();};
       sel.onblur=render;td.innerHTML='';td.appendChild(sel);sel.focus();
     }else{
       const inp=document.createElement('input');inp.type=field.includes('日期')?'date':'text';inp.value=cur;
@@ -2706,19 +2750,21 @@ function makeCell(ri,field,isWarn){
       td.innerHTML='';td.appendChild(inp);inp.focus();
     }
   });
+  if(isJob){td._render=render;td.classList.add('ec-job');td.dataset.ri=ri;}
   render();return td;
 }
 
 function renderPreview(rows){
   const tbody=document.getElementById('previewBody');tbody.innerHTML='';
   rows.forEach((row,i)=>{
-    const isWarn=row._aj&&row.上課對象.includes('護理人員')&&!row._origJob;
+    // 上課對象有護理人員 → 系統已改為護理／護理師；來源資料不同時用黃色提示（不擋儲存）
+    const isWarn=!!(row._aj&&row._aj.職員別&&(row._origJob!=='護理'||row._origCls!=='護理師'));
     const key=`${row.人事號}_${row['日期(起)']}_${row['時段(起)']}_${row.教具名稱}_${row.組數}`;
     const isDup=_dupSet&&_dupSet.has(key);
     const isMerged=row._merged&&row._merged>1;
     const isRoomOnly=!String(row.教具名稱||'').trim()&&(String(row['場地']||'').includes('中心')||String(row['場地']||'').includes('教室')||String(row['場地']||'').includes('討論室')||String(row['場地']||'').includes('技能'));
     const isNoTool=!String(row.教具名稱||'').trim()&&!isRoomOnly;
-    const tr=document.createElement('tr');
+    const tr=document.createElement('tr');tr.dataset.ri=i;
     if(isDup) tr.style.opacity='0.45';
     if(isNoTool&&!isDup) tr.style.cssText='opacity:0.6;background:#f9fafb';
     // checkbox：已存在 disabled；無教具名稱預設不勾選
@@ -2762,6 +2808,84 @@ function renderPreview(rows){
   document.getElementById('parseResult').style.display='';
   updateBatchBar();
 }
+
+// ── 匯入前檢查職員別／職類別 ─────────────────────────────
+// 只檢查「這次會新增」的資料（新增、新增(N天)、借用教室、有勾選的無教具列）
+// 擋下來的情況：空白、不在選單、職員別與職類別不符（醫師／醫技／行政）
+// 上課對象有「護理人員」→ 一律為 護理／護理師
+const JOB_PAIR_RULES = {
+  '醫師': ['西醫師','牙醫師','中醫師'],
+  '醫技': ['藥師','醫事放射師','醫事檢驗師','營養師','呼吸治療師','物理治療師','職能治療師','臨床心理師','語言治療師','聽力師'],
+  '行政': ['其他']
+};
+function previewRowKey(r){ return `${r.人事號}_${r['日期(起)']}_${r['時段(起)']}_${r.教具名稱}_${r.組數}`; }
+function rowWillInsert(ri){
+  const r = parsedRows[ri]; if (!r) return false;
+  if (_dupSet && _dupSet.has(previewRowKey(r))) return false;
+  const hasName = String(r.教具名稱||'').trim() !== '';
+  const isRoom = /中心|教室|討論室|技能/.test(String(r['場地']||''));
+  const chk = document.querySelector(`.row-chk[data-ri="${ri}"]`);
+  return hasName || isRoom || !!(chk && chk.checked);
+}
+// 回傳這一列的問題說明；沒問題回傳空字串
+function jobIssue(r){
+  const jv = String(r.職員別||'').trim(), kv = String(r.職類別||'').trim();
+  if (String(r.上課對象||'').includes('護理人員')) {
+    return (jv==='護理' && kv==='護理師') ? '' : '上課對象為護理人員，職員別應為「護理」、職類別應為「護理師」';
+  }
+  if (!jv || !kv) return '請選擇' + (!jv && !kv ? '職員別與職類別' : !jv ? '職員別' : '職類別');
+  if (!VALID_OPTIONS['職員別'].includes(jv)) return `職員別「${jv}」不在選單內，請重新選擇`;
+  if (!VALID_OPTIONS['職類別'].includes(kv)) return `職類別「${kv}」不在選單內，請重新選擇`;
+  const allow = JOB_PAIR_RULES[jv];
+  if (allow && !allow.includes(kv)) return `職員別「${jv}」與職類別「${kv}」不符（${jv}：${allow.join('／')}）`;
+  return '';
+}
+function jobIssueForCell(ri, field){
+  if (!rowWillInsert(ri)) return '';
+  const r = parsedRows[ri], issue = jobIssue(r);
+  if (!issue) return '';
+  const v = String(r[field]||'').trim();
+  // 空白或不在選單：只標有問題的那一格；不符：兩格都標
+  if (issue.startsWith('請選擇')) return v ? '' : issue;
+  if (issue.includes('不在選單')) return issue.startsWith(field) ? issue : '';
+  return issue;
+}
+// 選了一邊、另一邊可以確定時自動帶入（例：行政→其他、西醫師→醫師、護理師→護理）
+function jobAutoPair(ri, field){
+  const r = parsedRows[ri];
+  if (field === '職員別') {
+    const allow = JOB_PAIR_RULES[r.職員別];
+    if (r.職員別 === '護理' && !r.職類別) r.職類別 = '護理師';
+    else if (allow && allow.length === 1 && !allow.includes(r.職類別)) r.職類別 = allow[0];
+  } else {
+    if (!r.職員別 || !VALID_OPTIONS['職員別'].includes(r.職員別)) {
+      if (r.職類別 === '護理師') r.職員別 = '護理';
+      else { const hit = Object.keys(JOB_PAIR_RULES).find(k => JOB_PAIR_RULES[k].includes(r.職類別) && r.職類別 !== '其他'); if (hit) r.職員別 = hit; }
+    }
+  }
+}
+function jobPendingRows(){
+  return parsedRows.map((r,i) => i).filter(i => rowWillInsert(i) && jobIssue(parsedRows[i]));
+}
+// 重新標記紅格子、更新儲存按鈕旁的提示
+function refreshJobFlags(){
+  document.querySelectorAll('#previewBody td.ec-job').forEach(td => { if (!td.classList.contains('editing') && td._render) td._render(); });
+  const pending = new Set(jobPendingRows());
+  document.querySelectorAll('#previewBody tr[data-ri]').forEach(tr => tr.classList.toggle('job-pending', pending.has(parseInt(tr.dataset.ri))));
+  const el = document.getElementById('jobPending');
+  if (el) {
+    el.style.display = pending.size ? '' : 'none';
+    el.innerHTML = `<i class="bi bi-exclamation-octagon me-1"></i>還有 ${pending.size} 筆職員別／職類別要選擇`;
+  }
+}
+function jumpToJobPending(){
+  const tr = document.querySelector('#previewBody tr.job-pending');
+  if (!tr) return;
+  tr.scrollIntoView({ block:'center', behavior:'smooth' });
+  const td = tr.querySelector('td.ejob');
+  if (td) { td.animate([{ boxShadow:'inset 0 0 0 3px #ef4444' }, { boxShadow:'inset 0 0 0 1.5px #f87171' }], { duration:900, iterations:2 }); }
+}
+
 function cancelImport(){document.getElementById('parseResult').style.display='none';parsedRows=[];_dupSet=new Set();_compared=false;}
 
 async function deleteSelectedRows(){
@@ -2809,11 +2933,17 @@ let _compared = false;
 
 async function confirmImport(){
   if(!parsedRows.length) return;
+  const pending=jobPendingRows();
+  if(pending.length){
+    toast('還不能儲存',`還有 ${pending.length} 筆的職員別／職類別要選擇（紅色格子），選完才能儲存`,'danger');
+    jumpToJobPending();
+    return;
+  }
   // 取得使用者勾選的 index 集合
   const checkedSet=new Set([...document.querySelectorAll('.row-chk:checked')].map(c=>parseInt(c.dataset.ri)));
   // 實際要送出的資料：已勾選 OR（有教具名稱 AND 非重複）
   const rowsToSend=parsedRows.filter((r,i)=>{
-    const key=`${r.人事號}_${r['日期(起)']}_${r['時段(起)']}_${r.教具名稱}`;
+    const key=`${r.人事號}_${r['日期(起)']}_${r['時段(起)']}_${r.教具名稱}_${r.組數}`;
     const isDup=_dupSet&&_dupSet.has(key);
     if(isDup) return true; // 重複的讓後端自行處理（跳過或更新日期）
     const hasName=String(r.教具名稱||'').trim()!=='';
@@ -2821,7 +2951,7 @@ async function confirmImport(){
     return hasName || isRoom || checkedSet.has(i);
   });
   const newCount = rowsToSend.filter(r=>{
-    const key=`${r.人事號}_${r['日期(起)']}_${r['時段(起)']}_${r.教具名稱}`;
+    const key=`${r.人事號}_${r['日期(起)']}_${r['時段(起)']}_${r.教具名稱}_${r.組數}`;
     return !(_dupSet&&_dupSet.has(key));
   }).length;
   const updateCount = Object.keys(_updateMap).length;
@@ -2860,7 +2990,7 @@ async function queryRecords(){
   showLoad('查詢中...');
   try{
     const resp=await fetch(API+'?'+params);const r=await resp.json();hideLoad();
-    if(r.success){queryResults=r.data;applyStf(currentStf);}
+    if(r.success){queryResults=r.data;applyStf(currentStf);loadRoomAccessForQuery();}
     else toast('錯誤',r.message,'danger');
   }catch(err){hideLoad();toast('錯誤','無法連線：'+err.message,'danger');}
 }
@@ -2890,7 +3020,7 @@ function updateStfCounts(){
   const counts={};
   queryResults.forEach(r=>{const s=r['狀態']||'';counts[s]=(counts[s]||0)+1;});
   document.getElementById('cnt-all').textContent=queryResults.length;
-  ['借用中','借用教室','今日到期','即將到期','已過期','已結案','取消','未借出'].forEach(s=>{
+  ['借用中','借用教室','尚未結案','今日到期','即將到期','已過期','已結案','取消','未借出'].forEach(s=>{
     const el=document.getElementById('cnt-'+s);if(el)el.textContent=counts[s]||0;
   });
   document.querySelectorAll('.sb-count').forEach(sb=>{sb.style.display=queryResults.length?'':'none';sb.textContent=queryResults.length;});
@@ -2906,7 +3036,7 @@ function renderQueryPage(){
   document.getElementById('pageInfo').textContent=total?`顯示第 ${start+1}－${end} 筆，共 ${total} 筆`:'';
 
   const tbody=document.getElementById('queryBody');
-  if(!total){tbody.innerHTML='<tr><td colspan="19" class="text-center text-muted py-5" style="font-size:.85rem">查無資料</td></tr>';document.getElementById('pagination').innerHTML='';return;}
+  if(!total){tbody.innerHTML='<tr><td colspan="20" class="text-center text-muted py-5" style="font-size:.85rem">查無資料</td></tr>';document.getElementById('pagination').innerHTML='';return;}
   tbody.innerHTML='';
   pageRows.forEach(row=>{
     const st=row['狀態']||'';
@@ -2928,7 +3058,8 @@ function renderQueryPage(){
       <td style="white-space:nowrap">${row['分機']||'<span style="color:#94a3b8">—</span>'}</td>
       <td style="white-space:nowrap">${row['手機']||'<span style="color:#94a3b8">—</span>'}</td>
       <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${row['會議名稱']||''}">${row['會議名稱']||''}</td>
-      <td>${row['場地']||''}</td>
+      <td>${isRoomRow(row)?'<span class="venue-room">臨床技能中心</span>':(row['場地']||'')}</td>
+      <td style="white-space:nowrap">${isRoomRow(row)?`<span class="acc-wrap" data-ri="${row._rowIndex}">${accTagsHtml(row['人事號'],row['門禁註記'],true,row._rowIndex)}</span>`:''}</td>
       <td>${row['職員別']||''}</td>
       <td>${row['職類別']||''}</td>
       <td>${row['借出者']||'<span style="color:#94a3b8">—</span>'}</td>
@@ -2970,9 +3101,24 @@ function openEdit(ri){
   // handle time separately
   document.getElementById('edit時段起').value=fmtTimeVal(row['時段(起)']);
   document.getElementById('edit時段迄').value=fmtTimeVal(row['時段(迄)']);
+  editReceiverCheck();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).show();
 }
+function editMissingForClose(){
+  if(document.getElementById('edit完成狀態').value!=='已結案') return [];
+  return ['借出者','點收者'].filter(f=>!document.getElementById('edit'+f).value);
+}
+function editReceiverCheck(){
+  const miss=editMissingForClose();
+  document.getElementById('edit借出者').classList.toggle('need-pick',miss.includes('借出者'));
+  document.getElementById('editBorrowerHint').style.display=miss.includes('借出者')?'':'none';
+  document.getElementById('edit點收者').classList.toggle('need-pick',miss.includes('點收者'));
+  document.getElementById('editReceiverHint').style.display=miss.includes('點收者')?'':'none';
+  return miss.length>0;
+}
 async function saveEdit(){
+  if(editReceiverCheck()){const miss=editMissingForClose();toast('還不能儲存',`完成狀態為「已結案」時必須選擇${miss.join('、')}`,'danger');document.getElementById('edit'+miss[0]).focus();return;}
+  if(document.getElementById('edit完成狀態').value==='已結案'&&!confirmCardReturned([queryResults.find(r=>r._rowIndex===parseInt(document.getElementById('editRowIndex').value))])) return;
   const ri=parseInt(document.getElementById('editRowIndex').value);
   const data={借出者:document.getElementById('edit借出者').value,單位:document.getElementById('edit單位').value,人事號:document.getElementById('edit人事號').value,姓名:document.getElementById('edit姓名').value,場地:document.getElementById('edit場地').value,'日期(起)':document.getElementById('edit日期起').value,'日期(迄)':document.getElementById('edit日期迄').value,'時段(起)':document.getElementById('edit時段起').value,'時段(迄)':document.getElementById('edit時段迄').value,會議名稱:document.getElementById('edit會議名稱').value,院內人數:document.getElementById('edit院內人數').value,院外人數:document.getElementById('edit院外人數').value,分機:document.getElementById('edit分機').value,手機:document.getElementById('edit手機').value,教具名稱:document.getElementById('edit教具名稱').value,組數:document.getElementById('edit組數').value,課程類別:document.getElementById('edit課程類別').value,上課對象:document.getElementById('edit上課對象').value,職員別:document.getElementById('edit職員別').value,職類別:document.getElementById('edit職類別').value,完成狀態:document.getElementById('edit完成狀態').value,點收者:document.getElementById('edit點收者').value,備註:document.getElementById('edit備註').value};
   bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
@@ -3009,11 +3155,27 @@ function updateBqBar(){
   const bar=document.getElementById('batchQueryBar');
   bar.style.display=cnt>0?'':'none';
   document.getElementById('bqCount').textContent=cnt;
+  bqReceiverCheck();
+}
+// 完成狀態選「已結案」就必須有借出者、點收者（勾選的每一筆原本都有值時例外）
+function bqMissingForClose(){
+  if(document.getElementById('bq完成狀態').value!=='已結案') return [];
+  const picked=[...document.querySelectorAll('.bq-chk:checked')].map(c=>parseInt(c.dataset.ri)).map(ri=>queryResults.find(x=>x._rowIndex===ri));
+  return ['借出者','點收者'].filter(f=>!document.getElementById('bq'+f).value && picked.some(r=>!r||!String(r[f]||'').trim()));
+}
+function bqReceiverCheck(){
+  const miss=bqMissingForClose();
+  ['借出者','點收者'].forEach(f=>document.getElementById('bq'+f).classList.toggle('need-pick',miss.includes(f)));
+  const hint=document.getElementById('bqReceiverHint');
+  hint.style.display=miss.length?'':'none';
+  hint.innerHTML=miss.length?`<i class="bi bi-exclamation-circle me-1"></i>結案須選${miss.join('、')}`:'';
+  return miss.length>0;
 }
 function resetBatchQueryFields(){
   ['bq借出者','bq日期起','bq日期迄','bq點收者','bq職員別','bq職類別','bq完成狀態'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
+  bqReceiverCheck();
 }
 function clearBatchQuery(){
   document.querySelectorAll('.bq-chk').forEach(c=>c.checked=false);
@@ -3032,6 +3194,8 @@ async function applyBatchQuery(){
   const jobType=document.getElementById('bq職員別').value;
   const jobClass=document.getElementById('bq職類別').value;
   if(!borrower&&!startDate&&!endDate&&!receiver&&!doneStatus&&!jobType&&!jobClass){toast('提示','請至少填寫一個要修改的欄位','info');return;}
+  if(bqReceiverCheck()){const miss=bqMissingForClose();toast('還不能套用',`完成狀態選「已結案」時必須選擇${miss.join('、')}`,'danger');document.getElementById('bq'+miss[0]).focus();return;}
+  if(doneStatus==='已結案'&&!confirmCardReturned(rows.map(ri=>queryResults.find(r=>r._rowIndex===ri)))) return;
   showLoad(`批次更新 ${rows.length} 筆中...`);
   let success=0,fail=0;
   for(const ri of rows){
@@ -6555,6 +6719,9 @@ async function dnLoad(){
     if(date !== dnDate()) return; // 使用者已切到別天，丟掉這次結果
     dnRecords = r.data || [];
     dnRender();
+    // 背景補上借用教室的門禁權限
+    const ids = dnRecords.filter(isRoomRow).map(x => x['人事號']);
+    if(ids.length){ await fetchRoomAccess(ids); if(date === dnDate()) dnRender(); }
   } catch(err){
     document.getElementById('dnBody').innerHTML = '<div class="dn-empty text-danger">無法連線：'+escapeHtml(err.message)+'</div>';
   }
@@ -6603,9 +6770,10 @@ function dnItems(){
     if(!roomMap[k]) roomMap[k] = {
       id:'r|'+k, sec:'room', unit:r['單位']||'', name:r['姓名']||'', empNo:r['人事號']||'', ext:extOf(r), time:timeOf(r),
       course:r['會議名稱']||'', people:(Number(r['院內人數'])||0)+(Number(r['院外人數'])||0),
-      start:r['日期(起)']||'', end:r['日期(迄)']||'', tools:[], notes:[]
+      start:r['日期(起)']||'', end:r['日期(迄)']||'', tools:[], notes:[], accNote:''
     };
     const g = roomMap[k];
+    if(!g.accNote && String(r['門禁註記']||'').trim()) g.accNote = String(r['門禁註記']).trim();
     const tool = String(r['教具名稱']||'').trim();
     if(tool) g.tools.push(tool+' ×'+(Number(r['組數'])||1));
     const n = String(r['備註']||'').trim();
@@ -6673,12 +6841,13 @@ function dnRender(){
       <td>${e(it.course)}</td>
       <td style="text-align:center">${it.people||''}</td>
       <td>${it.tools.length ? e(it.tools.join('、')) : '<span class="dn-hint">—</span>'}</td>
+      <td style="white-space:nowrap">${accTagsHtml(it.empNo, it.accNote, false)}</td>
       <td style="white-space:nowrap">${it.start===it.end||!it.end ? e(dnFmtMD(it.start)) : e(dnFmtMD(it.start))+'~'+e(dnFmtMD(it.end))}</td>
       <td class="dn-act"><textarea class="form-control dn-note" rows="1" placeholder="備註" oninput="dnFitNote(this)" onchange="dnSetNote(this)">${e(it.note)}</textarea></td>
     </tr>`;
   const roomSec = `<div class="dn-sec dn-room">${head('dn-room','bi-door-open','借用教室',g.room)}
       ${g.room.length ? `<div class="table-responsive"><table class="dn-tbl"><thead><tr>
-        <th></th><th>時間</th><th>單位</th><th>姓名</th><th>分機</th><th>課程名稱</th><th>人數</th><th>使用教具</th><th>日期</th><th>備註</th>
+        <th></th><th>時間</th><th>單位</th><th>姓名</th><th>分機</th><th>課程名稱</th><th>人數</th><th>使用教具</th><th>門禁</th><th>日期</th><th>備註</th>
       </tr></thead><tbody>${g.room.map(roomRow).join('')}</tbody></table></div>`
       : '<div class="dn-empty">這天沒有借用教室</div>'}
     </div>`;
@@ -6743,13 +6912,15 @@ function dnBuildCapture(){
       <td class="c"><b>${String(it.qty)}</b></td><td>${e(it.venue)}</td>
       <td class="nw">${e(dnFmtMD(it[dateCol]))}</td><td>${e(it.note)}</td>
     </tr>`).join('')}</tbody></table>`;
-  const roomTable = list => `<table>${cols([44,112,110,76,96,0,52,210,100,150])}<thead><tr>
-      <th class="c">✓</th><th>時間</th><th>單位</th><th>姓名</th><th>分機</th><th>課程名稱</th><th class="c">人數</th><th>使用教具</th><th>日期</th><th>備註</th>
+  const capAccText = it => { const s = accState(it.empNo, it.accNote); if (s.cls==='acc-loading') return ''; const c = ({'acc-ok':'#15803d','acc-no':'#c2410c','acc-peer':'#1d4ed8','acc-wait':'#b91c1c','acc-lent':'#6d28d9'})[s.cls]||'#334155'; return `<span style="color:${c};font-weight:700;white-space:nowrap">${e(s.text.replace('● ',''))}</span>`; };
+  const roomTable = list => `<table>${cols([44,112,110,76,96,0,52,180,96,100,130])}<thead><tr>
+      <th class="c">✓</th><th>時間</th><th>單位</th><th>姓名</th><th>分機</th><th>課程名稱</th><th class="c">人數</th><th>使用教具</th><th>門禁</th><th>日期</th><th>備註</th>
     </tr></thead><tbody>${list.map(it=>`<tr>
       <td><span class="box"></span></td>
       <td class="nw">${e(it.time)}</td><td>${e(it.unit)}</td><td>${e(it.name)}</td>
       <td>${e(it.ext)}</td><td><b>${e(it.course)}</b></td>
       <td class="c">${it.people||''}</td><td>${e(it.tools.join('、'))}</td>
+      <td>${capAccText(it)}</td>
       <td class="nw">${e(dateRange(it))}</td><td>${e(it.note)}</td>
     </tr>`).join('')}</tbody></table>`;
   const sec = (color, bg, title, list, body, emptyText, unit='項') => `<div class="cap-sec">
@@ -6837,6 +7008,96 @@ async function dnSaveImage(){
     dnDownload(blob);
     toast('已下載', dnFileName(), 'success');
   } catch(err){ toast('錯誤', err.message, 'danger'); }
+}
+
+// ══════════════════════════════════════════════
+//  借用教室：門禁權限（自動）＋ 借卡狀態（手動）
+//  ・權限：背景查「門禁權限」名單，不拖慢清單顯示
+//  ・借卡狀態：跟同仁借／待借卡／已借卡，存在借用紀錄的「門禁註記」欄
+// ══════════════════════════════════════════════
+let roomAccessMap = {};          // { 人事號: true/false }
+const ACC_NOTE_OPTIONS = [
+  { v:'跟同仁借', cls:'acc-peer' },
+  { v:'待借卡',   cls:'acc-wait' },
+  { v:'已借卡',   cls:'acc-lent' }
+];
+function isRoomRow(r){ return String(r['場地']||'').trim()==='臨床技能中心'; }
+// 門禁標籤（每列一個）：有權限 → 綠色、不能點；無權限 → 顯示借卡狀態或「無權限 ▾」，可點選
+function accState(pid, note){
+  pid = String(pid||'').trim(); note = String(note||'').trim();
+  if (pid && !(pid in roomAccessMap)) return { cls:'acc-loading', text:'查詢中…', click:false };
+  if (pid && roomAccessMap[pid]) return { cls:'acc-ok', text:'● 有權限', click:false };
+  const opt = ACC_NOTE_OPTIONS.find(o => o.v === note);
+  if (opt) return { cls:opt.cls, text:'● '+opt.v, click:true };
+  return { cls:'acc-no', text:'● 無權限', click:true };
+}
+function accTagsHtml(pid, note, clickable, ri){
+  const s = accState(pid, note);
+  if (clickable && s.click) return `<span class="acc ${s.cls} acc-click" onclick="openAccMenu(event,${ri})" title="點擊設定借卡狀態">${s.text}<i class="bi bi-chevron-down ms-1" style="font-size:.6rem"></i></span>`;
+  return `<span class="acc ${s.cls}">${s.text}</span>`;
+}
+async function fetchRoomAccess(ids){
+  ids = [...new Set(ids.map(x => String(x||'').trim()).filter(x => x && !(x in roomAccessMap)))];
+  if (!ids.length) return;
+  try {
+    const r = await (await fetch(API + '?' + new URLSearchParams({ action:'roomAccess', token:getToken(), ids:ids.join(',') }))).json();
+    if (r.success) Object.assign(roomAccessMap, r.data || {});
+    else ids.forEach(id => { if (!(id in roomAccessMap)) roomAccessMap[id] = false; });
+  } catch (e) { /* 查不到就維持「查詢中」，不影響其他功能 */ }
+}
+// 借用管理：查詢完成後在背景補上權限標籤
+async function loadRoomAccessForQuery(){
+  roomAccessMap = {};   // 每次查詢重新抓（後端有暫存，很快）
+  const ids = queryResults.filter(isRoomRow).map(r => r['人事號']);
+  if (!ids.length) return;
+  await fetchRoomAccess(ids);
+  refreshAccTags();
+}
+function refreshAccTags(){
+  document.querySelectorAll('#queryBody .acc-wrap').forEach(w => {
+    const r = queryResults.find(x => x._rowIndex === parseInt(w.dataset.ri)); if (!r) return;
+    w.innerHTML = accTagsHtml(r['人事號'], r['門禁註記'], true, r._rowIndex);
+  });
+}
+// 點標籤 → 選借卡狀態
+function openAccMenu(ev, ri){
+  ev.stopPropagation();
+  const r = queryResults.find(x => x._rowIndex === ri); if (!r) return;
+  let m = document.getElementById('accMenu');
+  if (!m) { m = document.createElement('div'); m.id = 'accMenu'; document.body.appendChild(m); }
+  const cur = String(r['門禁註記']||'').trim();
+  m.innerHTML = `<div class="acc-menu-h">${escapeHtml(r['姓名']||'')} 的借卡狀態</div>`
+    + ACC_NOTE_OPTIONS.map(o => `<button type="button" class="acc-menu-i${o.v===cur?' on':''}" onclick="setAccNote(${ri},'${o.v}')"><span class="acc ${o.cls}">● ${o.v}</span>${o.v===cur?'<i class="bi bi-check2 ms-auto"></i>':''}</button>`).join('')
+    + (cur ? `<button type="button" class="acc-menu-i text-secondary" onclick="setAccNote(${ri},'')"><i class="bi bi-x-circle me-1"></i>清除</button>` : '');
+  const rc = ev.currentTarget.getBoundingClientRect();
+  m.style.display = 'block';
+  const top = Math.min(rc.bottom + 4, window.innerHeight - m.offsetHeight - 8);
+  const left = Math.min(rc.left, window.innerWidth - m.offsetWidth - 8);
+  m.style.top = top + 'px'; m.style.left = left + 'px';
+}
+document.addEventListener('click', e => { const m = document.getElementById('accMenu'); if (m && !m.contains(e.target)) m.style.display = 'none'; });
+window.addEventListener('scroll', () => { const m = document.getElementById('accMenu'); if (m) m.style.display = 'none'; }, true);
+async function setAccNote(ri, value){
+  const m = document.getElementById('accMenu'); if (m) m.style.display = 'none';
+  const r = queryResults.find(x => x._rowIndex === ri); if (!r) return;
+  const prev = r['門禁註記'] || '';
+  r['門禁註記'] = value; refreshAccTags();          // 先更新畫面
+  try {
+    const res = await (await fetch(API, { method:'POST', body: JSON.stringify({ action:'setRoomAccessNote', token:getToken(),
+      data:{ rowIndex:ri, expect:{ '人事號':r['人事號']||'', '日期(起)':r['日期(起)']||'' }, value } }) })).json();
+    if (!res.success) throw new Error(res.message === '未知的action' ? '需要先更新後端程式才能使用' : res.message);
+    toast('已儲存', res.message, 'success');
+  } catch (err) {
+    r['門禁註記'] = prev; refreshAccTags();
+    toast('儲存失敗', err.message, 'danger');
+  }
+}
+// 結案時：有「已借卡」的借用教室，提醒確認卡片已歸還（只提醒，不擋）
+function confirmCardReturned(rows){
+  const lent = rows.filter(r => r && isRoomRow(r) && String(r['門禁註記']||'').trim()==='已借卡' && String(r['完成狀態']||'').trim()!=='已結案');
+  if (!lent.length) return true;
+  const names = lent.slice(0,5).map(r => `・${r['姓名']||''}（${r['日期(起)']||''}）`).join('\n') + (lent.length>5 ? `\n…等 ${lent.length} 筆` : '');
+  return confirm(`以下借用教室登記為「已借卡」，請確認門禁卡已經歸還：\n\n${names}\n\n確定要結案嗎？`);
 }
 </script>
 </body>
