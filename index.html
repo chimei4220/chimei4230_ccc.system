@@ -242,7 +242,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 .am-photo-frame img{width:100%;height:100%;object-fit:cover;cursor:zoom-in;}
 .am-photo-frame.has{border-style:solid;border-color:#e2e8f0;}
 .am-photo-name{font-size:.78rem;color:#475569;word-break:break-all;background:#f1f5f9;border-radius:6px;padding:4px 8px;}
-#photoViewerImg{max-width:100%;max-height:75vh;display:block;margin:0 auto;border-radius:8px;}
+#photoViewerImg{max-width:100%;max-height:70vh;display:block;margin:0 auto;border-radius:8px;}
+.as-thumb-pair{display:flex;gap:6px;justify-content:center;}
+.as-thumb-box{position:relative;}
+.as-thumb-pair .as-thumb,.as-thumb-pair .as-thumb-empty{margin:0;}
+.as-tag-mark{position:absolute;right:-6px;bottom:-6px;font-size:.78rem;font-weight:700;line-height:1;background:#1e293b;color:#fff;border:1.5px solid #fff;border-radius:5px;padding:3px 4px;pointer-events:none;}
+.am-photo-slot{flex:1;min-width:240px;display:flex;gap:12px;align-items:flex-start;background:#f8fafc;border-radius:10px;padding:10px;}
+.am-photo-slot .am-photo-frame{width:112px;height:112px;}
+.pv-tabs .btn{font-size:.78rem;}
 </style>
 </head>
 <body>
@@ -959,7 +966,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
         <table class="table table-hover table-bordered">
           <thead>
             <tr>
-              <th style="width:60px;text-align:center">照片</th>
+              <th style="width:116px;text-align:center">照片</th>
               <th style="width:108px;text-align:center">保管品號</th>
               <th style="width:220px">掛網/設備名稱</th>
               <th style="width:100px;text-align:center">分類</th>
@@ -2018,8 +2025,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 <div class="modal fade" id="photoViewerModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content" style="border-radius:14px;border:none;">
-      <div class="modal-header py-2">
-        <h6 class="modal-title" id="photoViewerTitle" style="font-size:.88rem;word-break:break-all"></h6>
+      <div class="modal-header py-2 flex-wrap gap-2">
+        <div class="btn-group btn-group-sm pv-tabs" id="photoViewerTabs"></div>
+        <h6 class="modal-title" id="photoViewerTitle" style="font-size:.85rem;word-break:break-all;flex:1;min-width:200px"></h6>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body text-center"><img id="photoViewerImg" alt=""></div>
@@ -2040,21 +2048,35 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
       <div class="modal-body">
         <input type="hidden" id="assetRowIndex">
         <div class="row g-3" style="font-size:.85rem">
-          <!-- 財產照片 -->
+          <!-- 財產照片（教具本體＋財產標籤） -->
           <div class="col-12">
-            <label class="form-label fw-semibold">財產照片</label>
-            <div class="d-flex gap-3 align-items-start flex-wrap">
-              <div class="am-photo-frame" id="amPhotoFrame"><span><i class="bi bi-camera" style="font-size:1.4rem"></i><br>尚無照片</span></div>
-              <div style="flex:1;min-width:220px">
-                <div class="d-flex gap-2 flex-wrap mb-2">
-                  <label class="btn btn-outline-primary btn-sm mb-0"><i class="bi bi-image me-1"></i>選擇／拍攝照片
-                    <input type="file" accept="image/*" id="amPhotoInput" hidden onchange="amPhotoPick(this)"></label>
-                  <button type="button" class="btn btn-outline-danger btn-sm" id="amPhotoRemoveBtn" onclick="amPhotoRemove()" style="display:none"><i class="bi bi-x-lg me-1"></i>移除照片</button>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" id="amPhotoUndoBtn" onclick="amPhotoUndo()" style="display:none"><i class="bi bi-arrow-counterclockwise me-1"></i>復原</button>
+            <label class="form-label fw-semibold mb-1">財產照片</label>
+            <div class="d-flex gap-2 flex-wrap">
+              <div class="am-photo-slot">
+                <div class="am-photo-frame" id="amPhotoFrame"><span><i class="bi bi-camera" style="font-size:1.4rem"></i><br>尚無照片</span></div>
+                <div style="flex:1;min-width:0">
+                  <div class="fw-semibold mb-1" style="font-size:.82rem">教具本體 <span class="text-primary fw-normal" id="amPhotoState" style="font-size:.72rem"></span></div>
+                  <div class="d-flex gap-1 flex-wrap mb-2">
+                    <label class="btn btn-outline-primary btn-sm mb-0"><i class="bi bi-image me-1"></i>選擇／拍攝
+                      <input type="file" accept="image/*" id="amPhotoInput" hidden onchange="amPhotoPick(this,'main')"></label>
+                    <button type="button" class="btn btn-outline-danger btn-sm" id="amPhotoRemoveBtn" onclick="amPhotoRemove('main')" style="display:none" title="移除"><i class="bi bi-x-lg"></i></button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="amPhotoUndoBtn" onclick="amPhotoUndo('main')" style="display:none" title="復原"><i class="bi bi-arrow-counterclockwise"></i></button>
+                  </div>
+                  <div class="am-photo-name" id="amPhotoName" style="font-size:.72rem">—</div>
                 </div>
-                <div class="form-text mt-0 mb-1">雲端檔名（依下方欄位自動產生）：</div>
-                <div class="am-photo-name" id="amPhotoName">—</div>
-                <div class="form-text" id="amPhotoHint">照片會在按「儲存」時一起上傳，並自動縮小壓縮。</div>
+              </div>
+              <div class="am-photo-slot">
+                <div class="am-photo-frame" id="amTagFrame"><span><i class="bi bi-tag" style="font-size:1.4rem"></i><br>尚無照片</span></div>
+                <div style="flex:1;min-width:0">
+                  <div class="fw-semibold mb-1" style="font-size:.82rem">財產標籤 <span class="text-primary fw-normal" id="amTagState" style="font-size:.72rem"></span></div>
+                  <div class="d-flex gap-1 flex-wrap mb-2">
+                    <label class="btn btn-outline-primary btn-sm mb-0"><i class="bi bi-image me-1"></i>選擇／拍攝
+                      <input type="file" accept="image/*" id="amTagInput" hidden onchange="amPhotoPick(this,'tag')"></label>
+                    <button type="button" class="btn btn-outline-danger btn-sm" id="amTagRemoveBtn" onclick="amPhotoRemove('tag')" style="display:none" title="移除"><i class="bi bi-x-lg"></i></button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="amTagUndoBtn" onclick="amPhotoUndo('tag')" style="display:none" title="復原"><i class="bi bi-arrow-counterclockwise"></i></button>
+                  </div>
+                  <div class="am-photo-name" id="amTagName" style="font-size:.72rem">—</div>
+                </div>
               </div>
             </div>
           </div>
@@ -3371,7 +3393,7 @@ function renderGroupView() {
 
   // 固定欄寬 colgroup（每張 card 相同，視覺對齊）
   const colgroup = `<colgroup>
-    <col style="width:60px">
+    <col style="width:116px">
     <col style="width:108px">
     <col style="width:128px">
     <col style="width:260px">
@@ -3506,7 +3528,7 @@ function renderGroupView() {
       <div id="${gid}" style="display:none" class="table-responsive">
         <table class="table table-hover mb-0" style="font-size:.82rem;table-layout:fixed;width:100%">
           <colgroup>
-            <col style="width:60px"><col style="width:108px"><col style="width:130px"><col><col style="width:44px">
+            <col style="width:116px"><col style="width:108px"><col style="width:130px"><col><col style="width:44px">
             <col style="width:84px"><col style="width:64px"><col style="width:150px"><col style="width:40px">
           </colgroup>
           <thead>
@@ -3741,7 +3763,7 @@ function openAssetModal(rowIndex, prefillType, prefillParent) {
     }
     if (prefillParent) document.getElementById('am父項').value = decodeURIComponent(prefillParent);
   }
-  amPhotoInit(rowIndex ? (allAssets.find(a => a._rowIndex === rowIndex) || {})['照片'] : '');
+  { const r0 = rowIndex ? (allAssets.find(a => a._rowIndex === rowIndex) || {}) : {}; amPhotoInit(r0['照片'], r0['標籤照片']); }
   bootstrap.Modal.getOrCreateInstance(document.getElementById('assetModal')).show();
 }
 
@@ -3785,7 +3807,7 @@ async function saveAsset() {
   const rowIndex = document.getElementById('assetRowIndex').value;
   payload.action = rowIndex ? 'updateAssetV2' : 'insertAssetV2';
   if (rowIndex) payload.rowIndex = parseInt(rowIndex);
-  const photoOp = amPhoto.pending ? 'upload' : (amPhoto.remove && amPhoto.orig ? 'delete' : '');
+  const photoOps = Object.keys(AM_KINDS).map(k => ({ kind:k, op: amPh[k].pending ? 'upload' : (amPh[k].remove && amPh[k].orig ? 'delete' : '') })).filter(x => x.op);
 
   showLoad('儲存中...');
   bootstrap.Modal.getInstance(document.getElementById('assetModal')).hide();
@@ -3794,18 +3816,22 @@ async function saveAsset() {
     if (!data.success && data.message === '未知的action') {   // 後端還沒更新：退回舊版動作，資料照存
       payload.action = rowIndex ? 'updateAsset' : 'insertAsset';
       data = await assetPost(payload);
-      if (data.success && photoOp) { toast('資料已儲存', '照片功能需要先更新後端程式（財產照片.gs）才能使用', 'info'); await loadAssets(); return; }
+      if (data.success && photoOps.length) { toast('資料已儲存', '照片功能需要先更新後端程式才能使用', 'info'); await loadAssets(); return; }
     }
     if (!data.success) { toast('儲存失敗', data.message, 'danger'); return; }
     const targetRow = rowIndex ? parseInt(rowIndex) : data.rowIndex;
     const expect = { '保管品號': payload.data['保管品號'], '材料編號': payload.data['材料編號'] };
-    if (photoOp && targetRow) {
-      showLoad(photoOp === 'upload' ? '上傳照片中...' : '移除照片中...');
-      const pr = await assetPost(photoOp === 'upload'
-        ? { action:'uploadAssetPhoto', token:getToken(), data:{ rowIndex:targetRow, expect, base64:amPhoto.pending.base64, mimeType:amPhoto.pending.mime } }
-        : { action:'deleteAssetPhoto', token:getToken(), data:{ rowIndex:targetRow, expect } });
-      if (pr.success) toast('儲存成功', (data.message||'財產資料已更新') + '；' + pr.message, 'success');
-      else toast('資料已儲存，但照片處理失敗', pr.message, 'danger');
+    if (photoOps.length && targetRow) {
+      const msgs = [], fails = [];
+      for (const { kind, op } of photoOps) {
+        showLoad((op === 'upload' ? '上傳' : '移除') + AM_KINDS[kind].label + '照片中...');
+        const pr = await assetPost(op === 'upload'
+          ? { action:'uploadAssetPhoto', token:getToken(), data:{ rowIndex:targetRow, expect, kind, base64:amPh[kind].pending.base64, mimeType:amPh[kind].pending.mime } }
+          : { action:'deleteAssetPhoto', token:getToken(), data:{ rowIndex:targetRow, expect, kind } });
+        (pr.success ? msgs : fails).push(pr.success ? pr.message : AM_KINDS[kind].label + '：' + pr.message);
+      }
+      if (fails.length) toast('資料已儲存，但照片處理失敗', fails.join('；'), 'danger');
+      else toast('儲存成功', (data.message||'財產資料已更新') + '；' + msgs.join('、'), 'success');
     } else {
       toast('儲存成功', data.message||'財產資料已更新', 'success');
     }
@@ -3826,21 +3852,23 @@ function exportAssetsExcel(){
     if (r['父項']) return r['父項'] + ' ＞ ' + (r['掛網名稱'] || r['規格'] || r['品名'] || '');
     return r['掛網名稱'] || r['品名'] || '';
   };
-  const head = ['保管品號','掛網/設備名稱','類型','父項','分類','品名','規格','材料編號','單位','數量','取得日期','廠牌/型號','財產標籤','備註','註記','照片'];
+  const head = ['保管品號','掛網/設備名稱','類型','父項','分類','品名','規格','材料編號','單位','數量','取得日期','廠牌/型號','財產標籤','備註','註記','照片','標籤照片'];
   const rows = list.map(r => [
     r['保管品號']||'', nameOf(r), typeOf(r), r['父項']||'', r['分類']||'', r['品名']||'', r['規格']||'',
     r['材料編號']||'', r['單位']||'', Number(r['數量'])||1, fmtROC(r['取得日期']), r['廠牌/型號']||'',
-    r['財產標籤']||'', r['備註']||'', r['註記']||'', r['照片'] ? '查看照片' : ''
+    r['財產標籤']||'', r['備註']||'', r['註記']||'', r['照片'] ? '查看照片' : '', r['標籤照片'] ? '查看標籤' : ''
   ]);
   const ws = XLSX.utils.aoa_to_sheet([head, ...rows]);
   // 照片欄做成可點的連結
-  const pc = head.indexOf('照片');
-  list.forEach((r, i) => {
-    const id = String(r['照片']||'').trim(); if (!id) return;
-    const ref = XLSX.utils.encode_cell({ r:i+1, c:pc });
-    if (ws[ref]) ws[ref].l = { Target: driveViewUrl(id), Tooltip: assetPhotoBaseName(r) };
+  ['照片','標籤照片'].forEach(col => {
+    const pc = head.indexOf(col);
+    list.forEach((r, i) => {
+      const id = String(r[col]||'').trim(); if (!id) return;
+      const ref = XLSX.utils.encode_cell({ r:i+1, c:pc });
+      if (ws[ref]) ws[ref].l = { Target: driveViewUrl(id), Tooltip: assetPhotoBaseName(r) + (col==='標籤照片' ? '_財產標籤' : '') };
+    });
   });
-  ws['!cols'] = [10,42,10,26,12,24,30,18,6,6,11,20,8,24,10,10].map(w => ({ wch:w }));
+  ws['!cols'] = [10,42,10,26,12,24,30,18,6,6,11,20,8,24,10,10,10].map(w => ({ wch:w }));
   ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:rows.length, c:head.length-1} }) };
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, '財產清單');
   const fn = `財產清單_${twToday()}.xlsx`;
@@ -3876,15 +3904,26 @@ function photoThumbHtml(id, onclickJs){
     onerror="if(!this.dataset.r){this.dataset.r=1;this.src='${driveAltUrl(id,160)}';}"
     onclick="event.stopPropagation();${onclickJs}">`;
 }
-function showPhotoViewer(id, title){
-  id = String(id||'').trim(); if (!id) return;
+let pvItems = [], pvIdx = 0;
+function showPhotoViewer(id, title){ if (String(id||'').trim()) showPhotoViewerList([{ id:String(id).trim(), title, label:'' }], 0); }
+// 大圖檢視：多張時上方可切換（例如 教具本體／財產標籤）
+function showPhotoViewerList(items, idx){
+  pvItems = items; pvIdx = idx || 0;
+  const tabs = document.getElementById('photoViewerTabs');
+  tabs.innerHTML = items.length > 1 ? items.map((it, i) => `<button type="button" class="btn btn-outline-primary" onclick="pvShow(${i})">${escapeHtml(it.label)}</button>`).join('') : '';
+  tabs.style.display = items.length > 1 ? '' : 'none';
+  pvShow(pvIdx);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('photoViewerModal')).show();
+}
+function pvShow(i){
+  pvIdx = i; const it = pvItems[i]; if (!it) return;
   const img = document.getElementById('photoViewerImg');
   img.removeAttribute('data-r');
-  img.onerror = function(){ if(!this.dataset.r){ this.dataset.r = 1; this.src = driveAltUrl(id, 1600); } };
-  img.src = driveThumbUrl(id, 1600);
-  document.getElementById('photoViewerTitle').textContent = title || '';
-  document.getElementById('photoViewerLink').href = driveViewUrl(id);
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('photoViewerModal')).show();
+  img.onerror = function(){ if(!this.dataset.r){ this.dataset.r = 1; this.src = driveAltUrl(it.id, 1600); } };
+  img.src = driveThumbUrl(it.id, 1600);
+  document.getElementById('photoViewerTitle').textContent = it.title || '';
+  document.getElementById('photoViewerLink').href = driveViewUrl(it.id);
+  document.querySelectorAll('#photoViewerTabs .btn').forEach((b, k) => { b.classList.toggle('btn-primary', k === i); b.classList.toggle('btn-outline-primary', k !== i); });
 }
 
 // ── 耗材照片 ─────────────────────────────────────────────
@@ -3937,17 +3976,35 @@ async function csPhotoPick(input){
   if (e.target && e.target.id !== 'csPhotoInput' && e.target.closest && e.target.closest('#consumableModal')) csPhotoNameRefresh();
 }));
 
-// ── 財產照片 ─────────────────────────────────────────────
-//  照片存在雲端硬碟（後端 財產照片.gs），財產總清單「照片」欄存檔案 ID
-let amPhoto = { orig:'', pending:null, remove:false };
+// ── 財產照片（兩張：教具本體、財產標籤）──────────────────────
+//  財產總清單「照片」欄＝本體照、「標籤照片」欄＝財產標籤照，存雲端檔案 ID
+const AM_KINDS = {
+  main: { col:'照片',     label:'教具本體', prefix:'amPhoto', suffix:'' },
+  tag:  { col:'標籤照片', label:'財產標籤', prefix:'amTag',   suffix:'_財產標籤' }
+};
+let amPh = { main:{ orig:'', pending:null, remove:false }, tag:{ orig:'', pending:null, remove:false } };
 function driveThumbUrl(id, w){ return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + (w||200); }
 function driveAltUrl(id, w){ return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w' + (w||200); }
 function driveViewUrl(id){ return 'https://drive.google.com/file/d/' + encodeURIComponent(id) + '/view'; }
-// 縮圖：第一個網址失敗時改用另一個網址再試一次
-function assetThumb(r){ return photoThumbHtml(r['照片'], `openPhotoViewer(${r._rowIndex})`); }
-function openPhotoViewer(rowIndex){
-  const r = allAssets.find(a => a._rowIndex === rowIndex); if (!r || !r['照片']) return;
-  showPhotoViewer(r['照片'], assetPhotoBaseName(r));
+// 清單縮圖：本體＋標籤並排，標籤那張角落有「標」字
+function assetThumb(r){
+  const one = kind => {
+    const id = String(r[AM_KINDS[kind].col]||'').trim();
+    const mark = kind === 'tag' ? '<span class="as-tag-mark">標</span>' : '';
+    if (!id) return `<div class="as-thumb-box"><div class="as-thumb-empty" title="尚無${AM_KINDS[kind].label}照片"><i class="bi bi-${kind==='tag'?'tag':'camera'}"></i></div>${mark}</div>`;
+    return `<div class="as-thumb-box"><img class="as-thumb" loading="lazy" alt="${AM_KINDS[kind].label}" title="${AM_KINDS[kind].label}" src="${driveThumbUrl(id,160)}"
+      onerror="if(!this.dataset.r){this.dataset.r=1;this.src='${driveAltUrl(id,160)}';}"
+      onclick="event.stopPropagation();openPhotoViewer(${r._rowIndex},'${kind}')">${mark}</div>`;
+  };
+  return `<div class="as-thumb-pair">${one('main')}${one('tag')}</div>`;
+}
+function openPhotoViewer(rowIndex, kind){
+  const r = allAssets.find(a => a._rowIndex === rowIndex); if (!r) return;
+  const base = assetPhotoBaseName(r);
+  const items = ['main','tag'].filter(k => String(r[AM_KINDS[k].col]||'').trim())
+    .map(k => ({ id:String(r[AM_KINDS[k].col]).trim(), title: base + AM_KINDS[k].suffix, label: AM_KINDS[k].label }));
+  if (!items.length) return;
+  showPhotoViewerList(items, Math.max(0, items.findIndex(x => x.label === AM_KINDS[kind||'main'].label)));
 }
 // 檔名規則（和後端 assetPhotoBaseName_ 相同，用來在畫面上預覽）
 function assetPhotoBaseName(r){
@@ -3970,41 +4027,41 @@ function amFormRecord(){
     '保管品號': v('am保管品號'), '材料編號': v('am材料編號'), '品名': v('am品名'), '規格': v('am規格')
   };
 }
-function amPhotoInit(id){
-  amPhoto = { orig: String(id||'').trim(), pending:null, remove:false };
-  const inp = document.getElementById('amPhotoInput'); if (inp) inp.value = '';
-  amPhotoRender();
+function amPhotoInit(mainId, tagId){
+  amPh = { main:{ orig:String(mainId||'').trim(), pending:null, remove:false }, tag:{ orig:String(tagId||'').trim(), pending:null, remove:false } };
+  Object.keys(AM_KINDS).forEach(k => { const inp = document.getElementById(AM_KINDS[k].prefix+'Input'); if (inp) inp.value = ''; amPhotoRender(k); });
 }
-function amPhotoRender(){
-  const f = document.getElementById('amPhotoFrame');
+function amPhotoRender(kind){
+  const st = amPh[kind], p = AM_KINDS[kind].prefix;
+  const f = document.getElementById(p+'Frame');
   let src = '';
-  if (amPhoto.pending) src = amPhoto.pending.dataUrl;
-  else if (amPhoto.orig && !amPhoto.remove) src = driveThumbUrl(amPhoto.orig, 400);
+  if (st.pending) src = st.pending.dataUrl;
+  else if (st.orig && !st.remove) src = driveThumbUrl(st.orig, 400);
   f.classList.toggle('has', !!src);
-  f.innerHTML = src ? `<img src="${src}" alt="照片" onclick="amPhotoZoom()">`
-    : `<span><i class="bi bi-camera" style="font-size:1.4rem"></i><br>${amPhoto.remove ? '儲存後移除照片' : '尚無照片'}</span>`;
-  document.getElementById('amPhotoRemoveBtn').style.display = src ? '' : 'none';
-  document.getElementById('amPhotoUndoBtn').style.display = (amPhoto.pending || amPhoto.remove) ? '' : 'none';
-  document.getElementById('amPhotoHint').textContent = amPhoto.pending ? '新照片會在按「儲存」時上傳（已自動縮小壓縮）。'
-    : amPhoto.remove ? '按「儲存」後會從雲端硬碟移除這張照片。' : '照片會在按「儲存」時一起上傳，並自動縮小壓縮。';
+  f.innerHTML = src ? `<img src="${src}" alt="${AM_KINDS[kind].label}" onclick="amPhotoZoom('${kind}')">`
+    : `<span><i class="bi bi-${kind==='tag'?'tag':'camera'}" style="font-size:1.4rem"></i><br>${st.remove ? '儲存後移除' : '尚無照片'}</span>`;
+  document.getElementById(p+'RemoveBtn').style.display = src ? '' : 'none';
+  document.getElementById(p+'UndoBtn').style.display = (st.pending || st.remove) ? '' : 'none';
+  const state = document.getElementById(p+'State');
+  state.textContent = st.pending ? '新照片，儲存時上傳' : st.remove ? '儲存後會移除' : '';
   amPhotoNameRefresh();
 }
 function amPhotoNameRefresh(){
-  const el = document.getElementById('amPhotoName'); if (!el) return;
-  el.textContent = assetPhotoBaseName(amFormRecord()) + '.jpg';
+  const base = assetPhotoBaseName(amFormRecord());
+  Object.keys(AM_KINDS).forEach(k => { const el = document.getElementById(AM_KINDS[k].prefix+'Name'); if (el) el.textContent = base + AM_KINDS[k].suffix + '.jpg'; });
 }
-function amPhotoZoom(){ if (!amPhoto.pending && amPhoto.orig) window.open(driveViewUrl(amPhoto.orig), '_blank'); }
-function amPhotoRemove(){ if (amPhoto.pending) amPhoto.pending = null; else amPhoto.remove = true; document.getElementById('amPhotoInput').value=''; amPhotoRender(); }
-function amPhotoUndo(){ amPhoto.pending = null; amPhoto.remove = false; document.getElementById('amPhotoInput').value=''; amPhotoRender(); }
+function amPhotoZoom(kind){ const st = amPh[kind]; if (!st.pending && st.orig) window.open(driveViewUrl(st.orig), '_blank'); }
+function amPhotoRemove(kind){ const st = amPh[kind]; if (st.pending) st.pending = null; else st.remove = true; document.getElementById(AM_KINDS[kind].prefix+'Input').value=''; amPhotoRender(kind); }
+function amPhotoUndo(kind){ const st = amPh[kind]; st.pending = null; st.remove = false; document.getElementById(AM_KINDS[kind].prefix+'Input').value=''; amPhotoRender(kind); }
 // 選照片後先在瀏覽器縮小（長邊 1600px、JPEG 品質 0.85），上傳快、雲端也不佔空間
-async function amPhotoPick(input){
+async function amPhotoPick(input, kind){
   const file = input.files && input.files[0]; if (!file) return;
-  try { amPhoto.pending = await photoResizeFile(file); amPhoto.remove = false; amPhotoRender(); }
+  try { amPh[kind].pending = await photoResizeFile(file); amPh[kind].remove = false; amPhotoRender(kind); }
   catch(err) { toast('無法讀取照片', err.message, 'danger'); input.value = ''; }
 }
 // 修改名稱、保管品號等欄位時，即時更新檔名預覽
 ['input','change'].forEach(ev => document.addEventListener(ev, e => {
-  if (e.target && e.target.id !== 'amPhotoInput' && e.target.closest && e.target.closest('#assetModal')) amPhotoNameRefresh();
+  if (e.target && !/^am(Photo|Tag)Input$/.test(e.target.id) && e.target.closest && e.target.closest('#assetModal')) amPhotoNameRefresh();
 }));
 
 async function confirmRetire() {
